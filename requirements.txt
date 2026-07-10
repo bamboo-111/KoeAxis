@@ -1,0 +1,15 @@
+torch
+torchaudio
+transformers
+qwen-asr
+numpy
+soundfile
+silero-vad
+audio-separator
+pyannote-onnx
+onnxruntime
+tqdm
+orjson
+typing-extensions
+json-repair
+openai

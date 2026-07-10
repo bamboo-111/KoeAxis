@@ -1,0 +1,1703 @@
+﻿<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>KoeAxis / 声译轴</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #eef4fb;
+      --surface: #ffffff;
+      --surface-soft: #f7faff;
+      --text: #182230;
+      --muted: #667085;
+      --line: #e3e7ee;
+      --line-strong: #c9d1dc;
+      --blue: #2563eb;
+      --blue-soft: #eff6ff;
+      --blue-line: #bfdbfe;
+      --slate: #344054;
+      --slate-soft: #f1f5f9;
+      --green: #15803d;
+      --green-soft: #ecfdf3;
+      --amber: #b45309;
+      --amber-soft: #fffaeb;
+      --red: #b42318;
+      --red-soft: #fef3f2;
+      --shadow: 0 1px 2px rgba(16, 24, 40, 0.05);
+      --config-width: 52px;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: "Segoe UI", Arial, "Microsoft YaHei", sans-serif;
+      font-size: 13px;
+    }
+    body.config-open { --config-width: 460px; }
+    button, input, select, textarea { font: inherit; }
+    button {
+      min-height: 34px;
+      padding: 7px 11px;
+      border: 1px solid var(--line-strong);
+      border-radius: 6px;
+      background: #fff;
+      color: var(--text);
+      cursor: pointer;
+      font-weight: 600;
+    }
+    button:hover:not(:disabled) { border-color: var(--blue); background: #f8fbff; }
+    button:disabled { cursor: not-allowed; opacity: 0.5; }
+    button.primary { background: var(--blue); color: #fff; border-color: var(--blue); }
+    button.primary:hover:not(:disabled) { background: #1d4ed8; }
+    button.danger { color: var(--red); border-color: #fecdca; }
+    button.ghost { border-color: transparent; background: transparent; }
+    button.weak { min-height: 28px; padding: 4px 8px; font-size: 12px; }
+
+    input, select, textarea {
+      width: 100%;
+      min-width: 0;
+      border: 1px solid var(--line-strong);
+      border-radius: 6px;
+      background: #fff;
+      color: var(--text);
+      padding: 7px 9px;
+    }
+    input[type="checkbox"] { width: 16px; height: 16px; padding: 0; }
+    textarea { min-height: 92px; resize: vertical; }
+    input:focus, select:focus, textarea:focus {
+      outline: 2px solid rgba(37, 99, 235, 0.14);
+      border-color: var(--blue);
+    }
+    label { color: var(--slate); font-size: 12px; font-weight: 600; }
+    h1, h2, h3 { margin: 0; letter-spacing: 0; }
+    h1 { font-size: 20px; line-height: 1.2; }
+    h2 { font-size: 15px; }
+    h3 { font-size: 13px; }
+    .subtle { color: var(--muted); font-size: 12px; }
+
+    .page { max-width: 1440px; margin: 0 auto; padding: 16px; }
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      display: grid;
+      grid-template-columns: minmax(360px, 1.15fr) minmax(460px, 1fr) auto;
+      grid-template-areas:
+        "brand brand toolbar"
+        "media work work";
+      gap: 10px;
+      align-items: end;
+      margin: -16px -16px 14px;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(238, 244, 251, 0.96);
+      backdrop-filter: blur(8px);
+    }
+    .brand { grid-area: brand; display: grid; gap: 4px; min-width: 0; }
+    .brand-status { display: flex; gap: 8px; align-items: center; color: var(--muted); font-size: 12px; }
+    .top-field { display: grid; gap: 5px; min-width: 0; }
+    .media-field { grid-area: media; }
+    .work-field { grid-area: work; }
+    .inline { display: flex; gap: 7px; align-items: center; min-width: 0; }
+    .top-field .inline > input { flex: 1 1 auto; min-width: 220px; }
+    .top-field .inline > button {
+      flex: 0 0 auto;
+      min-width: 56px;
+      white-space: nowrap;
+    }
+    .path-combo {
+      position: relative;
+      display: flex;
+      flex: 1 1 auto;
+      min-width: 220px;
+    }
+    .path-combo input {
+      flex: 1 1 auto;
+      min-width: 0;
+      padding-right: 34px;
+    }
+    .path-combo-toggle {
+      position: absolute;
+      right: 4px;
+      top: 50%;
+      width: 26px;
+      height: 26px;
+      min-width: 26px;
+      padding: 0;
+      transform: translateY(-50%);
+      border: 0;
+      background: transparent;
+      color: var(--muted);
+      line-height: 1;
+    }
+    .path-combo-toggle:hover { background: var(--line-soft); color: var(--text); }
+    .path-menu {
+      display: none;
+      position: absolute;
+      z-index: 40;
+      left: 0;
+      right: 0;
+      top: calc(100% + 4px);
+      max-height: 220px;
+      overflow: auto;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--surface);
+      box-shadow: var(--shadow);
+      padding: 4px;
+    }
+    .path-menu.open { display: grid; gap: 2px; }
+    .path-menu button {
+      width: 100%;
+      min-height: 28px;
+      padding: 5px 7px;
+      border: 0;
+      border-radius: 5px;
+      background: transparent;
+      color: var(--text);
+      text-align: left;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      font-weight: 500;
+    }
+    .path-menu button:hover { background: var(--line-soft); }
+    .path-menu-empty { color: var(--muted) !important; }
+    .toolbar { grid-area: toolbar; display: flex; gap: 7px; justify-content: flex-end; flex-wrap: nowrap; }
+    .toolbar button { white-space: nowrap; }
+
+    .notice {
+      display: none;
+      margin-bottom: 12px;
+      border: 1px solid #fecdca;
+      border-radius: 7px;
+      background: var(--red-soft);
+      color: var(--red);
+      padding: 9px 11px;
+      font-weight: 600;
+    }
+    .notice.show { display: block; }
+
+    .app-main {
+      display: grid;
+      grid-template-columns: var(--config-width) minmax(0, 1fr);
+      gap: 14px;
+      align-items: start;
+      transition: grid-template-columns 0.18s ease;
+    }
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      box-shadow: var(--shadow);
+    }
+    .panel-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--line);
+    }
+    .panel-body { padding: 12px 14px; }
+
+    .config-shell {
+      position: sticky;
+      top: 78px;
+      min-height: calc(100vh - 96px);
+      overflow: hidden;
+    }
+    .config-rail {
+      display: grid;
+      gap: 8px;
+      justify-items: center;
+      padding: 10px 6px;
+    }
+    body.config-open .config-rail { display: none; }
+    .rail-btn {
+      position: relative;
+      width: 38px;
+      min-height: 36px;
+      padding: 0;
+      border-color: transparent;
+      background: transparent;
+      color: var(--slate);
+      font-size: 12px;
+    }
+    .rail-btn.active, .rail-btn:hover { background: var(--blue-soft); color: var(--blue); border-color: var(--blue-line); }
+    .rail-dot {
+      position: absolute;
+      top: 6px;
+      right: 6px;
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--blue);
+      display: none;
+    }
+    .rail-btn.invalid .rail-dot { display: block; background: var(--red); }
+    .rail-btn.related .rail-dot { display: block; }
+
+    .config-drawer { display: none; }
+    body.config-open .config-drawer { display: block; }
+    .drawer-head {
+      display: grid;
+      gap: 8px;
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--line);
+    }
+    .drawer-title-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+    }
+    .drawer-status {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      color: var(--muted);
+      font-size: 12px;
+    }
+    .checks { display: flex; flex-wrap: wrap; gap: 8px 12px; }
+    .check { display: inline-flex; align-items: center; gap: 6px; color: var(--slate); font-weight: 600; }
+    .drawer-body {
+      max-height: calc(100vh - 190px);
+      overflow: auto;
+      padding: 12px 14px;
+    }
+    details.config-group {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--surface-soft);
+      margin-bottom: 10px;
+      overflow: hidden;
+    }
+    details.config-group[open] { background: #fff; }
+    details.config-group summary {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 10px 12px;
+      cursor: pointer;
+      font-weight: 700;
+      list-style: none;
+    }
+    details.config-group summary::-webkit-details-marker { display: none; }
+    details.config-group summary::after { content: "+"; color: var(--muted); }
+    details.config-group[open] summary::after { content: "-"; }
+    .group-body { padding: 0 12px 12px; }
+    .form-grid { display: grid; grid-template-columns: repeat(2, minmax(180px, 1fr)); gap: 10px; }
+    .field { display: grid; gap: 5px; min-width: 0; }
+    .field.wide { grid-column: 1 / -1; }
+
+    .workspace {
+      min-width: 0;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 320px;
+      grid-template-areas:
+        "summary artifacts"
+        "pipeline artifacts"
+        "logs logs";
+      gap: 14px;
+    }
+    .job-summary { grid-area: summary; }
+    .pipeline-panel { grid-area: pipeline; }
+    .artifacts-panel { grid-area: artifacts; }
+    .logs-panel { grid-area: logs; }
+
+    .summary-card {
+      display: grid;
+      gap: 9px;
+    }
+    .summary-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+    }
+    .summary-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 20px;
+      font-weight: 700;
+    }
+    .summary-percent { color: var(--blue); font-size: 18px; font-weight: 700; }
+    .summary-line { color: var(--slate); font-weight: 600; }
+    .summary-current { color: var(--muted); word-break: break-word; }
+    .progress-wrap {
+      height: 9px;
+      border-radius: 999px;
+      overflow: hidden;
+      background: #dbe5f1;
+    }
+    .progress-bar {
+      height: 100%;
+      width: 0%;
+      background: var(--blue);
+      transition: width 0.2s ease;
+    }
+
+    .status-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--muted);
+      flex: 0 0 auto;
+    }
+    .status-dot.complete { background: var(--green); }
+    .status-dot.running { background: var(--blue); }
+    .status-dot.failed { background: var(--red); }
+    .status-dot.outdated, .status-dot.stopping { background: var(--amber); }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 70px;
+      min-height: 24px;
+      padding: 3px 8px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 600;
+      white-space: nowrap;
+      color: var(--muted);
+      background: var(--slate-soft);
+    }
+    .badge.complete { color: var(--green); background: var(--green-soft); }
+    .badge.running { color: var(--blue); background: var(--blue-soft); border: 1px solid var(--blue-line); }
+    .badge.failed { color: var(--red); background: var(--red-soft); }
+    .badge.outdated, .badge.stopping { color: var(--amber); background: var(--amber-soft); }
+
+    .timeline { display: grid; gap: 6px; }
+    .timeline-row {
+      display: grid;
+      grid-template-columns: 18px minmax(90px, 1fr) auto auto;
+      gap: 8px;
+      align-items: center;
+      padding: 8px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--surface-soft);
+    }
+    .timeline-row.current { border-color: var(--blue-line); background: var(--blue-soft); }
+    .timeline-name { font-weight: 600; }
+    .timeline-row.current .timeline-name { color: var(--blue); font-weight: 700; }
+    .timeline-row .subtle { min-width: 0; overflow: hidden; }
+    .timeline-row .subtle button {
+      max-width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      vertical-align: middle;
+    }
+    .timeline-actions { display: flex; gap: 5px; }
+
+    .artifact-section { display: grid; gap: 6px; margin-bottom: 12px; }
+    .artifact-section:last-child { margin-bottom: 0; }
+    .artifact-title { color: var(--muted); font-size: 12px; font-weight: 700; text-transform: uppercase; }
+    .artifact-row {
+      display: grid;
+      grid-template-columns: minmax(90px, 1fr) auto;
+      gap: 8px;
+      align-items: center;
+      padding: 7px 0;
+      border-bottom: 1px solid var(--line);
+    }
+    .artifact-row:last-child { border-bottom: 0; }
+    .batch-summary-panel { display: none; margin-top: 12px; border-top: 1px solid var(--line); padding-top: 12px; }
+    .batch-summary-panel.show { display: block; }
+    .batch-summary-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+    .batch-summary-metric {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--surface-soft);
+      padding: 8px;
+    }
+    .batch-summary-metric strong { display: block; font-size: 18px; }
+    .batch-task-list { display: grid; gap: 8px; }
+    .batch-task-row {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--surface-soft);
+      padding: 8px;
+    }
+    .batch-task-title { display: flex; justify-content: space-between; gap: 8px; align-items: center; margin-bottom: 4px; }
+    .batch-task-meta { color: var(--muted); font-size: 12px; word-break: break-word; }
+
+    .log-tabs { display: flex; gap: 5px; flex-wrap: wrap; }
+    .log-tabs button { min-height: 28px; padding: 4px 8px; font-size: 12px; }
+    button.tab.active { background: var(--slate); color: #fff; border-color: var(--slate); }
+    .log-tools { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+    .log-box {
+      min-height: 260px;
+      max-height: 360px;
+      overflow: auto;
+      margin: 0;
+      padding: 10px;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      background: var(--surface-soft);
+      color: #24364b;
+      white-space: pre-wrap;
+      word-break: break-word;
+      line-height: 1.5;
+      font-family: "Cascadia Mono", Consolas, monospace;
+      font-size: 12px;
+    }
+    #jobBox, #statusGrid { display: none; }
+
+    @media (max-width: 1080px) {
+      .topbar {
+        grid-template-columns: 1fr;
+        grid-template-areas:
+          "brand"
+          "media"
+          "work"
+          "toolbar";
+        align-items: stretch;
+      }
+      .toolbar { justify-content: flex-start; }
+      .app-main { grid-template-columns: 52px minmax(0, 1fr); }
+      body.config-open .config-shell {
+        position: fixed;
+        inset: 72px auto 0 0;
+        width: min(460px, 100vw);
+        z-index: 20;
+        min-height: auto;
+      }
+      body.config-open .config-shell::after {
+        content: "";
+        position: fixed;
+        inset: 72px 0 0 min(460px, 100vw);
+        background: rgba(24, 34, 48, 0.16);
+      }
+      .workspace {
+        grid-template-columns: 1fr;
+        grid-template-areas:
+          "summary"
+          "pipeline"
+          "artifacts"
+          "logs";
+      }
+    }
+    @media (max-width: 640px) {
+      .page { padding: 12px; }
+      .topbar { margin: -12px -12px 12px; padding: 12px; }
+      .app-main { gap: 10px; }
+      body.config-open .config-shell { inset: 0; width: 100vw; }
+      body.config-open .config-shell::after { display: none; }
+      .form-grid { grid-template-columns: 1fr; }
+      .inline { flex-wrap: wrap; align-items: stretch; }
+      .top-field .inline > input { flex-basis: 100%; }
+      #workspaceHistory { flex: 1 1 160px; width: auto; }
+      .timeline-row { grid-template-columns: 18px minmax(0, 1fr); }
+      .timeline-row .badge, .timeline-actions { grid-column: 2; }
+      .toolbar button { width: 100%; }
+    }
+  </style>
+</head>
+<body class="config-collapsed">
+  <div class="page">
+    <header class="topbar">
+      <div class="brand">
+        <h1>KoeAxis / 声译轴</h1>
+        <div class="brand-status"><span id="topStatus">idle</span><span id="topStage">-</span></div>
+      </div>
+      <div class="top-field media-field">
+        <label for="mediaPath">媒体路径</label>
+        <div class="inline">
+          <div class="path-combo">
+            <input id="mediaPath" value="">
+            <button type="button" class="path-combo-toggle" onclick="togglePathMenu('mediaHistory')" title="历史路径">⌄</button>
+            <div class="path-menu" id="mediaHistory"></div>
+          </div>
+          <button type="button" onclick="pickMedia()">选择</button>
+          <button type="button" onclick="pickMediaList()">批量选择</button>
+        </div>
+        <textarea id="mediaPaths" placeholder="批量模式：每行一个媒体路径，Run/Resume 时会自动切换为 batch-run。"></textarea>
+        <div class="inline" style="margin-top: 6px;">
+          <div class="path-combo">
+            <input id="batchManifestPath" value="" placeholder="可选：批量任务清单 JSON/JSONL">
+            <button type="button" class="path-combo-toggle" onclick="togglePathMenu('batchManifestHistory')" title="历史清单">⌄</button>
+            <div class="path-menu" id="batchManifestHistory"></div>
+          </div>
+          <button type="button" onclick="pickBatchManifest()">选择清单</button>
+        </div>
+      </div>
+      <div class="top-field work-field">
+        <label for="workdir">工作目录</label>
+        <div class="inline">
+          <div class="path-combo">
+            <input id="workdir" value="">
+            <button type="button" class="path-combo-toggle" onclick="togglePathMenu('workspaceHistory')" title="缓存目录">⌄</button>
+            <div class="path-menu" id="workspaceHistory"></div>
+          </div>
+          <button type="button" onclick="pickPath('workdir', '/api/pick-output-directory', '')">选择</button>
+          <button type="button" onclick="suggestWorkdir()">新建</button>
+          <button type="button" class="danger" onclick="deleteCurrentWorkspace()">删除</button>
+          <button type="button" class="danger" onclick="deleteAllWorkspaces()">清空</button>
+        </div>
+      </div>
+      <div class="toolbar">
+        <button class="primary" id="runButton">Run</button>
+        <button id="resumeButton">Resume</button>
+        <button class="danger" onclick="stopStage()">Stop</button>
+      </div>
+    </header>
+
+    <div class="notice" id="validationNotice"></div>
+
+    <main class="app-main">
+      <aside class="config-shell panel" id="configShell">
+        <nav class="config-rail" id="configRail" aria-label="配置导航">
+          <button class="rail-btn" onclick="toggleConfig(true)" title="配置">⚙<span class="rail-dot"></span></button>
+          <button class="rail-btn" data-group="input" onclick="toggleConfig(true, 'input')" title="输入 / 切段">IN<span class="rail-dot"></span></button>
+          <button class="rail-btn" data-group="asr" onclick="toggleConfig(true, 'asr')" title="ASR / Align">ASR<span class="rail-dot"></span></button>
+          <button class="rail-btn" data-group="llm" onclick="toggleConfig(true, 'llm')" title="LLM / 翻译 / 校正">LLM<span class="rail-dot"></span></button>
+          <button class="rail-btn" data-group="out" onclick="toggleConfig(true, 'out')" title="Normalize / Export">OUT<span class="rail-dot"></span></button>
+        </nav>
+
+        <section class="config-drawer" id="configDrawer">
+          <div class="drawer-head">
+            <div class="drawer-title-row">
+              <h2>配置</h2>
+              <button class="ghost" onclick="toggleConfig(false)">收起</button>
+            </div>
+            <div class="drawer-status">
+              <span>Preset: default</span>
+              <span id="configStatus">已保存 · 无错误</span>
+            </div>
+            <div class="checks">
+              <label class="check"><input type="checkbox" id="withAlign" checked> Align</label>
+              <label class="check"><input type="checkbox" id="withCorrect"> 校对</label>
+              <label class="check"><input type="checkbox" id="withSplit" checked> Split</label>
+              <label class="check"><input type="checkbox" id="withTranslate"> Translate</label>
+              <label class="check"><input type="checkbox" id="withNormalize" checked> Normalize</label>
+            </div>
+          </div>
+          <div class="drawer-body">
+            <details class="config-group" data-group="input" open>
+              <summary>输入 / 切段</summary>
+              <div class="group-body form-grid">
+                <label class="check field wide"><input id="denoise" type="checkbox" checked> 音频降噪</label>
+                <div class="field"><label for="denoiseBackend">降噪后端</label><select id="denoiseBackend">
+                  <option value="mdx_net">MDX-Net</option>
+                  <option value="ffmpeg">ffmpeg legacy</option>
+                </select></div>
+                <div class="field"><label for="denoiseLevel">降噪强度(dB)</label><input id="denoiseLevel" type="number" min="0" max="40" step="1" value="12"></div>
+                <div class="field"><label for="denoiseProfile">ffmpeg profile</label><select id="denoiseProfile">
+                  <option value="strong">strong</option>
+                  <option value="speech">speech</option>
+                  <option value="medium">medium</option>
+                  <option value="light">light</option>
+                </select></div>
+                <div class="field wide"><label for="mdxModel">MDX 模型</label><input id="mdxModel" value="UVR-MDX-NET-Inst_HQ_3.onnx"></div>
+                <div class="field wide"><label for="mdxModelDir">MDX 模型目录</label><input id="mdxModelDir" placeholder="空值使用默认模型缓存"></div>
+                <div class="field"><label for="vadBackend">VAD 后端</label><select id="vadBackend">
+                  <option value="pyannote_onnx_v3">pyannote_onnx_v3</option>
+                  <option value="silero">silero</option>
+                </select></div>
+                <div class="field"><label for="pyannoteOnnxModel">pyannote 模型</label><input id="pyannoteOnnxModel" value="segmentation-3.0"></div>
+                <div class="field"><label for="vadOnset">VAD onset</label><input id="vadOnset" type="number" min="0" max="1" step="0.01" value="0.5"></div>
+                <div class="field"><label for="vadOffset">VAD offset</label><input id="vadOffset" type="number" min="0" max="1" step="0.01" value="0.35"></div>
+                <div class="field"><label for="vadThreshold">Silero threshold</label><input id="vadThreshold" type="number" min="0" max="1" step="0.01" value="0.5"></div>
+                <div class="field"><label for="vadMinSpeechMs">最短语音(ms)</label><input id="vadMinSpeechMs" type="number" min="0" step="10" value="180"></div>
+                <div class="field"><label for="vadMinSilenceMs">最短静音(ms)</label><input id="vadMinSilenceMs" type="number" min="0" step="10" value="250"></div>
+                <div class="field"><label for="vadSpeechPadMs">VAD padding(ms)</label><input id="vadSpeechPadMs" type="number" min="0" step="10" value="120"></div>
+                <div class="field"><label for="maxSegmentSeconds">切段最大时长(s)</label><input id="maxSegmentSeconds" type="number" min="1" step="1" value="60"></div>
+                <div class="field"><label for="minSegmentSeconds">切段最小时长(s)</label><input id="minSegmentSeconds" type="number" min="0" step="1" value="8"></div>
+                <div class="field"><label for="preferredSilenceMs">首选静音(ms)</label><input id="preferredSilenceMs" type="number" min="0" step="10" value="800"></div>
+                <div class="field"><label for="minSilenceMs">最小静音(ms)</label><input id="minSilenceMs" type="number" min="0" step="10" value="500"></div>
+                <div class="field"><label for="paddingMs">切段 padding(ms)</label><input id="paddingMs" type="number" min="0" step="10" value="300"></div>
+                <div class="field"><label for="overlapMs">切段 overlap(ms)</label><input id="overlapMs" type="number" min="0" step="10" value="0"></div>
+              </div>
+            </details>
+
+            <details class="config-group" data-group="asr" open>
+              <summary>ASR / Align</summary>
+              <div class="group-body form-grid">
+                <div class="field wide"><label for="asrModel">ASR 模型</label><input id="asrModel" value="Qwen/Qwen3-ASR-1.7B"></div>
+                <div class="field"><label for="asrLanguage">ASR 语言</label><select id="asrLanguage">
+                  <option value="">自动识别</option>
+                  <option value="Chinese">Chinese</option>
+                  <option value="English">English</option>
+                  <option value="Cantonese">Cantonese</option>
+                  <option value="Arabic">Arabic</option>
+                  <option value="German">German</option>
+                  <option value="French">French</option>
+                  <option value="Spanish">Spanish</option>
+                  <option value="Portuguese">Portuguese</option>
+                  <option value="Indonesian">Indonesian</option>
+                  <option value="Italian">Italian</option>
+                  <option value="Korean">Korean</option>
+                  <option value="Russian">Russian</option>
+                  <option value="Thai">Thai</option>
+                  <option value="Vietnamese">Vietnamese</option>
+                  <option value="Japanese">Japanese</option>
+                  <option value="Turkish">Turkish</option>
+                  <option value="Hindi">Hindi</option>
+                  <option value="Malay">Malay</option>
+                  <option value="Dutch">Dutch</option>
+                  <option value="Swedish">Swedish</option>
+                  <option value="Danish">Danish</option>
+                  <option value="Finnish">Finnish</option>
+                  <option value="Polish">Polish</option>
+                  <option value="Czech">Czech</option>
+                  <option value="Filipino">Filipino</option>
+                  <option value="Persian">Persian</option>
+                  <option value="Greek">Greek</option>
+                  <option value="Romanian">Romanian</option>
+                  <option value="Hungarian">Hungarian</option>
+                  <option value="Macedonian">Macedonian</option>
+                </select></div>
+                <div class="field"><label for="dtype">dtype</label><select id="dtype"><option value="fp16">fp16</option><option value="bf16">bf16</option></select></div>
+                <div class="field"><label for="device">device</label><input id="device" value="cuda:0"></div>
+                <label class="check field"><input id="localFilesOnly" type="checkbox" checked> 只用本地模型缓存</label>
+                <div class="field wide"><label for="modelCacheDir">模型缓存目录</label><div class="inline"><div class="path-combo"><input id="modelCacheDir" placeholder="留空使用项目默认 .model-cache"><button type="button" class="path-combo-toggle" onclick="togglePathMenu('modelCacheHistory')" title="缓存历史">⌄</button><div class="path-menu" id="modelCacheHistory"></div></div><button type="button" id="pickModelCacheDirButton" onclick="pickPath('modelCacheDir', '/api/pick-model-cache-dir', 'modelCacheHistory')">选择</button></div></div>
+                <div class="field wide"><label for="alignModel">Align 模型</label><input id="alignModel" value="Qwen/Qwen3-ForcedAligner-0.6B"></div>
+              </div>
+            </details>
+
+            <details class="config-group" data-group="llm">
+              <summary>LLM / 翻译 / 校正</summary>
+              <div class="group-body form-grid">
+                <div class="field"><label for="llmModel">LLM 模型</label><input id="llmModel" value="mimo-v2.5" placeholder="split/translate/correct 可选或必填"></div>
+                <div class="field"><label for="threadNum">LLM 线程数</label><input id="threadNum" type="number" min="1" step="1" value="4"></div>
+                <div class="field"><label for="llmBaseUrl">LLM Base URL</label><input id="llmBaseUrl" value="https://api.xiaomimimo.com/v1" placeholder="https://api.xiaomimimo.com/v1"></div>
+                <div class="field"><label for="llmApiKey">LLM API Key</label><input id="llmApiKey" placeholder="sk-..."></div>
+                <div class="field"><label for="proofreadKind">校对方式</label><select id="proofreadKind"><option value="normal">普通校对</option><option value="mimo-audio">MiMo + 音频校对</option></select></div>
+                <div class="field"><label for="correctBatchNum">Correct 批大小</label><input id="correctBatchNum" type="number" min="1" step="1" value="8"></div>
+                <div class="field"><label for="translateBatchNum">Translate 批大小</label><input id="translateBatchNum" type="number" min="1" step="1" value="20"></div>
+                <div class="field"><label for="splitMode">Split 模式</label><select id="splitMode"><option value="token-counts">token-counts</option><option value="token-delimited">token-delimited</option><option value="token-boundary">token-boundary</option><option value="text">text</option><option value="rule">rule</option></select></div>
+                <div class="field"><label for="splitMaxWordCountCjk">Split CJK 限制</label><input id="splitMaxWordCountCjk" type="number" min="1" step="1" value="25"></div>
+                <div class="field"><label for="splitMaxWordCountEnglish">Split 英文限制</label><input id="splitMaxWordCountEnglish" type="number" min="1" step="1" value="18"></div>
+                <div class="field"><label for="splitPromptLimitRatio">Split Prompt 比例</label><input id="splitPromptLimitRatio" type="number" min="0.1" step="0.05" value="0.8"></div>
+                <div class="field"><label for="llmTimeout">LLM 超时(秒)</label><input id="llmTimeout" type="number" min="1" step="1" value="120"></div>
+                <label class="check field"><input id="disableThinking" type="checkbox" checked> 禁用思考</label>
+                <div class="field"><label for="targetLanguage">目标语言</label><input id="targetLanguage" value="简体中文"></div>
+                <div class="field wide"><label for="llmExtraBodyJson">LLM Extra Body JSON</label><input id="llmExtraBodyJson" value='{"thinking":{"type":"disabled"}}' placeholder='{"thinking":{"type":"disabled"}}'></div>
+                <div class="field wide"><label for="glossaryXlsx">翻译对照 XLSX</label><div class="inline"><div class="path-combo"><input id="glossaryXlsx" placeholder="选择或输入 glossary.xlsx 路径"><button type="button" class="path-combo-toggle" onclick="togglePathMenu('glossaryHistory')" title="历史路径">⌄</button><div class="path-menu" id="glossaryHistory"></div></div><button type="button" id="pickGlossaryXlsxButton" onclick="pickPath('glossaryXlsx', '/api/pick-glossary-xlsx', 'glossaryHistory')">选择</button><button type="button" id="normalizeGlossaryButton" onclick="normalizeGlossary()">标准化</button></div></div>
+                <div class="field wide"><label for="translateCustomPrompt">Translate 自定义 Prompt</label><textarea id="translateCustomPrompt" placeholder="术语表、专有名词翻译偏好、风格要求"></textarea></div>
+                <div class="field"><label for="mimoProofreadMode">MiMo 校对模式</label><select id="mimoProofreadMode"><option value="segment-audio">整段音频</option><option value="two-stage-nearby">分步短音频</option></select></div>
+                <div class="field"><label for="mimoProofreadWorkers">MiMo 线程</label><input id="mimoProofreadWorkers" type="number" min="1" step="1" value="1"></div>
+                <div class="field"><label for="mimoNearbyBatchSize">短音频批量</label><input id="mimoNearbyBatchSize" type="number" min="1" step="1" value="5"></div>
+                <div class="field"><label for="mimoNearbyBatchMaxGapS">批内间隔(秒)</label><input id="mimoNearbyBatchMaxGapS" type="number" min="0" step="0.5" value="20"></div>
+                <div class="field"><label for="mimoNearbyPaddingS">短音频留白(秒)</label><input id="mimoNearbyPaddingS" type="number" min="0" step="0.5" value="1.5"></div>
+                <div class="field"><label for="mimoNearbyContextSubtitles">上下文字幕数</label><input id="mimoNearbyContextSubtitles" type="number" min="0" step="1" value="1"></div>
+                <div class="field"><label for="mimoNearbyAudioWorkers">短音频线程</label><input id="mimoNearbyAudioWorkers" type="number" min="1" step="1" value="1"></div>
+                <div class="field"><label for="mimoProofreadMaxTokens">MiMo Max Tokens</label><input id="mimoProofreadMaxTokens" type="number" min="512" step="512" value="4096"></div>
+                <label class="check field"><input id="mimoCompactOutput" type="checkbox"> 精简输出</label>
+                <div class="field wide"><label for="mimoProofreadOutputDir">MiMo 输出目录</label><div class="inline"><div class="path-combo"><input id="mimoProofreadOutputDir" placeholder="留空则写入 workdir\\experiments\\mimo-proofread"><button type="button" class="path-combo-toggle" onclick="togglePathMenu('mimoOutputHistory')" title="历史路径">⌄</button><div class="path-menu" id="mimoOutputHistory"></div></div><button type="button" id="pickMiMoOutputDirButton" onclick="pickPath('mimoProofreadOutputDir', '/api/pick-output-directory', 'mimoOutputHistory')">选择</button></div></div>
+              </div>
+            </details>
+
+            <details class="config-group" data-group="out">
+              <summary>Normalize / Export</summary>
+              <div class="group-body form-grid">
+                <div class="field"><label for="normalizeSource">Normalize 来源</label><select id="normalizeSource"><option value="auto">auto</option><option value="translated">translated</option><option value="split">split</option><option value="transcript">transcript</option></select></div>
+                <div class="field"><label for="format">导出格式</label><select id="format"><option value="srt">srt</option><option value="vtt">vtt</option><option value="both">both</option></select></div>
+                <div class="field"><label for="source">导出源</label><select id="source"><option value="auto">auto</option><option value="normalized">normalized</option><option value="translated">translated</option><option value="split">split</option><option value="aligned">aligned</option><option value="transcript">transcript</option></select></div>
+                <div class="field"><label for="exportMode">导出位置</label><select id="exportMode" onchange="syncExportMode()"><option value="source">源文件同级</option><option value="custom">自定义路径</option></select></div>
+                <div class="field wide"><label for="exportPath">自定义导出路径</label><div class="inline"><div class="path-combo"><input id="exportPath" placeholder="目录或 .srt/.vtt 文件"><button type="button" class="path-combo-toggle" onclick="togglePathMenu('exportHistory')" title="历史路径">⌄</button><div class="path-menu" id="exportHistory"></div></div><button type="button" id="pickExportDirButton" onclick="pickPath('exportPath', '/api/pick-output-directory', 'exportHistory')">目录</button><button type="button" id="pickExportFileButton" onclick="pickPath('exportPath', '/api/pick-export-file', 'exportHistory')">文件</button></div></div>
+                <div class="field"><label for="normalizeExtendMs">后端延伸(ms)</label><input id="normalizeExtendMs" type="number" min="0" step="10" value="350"></div>
+                <div class="field"><label for="normalizeSnapGapMs">紧贴阈值(ms)</label><input id="normalizeSnapGapMs" type="number" min="0" step="10" value="200"></div>
+                <div class="field"><label for="normalizeMinBlankMs">最小空白(ms)</label><input id="normalizeMinBlankMs" type="number" min="0" step="10" value="300"></div>
+              </div>
+            </details>
+          </div>
+        </section>
+      </aside>
+
+      <section class="workspace" id="workspace">
+        <section class="panel job-summary" id="jobSummary">
+          <div class="panel-body summary-card">
+            <div class="summary-top">
+              <div>
+                <div class="summary-status"><span class="status-dot" id="summaryDot"></span><span id="summaryStatus">idle</span></div>
+                <div class="summary-line" id="summaryLine">- · - · 0s</div>
+              </div>
+              <div class="summary-percent" id="summaryPercent">0%</div>
+            </div>
+            <div class="summary-current" id="summaryCurrent">当前：-</div>
+            <div class="progress-wrap"><div class="progress-bar" id="jobProgressBar"></div></div>
+            <section class="batch-summary-panel" id="batchSummaryPanel">
+              <div class="artifact-title">Batch Summary</div>
+              <div class="batch-summary-grid" id="batchSummaryGrid"></div>
+              <div class="batch-task-list" id="batchTaskList"></div>
+            </section>
+          </div>
+        </section>
+
+        <section class="panel pipeline-panel" id="pipelinePanel">
+          <div class="panel-head">
+            <h2>Pipeline</h2>
+            <button class="weak" onclick="refresh()">刷新</button>
+          </div>
+          <div class="panel-body"><div class="timeline" id="pipelineTimeline"></div></div>
+        </section>
+
+        <section class="panel artifacts-panel" id="artifactsPanel">
+          <div class="panel-head"><h2>Artifacts</h2></div>
+          <div class="panel-body" id="artifactList"></div>
+        </section>
+
+        <section class="panel logs-panel" id="logsPanel">
+          <div class="panel-head">
+            <h2>Logs</h2>
+            <div class="log-tools">
+              <label class="check"><input type="checkbox" id="autoSelectLog" checked> auto</label>
+            </div>
+          </div>
+          <div class="panel-body">
+            <div class="log-tabs" id="logTabs"></div>
+            <pre class="log-box" id="logBox"></pre>
+          </div>
+          <pre id="jobBox"></pre>
+          <div id="statusGrid"></div>
+        </section>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const SETTINGS_KEY = 'koeaxis_webui_settings_v1';
+    const LEGACY_SETTINGS_KEY = 'qwen3_asr_webui_settings_v3';
+    const UI_KEY = 'qwen3_asr_webui_ui_state_v1';
+    const EXPORT_HISTORY_KEY = 'qwen3_asr_export_history_v1';
+    const PATH_HISTORY_KEYS = {
+      mediaHistory: 'qwen3_asr_media_history_v1',
+      batchManifestHistory: 'qwen3_asr_batch_manifest_history_v1',
+      modelCacheHistory: 'qwen3_asr_model_cache_history_v1',
+      glossaryHistory: 'qwen3_asr_glossary_history_v1',
+      mimoOutputHistory: 'koeaxis_mimo_output_history_v1',
+      exportHistory: EXPORT_HISTORY_KEY,
+    };
+    const PATH_HISTORY_INPUTS = {
+      mediaHistory: 'mediaPath',
+      batchManifestHistory: 'batchManifestPath',
+      modelCacheHistory: 'modelCacheDir',
+      glossaryHistory: 'glossaryXlsx',
+      mimoOutputHistory: 'mimoProofreadOutputDir',
+      exportHistory: 'exportPath',
+    };
+    const STAGES = ['prepare', 'transcribe', 'correct', 'align', 'split', 'translate', 'normalize', 'export', 'mimo-proofread'];
+    const FILE_LABELS = {
+      audio: 'Audio',
+      segments: 'Segments',
+      transcript: 'Transcript',
+      corrected: 'Corrected',
+      aligned: 'Aligned',
+      split: 'Split',
+      translated: 'Translated',
+      normalized: 'Normalized',
+      srt: 'SRT',
+      vtt: 'VTT'
+    };
+    const ARTIFACT_GROUPS = [
+      ['输入', ['audio']],
+      ['中间结果', ['segments', 'transcript', 'corrected', 'aligned', 'split', 'translated', 'normalized']],
+      ['导出', ['srt', 'vtt']]
+    ];
+    const FIELD_GROUPS = {
+      mediaPath: 'input',
+      mediaPaths: 'input',
+      batchManifestPath: 'input',
+      workdir: 'input',
+      modelCacheDir: 'asr',
+      exportPath: 'out',
+      glossaryXlsx: 'llm',
+      llmModel: 'llm',
+      llmBaseUrl: 'llm',
+      llmApiKey: 'llm',
+      proofreadKind: 'llm'
+    };
+    let selectedLogStage = '';
+    let uiState = { configOpen: false, activeConfigGroup: '' };
+    let uiRunning = false;
+
+    function settingFields() {
+      return [
+        'mediaPath', 'mediaPaths', 'batchManifestPath', 'denoise', 'denoiseBackend', 'denoiseLevel', 'denoiseProfile', 'mdxModel', 'mdxModelDir',
+        'vadBackend', 'pyannoteOnnxModel', 'vadOnset', 'vadOffset', 'vadThreshold', 'vadMinSpeechMs', 'vadMinSilenceMs', 'vadSpeechPadMs',
+        'maxSegmentSeconds', 'minSegmentSeconds', 'preferredSilenceMs', 'minSilenceMs', 'paddingMs', 'overlapMs',
+        'workdir', 'asrModel', 'asrLanguage', 'alignModel', 'dtype', 'device', 'localFilesOnly', 'modelCacheDir',
+        'llmModel', 'threadNum', 'splitMode', 'splitMaxWordCountCjk', 'splitMaxWordCountEnglish', 'splitPromptLimitRatio',
+        'proofreadKind', 'correctBatchNum', 'translateBatchNum', 'llmTimeout', 'disableThinking', 'llmExtraBodyJson', 'llmBaseUrl',
+        'targetLanguage', 'normalizeSource', 'normalizeExtendMs', 'normalizeSnapGapMs', 'normalizeMinBlankMs', 'translateCustomPrompt', 'glossaryXlsx',
+        'mimoProofreadMode', 'mimoProofreadWorkers', 'mimoNearbyBatchSize', 'mimoNearbyBatchMaxGapS', 'mimoNearbyPaddingS',
+        'mimoNearbyContextSubtitles', 'mimoNearbyAudioWorkers', 'mimoProofreadMaxTokens', 'mimoCompactOutput', 'mimoProofreadOutputDir',
+        'format', 'source', 'exportMode', 'exportPath', 'withAlign', 'withCorrect', 'withNormalize', 'withSplit', 'withTranslate'
+      ];
+    }
+
+    function saveSettings() {
+      const settings = {};
+      for (const id of settingFields()) {
+        const el = document.getElementById(id);
+        settings[id] = el.type === 'checkbox' ? el.checked : el.value;
+      }
+      localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+      updateRailState();
+      renderPathHistories();
+    }
+
+    function loadSettings() {
+      const raw = localStorage.getItem(SETTINGS_KEY) || localStorage.getItem(LEGACY_SETTINGS_KEY);
+      if (!raw) return;
+      try {
+        const settings = JSON.parse(raw);
+        for (const id of settingFields()) {
+          const el = document.getElementById(id);
+          if (!el || !(id in settings)) continue;
+          if (el.type === 'checkbox') el.checked = Boolean(settings[id]);
+          else if (el.tagName === 'SELECT') {
+            const wanted = String(settings[id] || '');
+            const hasOption = Array.from(el.options).some(option => option.value === wanted);
+            el.value = hasOption ? wanted : '';
+          } else el.value = settings[id];
+        }
+        if (!localStorage.getItem(SETTINGS_KEY)) localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+      } catch (_) {}
+      renderPathHistories();
+      syncExportMode();
+    }
+
+    function loadUiState() {
+      const hasSettings = Boolean(localStorage.getItem(SETTINGS_KEY));
+      const raw = localStorage.getItem(UI_KEY);
+      if (raw) {
+        try { uiState = { ...uiState, ...JSON.parse(raw) }; } catch (_) {}
+      } else {
+        uiState.configOpen = !hasSettings;
+      }
+      applyConfigState();
+    }
+
+    function saveUiState() {
+      localStorage.setItem(UI_KEY, JSON.stringify(uiState));
+    }
+
+    function applyConfigState() {
+      document.body.classList.toggle('config-open', Boolean(uiState.configOpen));
+      document.body.classList.toggle('config-collapsed', !uiState.configOpen);
+      document.querySelectorAll('.rail-btn[data-group]').forEach(button => {
+        button.classList.toggle('active', button.dataset.group === uiState.activeConfigGroup);
+      });
+    }
+
+    function openConfigGroup(group) {
+      if (!group) return;
+      const target = document.querySelector(`details.config-group[data-group="${group}"]`);
+      if (!target) return;
+      document.querySelectorAll('details.config-group').forEach(item => {
+        item.open = item === target;
+      });
+      target.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    function toggleConfig(open, group = '') {
+      uiState.configOpen = typeof open === 'boolean' ? open : !uiState.configOpen;
+      if (group) uiState.activeConfigGroup = group;
+      saveUiState();
+      applyConfigState();
+      if (group) openConfigGroup(group);
+    }
+
+    function bindSettingsPersistence() {
+      for (const id of settingFields()) {
+        const el = document.getElementById(id);
+        if (!el) continue;
+        el.addEventListener('change', saveSettings);
+        el.addEventListener('input', saveSettings);
+      }
+      document.getElementById('mediaPath').addEventListener('change', () => {
+        if (!document.getElementById('workdir').value.trim()) suggestWorkdir();
+      });
+      document.getElementById('mediaPaths').addEventListener('change', () => {
+        if (!document.getElementById('workdir').value.trim()) suggestWorkdir();
+      });
+      document.getElementById('batchManifestPath').addEventListener('change', saveSettings);
+      window.addEventListener('beforeunload', saveSettings);
+    }
+
+    function batchManifestPath() {
+      return document.getElementById('batchManifestPath').value.trim();
+    }
+
+    function bindActionButtons() {
+      document.getElementById('runButton').addEventListener('click', event => {
+        event.preventDefault();
+        startStage('run');
+      });
+      document.getElementById('resumeButton').addEventListener('click', event => {
+        event.preventDefault();
+        resumePipeline();
+      });
+    }
+
+    function parsedMediaPaths() {
+      const single = document.getElementById('mediaPath').value.trim();
+      const lines = document.getElementById('mediaPaths').value
+        .split(/\r?\n/)
+        .map(item => item.trim())
+        .filter(Boolean);
+      if (lines.length > 0) return lines;
+      return single ? [single] : [];
+    }
+
+    function effectiveStage(stage) {
+      if (stage === 'run' && (parsedMediaPaths().length > 1 || batchManifestPath())) return 'batch-run';
+      return stage;
+    }
+
+    function payload(stage, options = {}) {
+      const resume = Object.prototype.hasOwnProperty.call(options, 'resume') ? options.resume : false;
+      const force = Object.prototype.hasOwnProperty.call(options, 'force') ? options.force : !resume;
+      const mediaPaths = parsedMediaPaths();
+      const resolvedStage = effectiveStage(stage);
+      return {
+        stage: resolvedStage,
+        media_path: document.getElementById('mediaPath').value,
+        media_paths: mediaPaths,
+        batch_manifest: batchManifestPath(),
+        denoise: document.getElementById('denoise').checked,
+        denoise_backend: document.getElementById('denoiseBackend').value,
+        denoise_level: document.getElementById('denoiseLevel').value,
+        denoise_profile: document.getElementById('denoiseProfile').value,
+        mdx_model: document.getElementById('mdxModel').value,
+        mdx_model_dir: document.getElementById('mdxModelDir').value,
+        vad_backend: document.getElementById('vadBackend').value,
+        pyannote_onnx_model: document.getElementById('pyannoteOnnxModel').value,
+        vad_onset: document.getElementById('vadOnset').value,
+        vad_offset: document.getElementById('vadOffset').value,
+        vad_threshold: document.getElementById('vadThreshold').value,
+        vad_min_speech_ms: document.getElementById('vadMinSpeechMs').value,
+        vad_min_silence_ms: document.getElementById('vadMinSilenceMs').value,
+        vad_speech_pad_ms: document.getElementById('vadSpeechPadMs').value,
+        max_segment_seconds: document.getElementById('maxSegmentSeconds').value,
+        min_segment_seconds: document.getElementById('minSegmentSeconds').value,
+        preferred_silence_ms: document.getElementById('preferredSilenceMs').value,
+        min_silence_ms: document.getElementById('minSilenceMs').value,
+        padding_ms: document.getElementById('paddingMs').value,
+        overlap_ms: document.getElementById('overlapMs').value,
+        workdir: document.getElementById('workdir').value,
+        asr_model: document.getElementById('asrModel').value,
+        asr_language: document.getElementById('asrLanguage').value,
+        align_model: document.getElementById('alignModel').value,
+        model_cache_dir: document.getElementById('modelCacheDir').value,
+        dtype: document.getElementById('dtype').value,
+        device: document.getElementById('device').value,
+        local_files_only: document.getElementById('localFilesOnly').checked,
+        llm_model: document.getElementById('llmModel').value,
+        thread_num: document.getElementById('threadNum').value,
+        split_mode: document.getElementById('splitMode').value,
+        split_max_word_count_cjk: document.getElementById('splitMaxWordCountCjk').value,
+        split_max_word_count_english: document.getElementById('splitMaxWordCountEnglish').value,
+        split_prompt_limit_ratio: document.getElementById('splitPromptLimitRatio').value,
+        proofread_kind: document.getElementById('proofreadKind').value,
+        correct_batch_num: document.getElementById('correctBatchNum').value,
+        translate_batch_num: document.getElementById('translateBatchNum').value,
+        llm_timeout: document.getElementById('llmTimeout').value,
+        disable_thinking: document.getElementById('disableThinking').checked,
+        llm_extra_body_json: document.getElementById('llmExtraBodyJson').value,
+        llm_base_url: document.getElementById('llmBaseUrl').value,
+        llm_api_key: document.getElementById('llmApiKey').value,
+        mimo_proofread_mode: document.getElementById('mimoProofreadMode').value,
+        mimo_proofread_workers: document.getElementById('mimoProofreadWorkers').value,
+        mimo_nearby_batch_size: document.getElementById('mimoNearbyBatchSize').value,
+        mimo_nearby_batch_max_gap_s: document.getElementById('mimoNearbyBatchMaxGapS').value,
+        mimo_nearby_padding_s: document.getElementById('mimoNearbyPaddingS').value,
+        mimo_nearby_context_subtitles: document.getElementById('mimoNearbyContextSubtitles').value,
+        mimo_nearby_audio_workers: document.getElementById('mimoNearbyAudioWorkers').value,
+        mimo_proofread_max_tokens: document.getElementById('mimoProofreadMaxTokens').value,
+        mimo_compact_output: document.getElementById('mimoCompactOutput').checked,
+        mimo_proofread_output_dir: document.getElementById('mimoProofreadOutputDir').value,
+        target_language: document.getElementById('targetLanguage').value,
+        normalize_source: document.getElementById('normalizeSource').value,
+        normalize_extend_ms: document.getElementById('normalizeExtendMs').value,
+        normalize_snap_gap_ms: document.getElementById('normalizeSnapGapMs').value,
+        normalize_min_blank_ms: document.getElementById('normalizeMinBlankMs').value,
+        translate_custom_prompt: document.getElementById('translateCustomPrompt').value,
+        glossary_xlsx: document.getElementById('glossaryXlsx').value,
+        format: document.getElementById('format').value,
+        source: document.getElementById('source').value,
+        export_mode: document.getElementById('exportMode').value,
+        export_path: document.getElementById('exportPath').value,
+        resume: resume,
+        force: force,
+        with_align: document.getElementById('withAlign').checked,
+        with_correct: document.getElementById('withCorrect').checked && document.getElementById('proofreadKind').value === 'normal',
+        with_mimo_proofread: document.getElementById('withCorrect').checked && document.getElementById('proofreadKind').value === 'mimo-audio',
+        with_normalize: document.getElementById('withNormalize').checked,
+        with_split: document.getElementById('withSplit').checked,
+        with_translate: document.getElementById('withTranslate').checked
+      };
+    }
+
+    function showValidation(result) {
+      const message = typeof result === 'string' ? result : (result && result.message) || '';
+      const fieldId = result && result.fieldId ? result.fieldId : '';
+      const notice = document.getElementById('validationNotice');
+      notice.textContent = message || '';
+      notice.classList.toggle('show', Boolean(message));
+      document.getElementById('configStatus').textContent = message ? '未保存 · 有错误' : '已保存 · 无错误';
+      updateRailState(fieldId);
+      if (message) {
+        toggleConfig(true, FIELD_GROUPS[fieldId] || '');
+        const field = document.getElementById(fieldId);
+        if (field) {
+          field.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          field.focus();
+        }
+      }
+    }
+
+    function validateBeforeStart(stage, options = {}) {
+      const media = document.getElementById('mediaPath').value.trim();
+      const mediaPaths = parsedMediaPaths();
+      const manifestPath = batchManifestPath();
+      const workdir = document.getElementById('workdir').value.trim();
+      const llmModel = document.getElementById('llmModel').value.trim();
+      const llmBaseUrl = document.getElementById('llmBaseUrl').value.trim();
+      const llmApiKey = document.getElementById('llmApiKey').value.trim();
+      const exportMode = document.getElementById('exportMode').value;
+      const exportPath = document.getElementById('exportPath').value.trim();
+      if (!workdir) return { message: '工作目录不能为空。', fieldId: 'workdir' };
+      if ((stage === 'prepare' || stage === 'run') && mediaPaths.length === 0 && !manifestPath && !options.resume) {
+        return { message: 'Prepare/Run 需要媒体路径。', fieldId: 'mediaPath' };
+      }
+      if (stage === 'prepare' && mediaPaths.length > 1) {
+        return { message: 'Prepare 阶段仅支持单个媒体；批量处理请使用 Run。', fieldId: 'mediaPaths' };
+      }
+      if (stage === 'prepare' && manifestPath) {
+        return { message: 'Prepare 阶段不支持批量清单；请使用 Run。', fieldId: 'batchManifestPath' };
+      }
+      if ((stage === 'export' || stage === 'run') && exportMode === 'custom' && !exportPath) {
+        return { message: '自定义导出需要路径。', fieldId: 'exportPath' };
+      }
+      const proofreadKind = document.getElementById('proofreadKind').value;
+      const proofreadEnabled = document.getElementById('withCorrect').checked;
+      const needsLlm = stage === 'translate' || stage === 'correct' || stage === 'mimo-proofread' ||
+        ((stage === 'run' || stage === 'batch-run') && (document.getElementById('withTranslate').checked || (proofreadEnabled && proofreadKind === 'normal')));
+      if (needsLlm && !llmModel) return { message: 'LLM/MiMo 需要填写模型。', fieldId: 'llmModel' };
+      if (needsLlm && !llmBaseUrl) return { message: 'LLM/MiMo 需要填写 Base URL。', fieldId: 'llmBaseUrl' };
+      return { message: '' };
+    }
+
+    function updateRailState(invalidFieldId = '') {
+      document.querySelectorAll('.rail-btn').forEach(button => {
+        button.classList.remove('invalid', 'related');
+      });
+      if (invalidFieldId) {
+        const group = FIELD_GROUPS[invalidFieldId];
+        const button = document.querySelector(`.rail-btn[data-group="${group}"]`);
+        if (button) button.classList.add('invalid');
+      }
+    }
+
+    function setRunningMode(isRunning) {
+      uiRunning = isRunning;
+      document.querySelectorAll('#configDrawer input, #configDrawer select, #configDrawer textarea, .top-field input, .top-field select').forEach(el => {
+        el.disabled = isRunning;
+      });
+      document.querySelectorAll('.top-field button').forEach(button => {
+        button.disabled = isRunning;
+      });
+      document.querySelectorAll('#configDrawer button').forEach(button => {
+        button.disabled = isRunning;
+      });
+      document.querySelectorAll('[data-stage-run]').forEach(button => {
+        button.disabled = isRunning;
+      });
+      document.getElementById('runButton').disabled = isRunning;
+      document.getElementById('resumeButton').disabled = isRunning;
+    }
+
+    async function startStage(stage) {
+      saveSettings();
+      const validation = validateBeforeStart(stage);
+      if (validation.message) {
+        showValidation(validation);
+        return;
+      }
+      showValidation({ message: '' });
+      rememberPathValues();
+      try {
+        const res = await fetch('/api/start', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify(payload(stage))
+        });
+        const data = await res.json();
+        if (!res.ok) alert(data.error || '启动失败');
+      } catch (err) {
+        showValidation({ message: err && err.message ? err.message : '启动失败' });
+      } finally {
+        refresh();
+      }
+    }
+
+    async function resumePipeline() {
+      saveSettings();
+      const options = { resume: true, force: false };
+      const validation = validateBeforeStart('run', options);
+      if (validation.message) {
+        showValidation(validation);
+        return;
+      }
+      showValidation({ message: '' });
+      rememberPathValues();
+      try {
+        const res = await fetch('/api/start', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify(payload('run', options))
+        });
+        const data = await res.json();
+        if (!res.ok) alert(data.error || '启动失败');
+      } catch (err) {
+        showValidation({ message: err && err.message ? err.message : '启动失败' });
+      } finally {
+        refresh();
+      }
+    }
+
+    async function stopStage() {
+      try {
+        const res = await fetch('/api/stop', { method: 'POST' });
+        const data = await res.json();
+        if (!res.ok) alert(data.error || data.message || '停止失败');
+      } catch (err) {
+        showValidation({ message: err && err.message ? err.message : '停止失败' });
+      } finally {
+        refresh();
+      }
+    }
+
+    async function pickMedia() {
+      try {
+        const res = await fetch('/api/pick-media', { method: 'POST' });
+        const data = await res.json();
+        if (!res.ok) {
+          alert(data.error || '选择文件失败');
+          return;
+        }
+        if (data.cancelled) return;
+        document.getElementById('mediaPath').value = data.path;
+        document.getElementById('mediaPaths').value = '';
+        document.getElementById('batchManifestPath').value = '';
+        savePathHistoryItem('mediaHistory', data.path);
+        renderPathHistories();
+        await suggestWorkdir();
+        saveSettings();
+      } catch (err) {
+        alert(err && err.message ? err.message : '选择文件失败');
+      }
+    }
+
+    async function pickMediaList() {
+      try {
+        const res = await fetch('/api/pick-media-list', { method: 'POST' });
+        const data = await res.json();
+        if (!res.ok) {
+          alert(data.error || '批量选择文件失败');
+          return;
+        }
+        if (data.cancelled) return;
+        const paths = Array.isArray(data.paths) ? data.paths : [];
+        document.getElementById('mediaPaths').value = paths.join('\n');
+        document.getElementById('mediaPath').value = paths[0] || '';
+        document.getElementById('batchManifestPath').value = '';
+        paths.forEach(path => savePathHistoryItem('mediaHistory', path));
+        renderPathHistories();
+        await suggestWorkdir();
+        saveSettings();
+      } catch (err) {
+        alert(err && err.message ? err.message : '批量选择文件失败');
+      }
+    }
+
+    async function pickBatchManifest() {
+      try {
+        const res = await fetch('/api/pick-batch-manifest', { method: 'POST' });
+        const data = await res.json();
+        if (!res.ok) {
+          alert(data.error || '选择清单失败');
+          return;
+        }
+        if (data.cancelled) return;
+        document.getElementById('batchManifestPath').value = data.path;
+        document.getElementById('mediaPath').value = '';
+        document.getElementById('mediaPaths').value = '';
+        savePathHistoryItem('batchManifestHistory', data.path);
+        renderPathHistories();
+        await suggestWorkdir();
+        saveSettings();
+      } catch (err) {
+        alert(err && err.message ? err.message : '选择清单失败');
+      }
+    }
+
+    async function normalizeGlossary() {
+      const input = document.getElementById('glossaryXlsx');
+      const xlsx = input.value.trim();
+      if (!xlsx) {
+        showValidation({ message: 'Glossary XLSX 路径不能为空。', fieldId: 'glossaryXlsx' });
+        return;
+      }
+      showValidation({ message: '' });
+      try {
+        const res = await fetch('/api/glossary-normalize', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({ xlsx })
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          showValidation({ message: data.error || 'Glossary 标准化失败。', fieldId: 'glossaryXlsx' });
+          return;
+        }
+        input.value = data.output || xlsx;
+        savePathHistoryItem('glossaryHistory', input.value);
+        renderPathHistories();
+        saveSettings();
+        alert(`翻译对照已标准化：${data.count || 0} 条`);
+      } catch (err) {
+        showValidation({ message: err && err.message ? err.message : 'Glossary 标准化失败。', fieldId: 'glossaryXlsx' });
+      }
+    }
+
+    async function suggestWorkdir() {
+      const mediaList = parsedMediaPaths();
+      const media = encodeURIComponent(mediaList[0] || batchManifestPath());
+      if (!media) return;
+      try {
+        const res = await fetch('/api/suggest-workdir?media=' + media);
+        const data = await res.json();
+        if (!res.ok) {
+          alert(data.error || '生成工作目录失败');
+          return;
+        }
+        let workdir = data.workdir;
+        if (mediaList.length > 1) {
+          const suffix = '-batch';
+          if (!String(workdir).endsWith(suffix)) {
+            workdir = String(workdir) + suffix;
+          }
+        }
+        document.getElementById('workdir').value = workdir;
+        saveSettings();
+      } catch (err) {
+        alert(err && err.message ? err.message : '生成工作目录失败');
+      }
+    }
+
+    async function deleteCurrentWorkspace() {
+      const workdir = document.getElementById('workdir').value.trim();
+      if (!workdir) return;
+      if (!confirm('删除当前工作目录缓存？')) return;
+      try {
+        const res = await fetch('/api/delete-workspace', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({ workdir })
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          alert(data.error || '删除失败');
+          return;
+        }
+        await loadWorkspaceHistory();
+        refresh();
+      } catch (err) {
+        alert(err && err.message ? err.message : '删除失败');
+      }
+    }
+
+    async function deleteAllWorkspaces() {
+      const menu = document.getElementById('workspaceHistory');
+      const count = Math.max(0, menu ? Number(menu.dataset.count || 0) : 0);
+      if (count < 1) return;
+      if (!confirm(`删除全部 ${count} 个工作目录缓存？`)) return;
+      try {
+        const res = await fetch('/api/delete-workspaces', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({})
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          alert(data.error || '批量删除失败');
+          return;
+        }
+        document.getElementById('workspaceHistory').value = '';
+        document.getElementById('workdir').value = '';
+        saveSettings();
+        await loadWorkspaceHistory();
+        refresh();
+      } catch (err) {
+        alert(err && err.message ? err.message : '批量删除失败');
+      }
+    }
+
+    async function loadWorkspaceHistory() {
+      const menu = document.getElementById('workspaceHistory');
+      if (!menu) return;
+      try {
+        const res = await fetch('/api/workspaces');
+        const data = await res.json();
+        if (!res.ok) return;
+        const workspaces = data.workspaces || [];
+        menu.dataset.count = String(workspaces.length);
+        const actions = ['<button type="button" class="path-menu-empty" onclick="selectWorkspaceHistory(\'__clear__\')">空</button>'].concat(
+          workspaces.map(item => `<button type="button" title="${escapeHtml(item.path)}" onclick="selectWorkspaceHistory('${escapeJs(item.path)}')">${escapeHtml(item.name)}</button>`)
+        );
+        menu.innerHTML = actions.join('');
+      } catch (_) {}
+    }
+
+    function selectWorkspaceHistory(value) {
+      if (!value) return;
+      document.getElementById('workdir').value = value === '__clear__' ? '' : value;
+      closePathMenus();
+      saveSettings();
+      if (value !== '__clear__') refresh();
+    }
+
+    function syncExportMode() {
+      const custom = document.getElementById('exportMode').value === 'custom';
+      document.getElementById('exportPath').disabled = !custom || uiRunning;
+      document.getElementById('exportHistory').disabled = !custom || uiRunning;
+      document.getElementById('pickExportDirButton').disabled = !custom || uiRunning;
+      document.getElementById('pickExportFileButton').disabled = !custom || uiRunning;
+    }
+
+    function pathHistoryItems(selectId) {
+      const key = PATH_HISTORY_KEYS[selectId];
+      if (!key) return [];
+      try {
+        const payload = JSON.parse(localStorage.getItem(key) || '[]');
+        return Array.isArray(payload) ? payload.filter(Boolean).slice(0, 12) : [];
+      } catch (_) {
+        return [];
+      }
+    }
+
+    function savePathHistoryItem(selectId, value) {
+      const key = PATH_HISTORY_KEYS[selectId];
+      if (!key) return;
+      const path = String(value || '').trim();
+      if (!path) return;
+      const items = [path, ...pathHistoryItems(selectId).filter(item => item !== path)].slice(0, 12);
+      localStorage.setItem(key, JSON.stringify(items));
+    }
+
+    function rememberPathValues() {
+      savePathHistoryItem('mediaHistory', document.getElementById('mediaPath').value);
+      savePathHistoryItem('batchManifestHistory', document.getElementById('batchManifestPath').value);
+      savePathHistoryItem('modelCacheHistory', document.getElementById('modelCacheDir').value);
+      savePathHistoryItem('glossaryHistory', document.getElementById('glossaryXlsx').value);
+      savePathHistoryItem('mimoOutputHistory', document.getElementById('mimoProofreadOutputDir').value);
+      if (document.getElementById('exportMode').value === 'custom') {
+        savePathHistoryItem('exportHistory', document.getElementById('exportPath').value);
+      }
+      renderPathHistories();
+    }
+
+    function renderPathHistory(selectId) {
+      const menu = document.getElementById(selectId);
+      if (!menu) return;
+      const emptyLabel = selectId === 'modelCacheHistory' ? '默认' : '历史';
+      const inputId = PATH_HISTORY_INPUTS[selectId];
+      const actions = [`<button type="button" class="path-menu-empty" onclick="selectPathHistory('${inputId}', '${selectId}', '__clear__')">${emptyLabel === '默认' ? '默认 / 空' : '空'}</button>`].concat(
+        pathHistoryItems(selectId).map(item => `<button type="button" title="${escapeHtml(item)}" onclick="selectPathHistory('${inputId}', '${selectId}', '${escapeJs(item)}')">${escapeHtml(item)}</button>`)
+      );
+      menu.innerHTML = actions.join('');
+    }
+
+    function renderPathHistories() {
+      Object.keys(PATH_HISTORY_KEYS).forEach(renderPathHistory);
+    }
+
+    function selectPathHistory(inputId, selectId, value) {
+      if (!value) return;
+      document.getElementById(inputId).value = value === '__clear__' ? '' : value;
+      closePathMenus();
+      if (inputId === 'exportPath' && value !== '__clear__') document.getElementById('exportMode').value = 'custom';
+      if (inputId === 'mediaPath' && value !== '__clear__') {
+        document.getElementById('mediaPaths').value = '';
+        document.getElementById('batchManifestPath').value = '';
+        if (!document.getElementById('workdir').value.trim()) suggestWorkdir();
+      }
+      if (inputId === 'batchManifestPath' && value !== '__clear__') {
+        document.getElementById('mediaPath').value = '';
+        document.getElementById('mediaPaths').value = '';
+        if (!document.getElementById('workdir').value.trim()) suggestWorkdir();
+      }
+      syncExportMode();
+      saveSettings();
+    }
+
+    function togglePathMenu(menuId) {
+      const menu = document.getElementById(menuId);
+      if (!menu) return;
+      const willOpen = !menu.classList.contains('open');
+      closePathMenus();
+      if (willOpen) menu.classList.add('open');
+    }
+
+    function closePathMenus() {
+      document.querySelectorAll('.path-menu.open').forEach(menu => menu.classList.remove('open'));
+    }
+
+    async function pickPath(inputId, endpoint, historySelectId) {
+      try {
+        const res = await fetch(endpoint, { method: 'POST' });
+        const data = await res.json();
+        if (!res.ok) {
+          alert(data.error || '选择路径失败');
+          return;
+        }
+        if (data.cancelled) return;
+        const value = data.path || '';
+        document.getElementById(inputId).value = value;
+        if (inputId === 'exportPath') document.getElementById('exportMode').value = 'custom';
+        if (historySelectId) savePathHistoryItem(historySelectId, value);
+        renderPathHistories();
+        syncExportMode();
+        saveSettings();
+      } catch (err) {
+        alert(err && err.message ? err.message : '选择路径失败');
+      }
+    }
+
+    function escapeHtml(value) {
+      return String(value).replace(/[&<>"']/g, ch => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;'
+      }[ch]));
+    }
+
+    function escapeJs(value) {
+      return String(value).replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/\r?\n/g, ' ');
+    }
+
+    function statusClass(status) {
+      if (['completed', 'complete', 'ready'].includes(status)) return 'complete';
+      if (['running'].includes(status)) return 'running';
+      if (['failed', 'error'].includes(status)) return 'failed';
+      if (['outdated', 'stopping'].includes(status)) return status;
+      return 'pending';
+    }
+
+    function stageState(stage, info, jobStage, jobStatus) {
+      if (jobStage === stage && ['running', 'stopping'].includes(jobStatus)) return jobStatus;
+      if (!info) return 'pending';
+      if (info.outdated) return 'outdated';
+      if (info.complete) return 'complete';
+      if (info.missing_inputs && info.missing_inputs.length) return 'missing';
+      return 'pending';
+    }
+
+    function renderJobSummary(job) {
+      const p = job.progress || {};
+      const status = job.status || 'idle';
+      const stage = p.stage || job.stage || '-';
+      const completed = p.completed;
+      const total = p.total;
+      const hasProgress = completed !== null && completed !== undefined && total !== null && total !== undefined;
+      const progressText = hasProgress ? `${completed}/${total}` : '-';
+      const pct = Number(total) > 0 && Number(completed) >= 0 ? Math.max(0, Math.min(100, (Number(completed) / Number(total)) * 100)) : 0;
+      const pctText = Number.isFinite(pct) ? `${pct.toFixed(pct % 1 === 0 ? 0 : 1)}%` : '0%';
+      document.getElementById('summaryStatus').textContent = status;
+      document.getElementById('summaryLine').textContent = `${stage} · ${progressText} · ${p.elapsed_seconds || 0}s`;
+      document.getElementById('summaryPercent').textContent = pctText;
+      document.getElementById('summaryCurrent').textContent = `当前：${p.current || p.summary || '-'}`;
+      document.getElementById('jobProgressBar').style.width = `${pct}%`;
+      const dot = document.getElementById('summaryDot');
+      dot.className = `status-dot ${statusClass(status)}`;
+      document.getElementById('topStatus').textContent = status;
+      document.getElementById('topStage').textContent = stage;
+      document.getElementById('jobBox').textContent =
+        `状态: ${status}\n阶段: ${stage}\n耗时: ${p.elapsed_seconds || 0}s\n进度: ${progressText}\n摘要: ${p.summary || ''}\n当前: ${p.current || ''}`;
+    }
+
+    function renderPipeline(status, job) {
+      const stages = status.stages || {};
+      const jobProgress = job.progress || {};
+      const jobStage = jobProgress.stage || job.stage || '';
+      const jobStatus = job.status || 'idle';
+      const html = STAGES.map(stage => {
+        const info = stages[stage] || {};
+        const state = stageState(stage, info, jobStage, jobStatus);
+        const klass = statusClass(state);
+        const missing = info.missing_inputs && info.missing_inputs.length ? info.missing_inputs.join(', ') : '';
+        const summary = missing ? `<button class="weak" onclick="toggleConfig(true, 'input')">${missing}</button>` : '';
+        return `<div class="timeline-row ${jobStage === stage ? 'current' : ''}">
+          <span class="status-dot ${klass}"></span>
+          <div><div class="timeline-name">${stage}</div><div class="subtle">${summary}</div></div>
+          <span class="badge ${klass}">${state}</span>
+          <div class="timeline-actions">
+            <button class="weak" data-stage-run onclick="startStage('${stage}')">Run</button>
+            <button class="weak" onclick="selectLog('${stage}')">Log</button>
+          </div>
+        </div>`;
+      }).join('');
+      document.getElementById('pipelineTimeline').innerHTML = html;
+    }
+
+    function renderArtifacts(status) {
+      const files = status.files || {};
+      const counts = status.counts || {};
+      const html = ARTIFACT_GROUPS.map(([title, keys]) => {
+        const rows = keys.map(key => {
+          const ready = Boolean(files[key]);
+          const count = counts[key] ? ` · ${counts[key]}` : '';
+          return `<div class="artifact-row">
+            <div>${FILE_LABELS[key] || key}</div>
+            <span class="badge ${ready ? 'complete' : ''}">${ready ? 'ready' : 'missing'}${count}</span>
+          </div>`;
+        }).join('');
+        return `<div class="artifact-section"><div class="artifact-title">${title}</div>${rows}</div>`;
+      }).join('');
+      document.getElementById('artifactList').innerHTML = html;
+
+      const items = [];
+      for (const [key, value] of Object.entries(files)) {
+        items.push(`<div><div>${key}</div><div>${value ? 'ready' : 'missing'}</div><div>${counts[key] || ''}</div></div>`);
+      }
+      document.getElementById('statusGrid').innerHTML = items.join('');
+    }
+
+    function renderBatchSummary(status) {
+      const panel = document.getElementById('batchSummaryPanel');
+      const summary = status.batch_summary;
+      if (!summary || !Array.isArray(summary.tasks) || summary.tasks.length === 0) {
+        panel.classList.remove('show');
+        document.getElementById('batchSummaryGrid').innerHTML = '';
+        document.getElementById('batchTaskList').innerHTML = '';
+        return;
+      }
+      panel.classList.add('show');
+      document.getElementById('batchSummaryGrid').innerHTML = [
+        ['Total', summary.total || 0],
+        ['Succeeded', summary.succeeded || 0],
+        ['Failed', summary.failed || 0],
+        ['Skipped', summary.skipped || 0],
+      ].map(([label, value]) => `<div class="batch-summary-metric"><div class="subtle">${label}</div><strong>${value}</strong></div>`).join('');
+      document.getElementById('batchTaskList').innerHTML = summary.tasks.map(task => {
+        const klass = statusClass(task.status || 'pending');
+        const requested = task.requested_workdir ? `<div class="batch-task-meta">Requested: ${escapeHtml(task.requested_workdir)}</div>` : '';
+        const error = task.error ? `<div class="batch-task-meta">Error: ${escapeHtml(task.error)}</div>` : '';
+        return `<div class="batch-task-row">
+          <div class="batch-task-title">
+            <strong>${escapeHtml(task.media || '')}</strong>
+            <span class="badge ${klass}">${escapeHtml(task.status || 'pending')}</span>
+          </div>
+          <div class="batch-task-meta">Workdir: ${escapeHtml(task.workdir || '')}</div>
+          <div class="batch-task-meta">Stage: ${escapeHtml(task.failed_stage || task.prepare_status || '')} · ${escapeHtml(String(task.elapsed_s || 0))}s</div>
+          ${requested}
+          ${error}
+        </div>`;
+      }).join('');
+    }
+
+    function selectLog(stage) {
+      selectedLogStage = stage;
+      document.getElementById('autoSelectLog').checked = false;
+      refresh();
+    }
+
+    function renderLogs(status, job) {
+      const logs = status.logs || {};
+      const auto = document.getElementById('autoSelectLog').checked;
+      const active = auto ? ((job.progress && job.progress.stage) || job.stage || selectedLogStage || Object.keys(logs)[0] || '') : (selectedLogStage || Object.keys(logs)[0] || '');
+      selectedLogStage = active;
+      const tabStages = Array.from(new Set([...STAGES, 'run', ...Object.keys(logs)]));
+      document.getElementById('logTabs').innerHTML = tabStages.map(stage =>
+        `<button class="tab weak ${stage === active ? 'active' : ''}" onclick="selectLog('${stage}')">${stage}</button>`
+      ).join('');
+      const fallback = Object.entries(logs).map(([k, v]) => `[${k}]\n${v}`).join('\n\n');
+      const hasActiveLog = Object.prototype.hasOwnProperty.call(logs, active);
+      document.getElementById('logBox').textContent = hasActiveLog ? (logs[active] || `暂无 ${active} 日志`) : (fallback || '暂无日志');
+    }
+
+    async function refresh() {
+      const workdir = encodeURIComponent(document.getElementById('workdir').value);
+      let status = { files: {}, counts: {}, logs: {}, stages: {} };
+      let job = { status: 'offline', progress: { elapsed_seconds: 0, summary: 'status API unavailable' } };
+      try {
+        const [statusRes, jobRes] = await Promise.all([
+          fetch('/api/status?workdir=' + workdir),
+          fetch('/api/job')
+        ]);
+        status = await statusRes.json();
+        job = await jobRes.json();
+      } catch (err) {
+        status.logs = { webui: err && err.message ? err.message : 'status API unavailable' };
+      }
+
+      renderJobSummary(job);
+      renderPipeline(status, job);
+      renderArtifacts(status);
+      renderBatchSummary(status);
+      renderLogs(status, job);
+      setRunningMode(['running', 'stopping'].includes(job.status));
+      syncExportMode();
+    }
+
+    window.toggleConfig = toggleConfig;
+    window.applyConfigState = applyConfigState;
+    window.openConfigGroup = openConfigGroup;
+    window.renderJobSummary = renderJobSummary;
+    window.renderPipeline = renderPipeline;
+    window.validateBeforeStart = validateBeforeStart;
+    window.showValidation = showValidation;
+    window.startStage = startStage;
+    window.resumePipeline = resumePipeline;
+    window.stopStage = stopStage;
+    window.pickMedia = pickMedia;
+    window.pickMediaList = pickMediaList;
+    window.pickBatchManifest = pickBatchManifest;
+    window.normalizeGlossary = normalizeGlossary;
+    window.suggestWorkdir = suggestWorkdir;
+    window.deleteCurrentWorkspace = deleteCurrentWorkspace;
+    window.deleteAllWorkspaces = deleteAllWorkspaces;
+    window.loadWorkspaceHistory = loadWorkspaceHistory;
+    window.selectWorkspaceHistory = selectWorkspaceHistory;
+    window.syncExportMode = syncExportMode;
+    window.selectPathHistory = selectPathHistory;
+    window.pickPath = pickPath;
+    window.selectLog = selectLog;
+    window.refresh = refresh;
+
+    setInterval(refresh, 3000);
+    loadSettings();
+    loadUiState();
+    bindSettingsPersistence();
+    bindActionButtons();
+    document.addEventListener('click', event => {
+      if (!event.target.closest('.path-combo')) closePathMenus();
+    });
+    updateRailState();
+    renderPathHistories();
+    syncExportMode();
+    loadWorkspaceHistory();
+    refresh();
+  </script>
+</body>
+</html>
