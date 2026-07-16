@@ -1,0 +1,145 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-07-16T06:42:58.508103+00:00",
+  "status": "COMPLETE",
+  "items": [
+    {
+      "capability": "qwen_primary_align",
+      "conclusion": "IMPLEMENTED_REACHABLE",
+      "code": [
+        "qwen_asr/commands/align.py::cmd_align",
+        "qwen_asr/align.py::QwenForcedAligner"
+      ],
+      "entry": "CLI align/run/batch-run with align_backend=qwen",
+      "default": "qwen",
+      "tests": [
+        "tests/test_align_cleanup.py"
+      ],
+      "historical_evidence": "full regression: 128 input, 104 completed, 24 failed",
+      "actual_reachability": "production entry executes the backend; 22 non-music failures remain"
+    },
+    {
+      "capability": "asr_short_window_fallback",
+      "conclusion": "IMPLEMENTED_REACHABLE",
+      "code": [
+        "qwen_asr/commands/align.py::_run_asr_short_window_align_fallback"
+      ],
+      "entry": "align_fallback=asr-short-window",
+      "default": "off",
+      "tests": [
+        "tests/test_align_cleanup.py"
+      ],
+      "historical_evidence": "24/24 failures attempted; exact recovery 0/24",
+      "actual_reachability": "content preservation guard rejects transcript rewrites and must remain strict"
+    },
+    {
+      "capability": "align_parameter_matrix",
+      "conclusion": "REJECTED_BY_EVIDENCE",
+      "code": [
+        "qwen_asr/align.py::AlignTimingValidationConfig",
+        "qwen_asr/align.py::validate_aligned_token_timing"
+      ],
+      "entry": "explicit align timing validation and repair flags",
+      "default": "current defaults retained",
+      "tests": [
+        "tests/test_align_cleanup.py"
+      ],
+      "historical_evidence": "P6 nine variants had identical ASS target metrics",
+      "actual_reachability": "reachable but broad rerun is prohibited without a new falsifiable hypothesis"
+    },
+    {
+      "capability": "mfa_full_backend",
+      "conclusion": "REJECTED_BY_EVIDENCE",
+      "code": [
+        "tools/mfa_full_alignment.py",
+        "qwen_asr/mfa_backend.py"
+      ],
+      "entry": "align_backend=mfa",
+      "default": "qwen",
+      "tests": [
+        "tests/test_mfa_backend.py"
+      ],
+      "historical_evidence": "two-dataset A/B showed about 0.5 coverage and downstream regression",
+      "actual_reachability": "implemented but not eligible for Goal A broad rerun"
+    },
+    {
+      "capability": "mfa_local_fallback",
+      "conclusion": "IMPLEMENTED_NOT_REACHABLE",
+      "code": [
+        "qwen_asr/mfa_candidates.py",
+        "qwen_asr/mfa_runner.py",
+        "qwen_asr/mfa_guards.py",
+        "qwen_asr/mfa_writeback.py"
+      ],
+      "entry": "proofread-realign experiment path only",
+      "default": "not connected to initial Align failed-dialogue recovery",
+      "tests": [
+        "tests/test_mfa_candidates.py",
+        "tests/test_mfa_runner.py",
+        "tests/test_mfa_guards.py",
+        "tests/test_mfa_writeback.py"
+      ],
+      "historical_evidence": "kept only as Japanese local fallback; English mismatch was correctly rejected",
+      "actual_reachability": "no shared first-Align recovery executor currently dispatches it"
+    },
+    {
+      "capability": "recovery_retry_align",
+      "conclusion": "IMPLEMENTED_NOT_REACHABLE",
+      "code": [
+        "qwen_asr/recovery_service.py::perform_recovery_action"
+      ],
+      "entry": "Web/API action retry_align",
+      "default": "strategy=qwen",
+      "tests": [
+        "tests/test_recovery_service.py",
+        "tests/test_web_workspace_api.py"
+      ],
+      "historical_evidence": "action persists retry_requested only",
+      "actual_reachability": "does not invoke any align backend"
+    },
+    {
+      "capability": "recovery_language_route",
+      "conclusion": "IMPLEMENTED_NOT_REACHABLE",
+      "code": [
+        "qwen_asr/recovery_service.py::perform_recovery_action"
+      ],
+      "entry": "Web/API action route_language",
+      "default": "none",
+      "tests": [
+        "tests/test_recovery_service.py"
+      ],
+      "historical_evidence": "language value is persisted with audit",
+      "actual_reachability": "does not affect backend dispatch"
+    },
+    {
+      "capability": "vad_coarse_writeback",
+      "conclusion": "IMPLEMENTED_REACHABLE",
+      "code": [
+        "qwen_asr/recovery_service.py::_localize_with_vad",
+        "qwen_asr/recovery_service.py::_apply_completed_coarse"
+      ],
+      "entry": "localize_vad then accept_completed_coarse",
+      "default": "pyannote_onnx_v3, threshold=0.5",
+      "tests": [
+        "tests/test_recovery_service.py"
+      ],
+      "historical_evidence": "manifest/checkpoint/event backup and coarse writeback are tested",
+      "actual_reachability": "reachable, but transcript verification, multi-region and neighbor hard gates are missing"
+    },
+    {
+      "capability": "proofread_realign",
+      "conclusion": "NOT_APPLICABLE",
+      "code": [
+        "qwen_asr/proofread_realign.py"
+      ],
+      "entry": "post-edit proofread-realign stage",
+      "default": "post-translation/post-edit only",
+      "tests": [
+        "tests/test_proofread_realign.py",
+        "tests/test_proofread_realign_strategy.py"
+      ],
+      "historical_evidence": "Qwen clamp, MFA local and mixed-language original timing are guarded",
+      "actual_reachability": "not a replacement for initial Align failure recovery"
+    }
+  ]
+}

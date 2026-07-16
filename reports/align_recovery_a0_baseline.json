@@ -1,0 +1,133 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-07-16T06:42:58.508103+00:00",
+  "status": "PASS",
+  "git": {
+    "branch": "codex/web-pipeline-workbench",
+    "commit": "59b78594ecc8dff5aae6a1fbd20ed93f674b1f0f",
+    "status_short": "?? .playwright-cli/\n?? 1/\n?? \"docs/Align\\345\\244\\261\\350\\264\\245\\346\\201\\242\\345\\244\\215Goal\\346\\250\\241\\345\\274\\217\\346\\217\\220\\347\\244\\272\\350\\257\\215.md\"\n?? \"docs/Align\\345\\244\\261\\350\\264\\245\\346\\201\\242\\345\\244\\215\\346\\227\\242\\346\\234\\211\\350\\203\\275\\345\\212\\233\\345\\256\\241\\350\\256\\241TODO\\344\\270\\216\\351\\252\\214\\350\\257\\201\\350\\256\\241\\345\\210\\222.md\"\n?? output/\n?? reports/align_recovery_a0_baseline.json\n?? reports/align_recovery_a0_baseline.md\n?? reports/align_recovery_capability_matrix.json\n?? reports/align_recovery_capability_matrix.md\n?? reports/align_recovery_failure_trace.json\n?? reports/align_recovery_failure_trace.md\n?? reports/align_recovery_goal_baseline.json\n?? reports/align_recovery_goal_baseline.md\n?? reports/archive_candidates.json\n?? reports/archive_candidates.md\n?? reports/git_file_classification.json\n?? reports/git_file_classification.md\n?? reports/p5_0_compileall_environment_incident.json\n?? samples/\n?? scripts/generate_align_recovery_audit.py"
+  },
+  "python": "E:\\project\\qwen3-asr\\.venv312\\Scripts\\python.exe",
+  "source_workspace": "workspaces\\full-regression-sayonara-lara-02-20260715-234059",
+  "diagnostic_workspace": "workspaces\\post-repair-full-flow-sayonara-lara-02-20260716-002234",
+  "derived_workspace": "workspaces\\align-recovery-sayonara-lara-02-20260716-143833",
+  "evidence": [
+    {
+      "path": "workspaces/full-regression-sayonara-lara-02-20260715-234059/manifests/transcript_segments.json",
+      "bytes": 58175,
+      "sha256": "5bf0bfec12a6c4b6ba500c9141fb6ed7aa56e3fe44f6802b19351b7327284a49",
+      "actual_bytes": 58175,
+      "actual_sha256": "5bf0bfec12a6c4b6ba500c9141fb6ed7aa56e3fe44f6802b19351b7327284a49",
+      "status": "MATCH"
+    },
+    {
+      "path": "workspaces/full-regression-sayonara-lara-02-20260715-234059/manifests/aligned_segments.json",
+      "bytes": 566667,
+      "sha256": "a936e2b4403c0ad3df22f083b92805806a145c76fbe3107a230fb42dff869cd9",
+      "actual_bytes": 566667,
+      "actual_sha256": "a936e2b4403c0ad3df22f083b92805806a145c76fbe3107a230fb42dff869cd9",
+      "status": "MATCH"
+    },
+    {
+      "path": "workspaces/full-regression-sayonara-lara-02-20260715-234059/manifests/split_segments.json",
+      "bytes": 56416,
+      "sha256": "21ec9715fd5b3f185ebffd415c935dce6caf1480bb54b634322021b345a3fc9a",
+      "actual_bytes": 56416,
+      "actual_sha256": "21ec9715fd5b3f185ebffd415c935dce6caf1480bb54b634322021b345a3fc9a",
+      "status": "MATCH"
+    },
+    {
+      "path": "workspaces/full-regression-sayonara-lara-02-20260715-234059/reports/final_quality.json",
+      "bytes": 4967,
+      "sha256": "b704db71a97db092db4cdf9e3a7f883759ea0e86d7656d276765b4e063a2bc14",
+      "actual_bytes": 4967,
+      "actual_sha256": "b704db71a97db092db4cdf9e3a7f883759ea0e86d7656d276765b4e063a2bc14",
+      "status": "MATCH"
+    },
+    {
+      "path": "workspaces/post-repair-full-flow-sayonara-lara-02-20260716-002234/reports/post_repair_effectiveness_excluding_oped.json",
+      "bytes": 3206,
+      "sha256": "1ca6a684a8893ed477c040771f778a85700889c624eafd6dc1bd201b250ad498",
+      "actual_bytes": 3206,
+      "actual_sha256": "1ca6a684a8893ed477c040771f778a85700889c624eafd6dc1bd201b250ad498",
+      "status": "MATCH"
+    },
+    {
+      "path": "reports/web_frontend_backend_final_acceptance.json",
+      "bytes": 2707,
+      "sha256": "020fb1c76e401d568049b33609a8f4646c1e0b7490b407bdc70cf6b1cdd55d19",
+      "actual_bytes": 2707,
+      "actual_sha256": "020fb1c76e401d568049b33609a8f4646c1e0b7490b407bdc70cf6b1cdd55d19",
+      "status": "MATCH"
+    }
+  ],
+  "metrics": {
+    "raw_align_input": 128,
+    "raw_completed": 104,
+    "raw_failed": 24,
+    "music_region_segments": 15,
+    "music_region_failed": 2,
+    "dialogue_segments": 113,
+    "completed_exact": 91,
+    "completed_coarse": 0,
+    "failed_dialogue": 22,
+    "short_failures_le_4_chars": 18
+  },
+  "derivation": {
+    "schema_version": 1,
+    "created_at": "2026-07-16T06:41:29.217224+00:00",
+    "source_workspace": "workspaces\\full-regression-sayonara-lara-02-20260715-234059",
+    "diagnostic_workspace": "workspaces\\post-repair-full-flow-sayonara-lara-02-20260716-002234",
+    "policy": "source workspaces remain read-only; audio_path values continue to reference source segment audio",
+    "copied_files": [
+      {
+        "source": "workspaces\\full-regression-sayonara-lara-02-20260715-234059\\project.json",
+        "destination": "workspaces\\align-recovery-sayonara-lara-02-20260716-143833\\project.json",
+        "bytes": 466,
+        "sha256": "5e95eb03a13dbca7c5a47f0d6ce7a57558fa8ebcae9964525b4a73fc5336949c"
+      },
+      {
+        "source": "workspaces\\full-regression-sayonara-lara-02-20260715-234059\\progress.json",
+        "destination": "workspaces\\align-recovery-sayonara-lara-02-20260716-143833\\progress.json",
+        "bytes": 191,
+        "sha256": "4865228fc2f207c22eba13e08753e2a47d062527b46ad23c63a423f2edadb531"
+      },
+      {
+        "source": "workspaces\\full-regression-sayonara-lara-02-20260715-234059\\manifests\\transcript_segments.json",
+        "destination": "workspaces\\align-recovery-sayonara-lara-02-20260716-143833\\manifests\\transcript_segments.json",
+        "bytes": 58175,
+        "sha256": "5bf0bfec12a6c4b6ba500c9141fb6ed7aa56e3fe44f6802b19351b7327284a49"
+      },
+      {
+        "source": "workspaces\\full-regression-sayonara-lara-02-20260715-234059\\manifests\\aligned_segments.json",
+        "destination": "workspaces\\align-recovery-sayonara-lara-02-20260716-143833\\manifests\\aligned_segments.json",
+        "bytes": 566667,
+        "sha256": "a936e2b4403c0ad3df22f083b92805806a145c76fbe3107a230fb42dff869cd9"
+      },
+      {
+        "source": "workspaces\\full-regression-sayonara-lara-02-20260715-234059\\manifests\\aligned_checkpoint.json",
+        "destination": "workspaces\\align-recovery-sayonara-lara-02-20260716-143833\\manifests\\aligned_checkpoint.json",
+        "bytes": 566667,
+        "sha256": "a936e2b4403c0ad3df22f083b92805806a145c76fbe3107a230fb42dff869cd9"
+      },
+      {
+        "source": "workspaces\\full-regression-sayonara-lara-02-20260715-234059\\manifests\\aligned_events.jsonl",
+        "destination": "workspaces\\align-recovery-sayonara-lara-02-20260716-143833\\manifests\\aligned_events.jsonl",
+        "bytes": 335041,
+        "sha256": "560cf8422e1fefb862837e935b2e7d5057e368f10faf40d82043b340c91274f7"
+      },
+      {
+        "source": "workspaces\\full-regression-sayonara-lara-02-20260715-234059\\manifests\\split_segments.json",
+        "destination": "workspaces\\align-recovery-sayonara-lara-02-20260716-143833\\manifests\\split_segments.json",
+        "bytes": 56416,
+        "sha256": "21ec9715fd5b3f185ebffd415c935dce6caf1480bb54b634322021b345a3fc9a"
+      },
+      {
+        "source": "workspaces\\post-repair-full-flow-sayonara-lara-02-20260716-002234\\reports\\post_repair_effectiveness_excluding_oped.json",
+        "destination": "workspaces\\align-recovery-sayonara-lara-02-20260716-143833\\reports\\post_repair_effectiveness_excluding_oped.json",
+        "bytes": 3206,
+        "sha256": "1ca6a684a8893ed477c040771f778a85700889c624eafd6dc1bd201b250ad498"
+      }
+    ]
+  }
+}

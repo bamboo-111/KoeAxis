@@ -1,0 +1,1417 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-07-16T07:06:56.357393+00:00",
+  "status": "COMPLETE",
+  "workspace": "E:\\project\\qwen3-asr\\workspaces\\align-recovery-sayonara-lara-02-20260716-143833",
+  "before": {
+    "completed_exact": 91,
+    "completed_coarse": 0,
+    "failed": 22,
+    "short_failed": 18
+  },
+  "phase_before": {
+    "completed_exact": 93,
+    "completed_coarse": 0,
+    "failed": 20,
+    "short_failed": 18
+  },
+  "provisional_after": {
+    "completed_exact": 93,
+    "completed_coarse": 0,
+    "failed": 20,
+    "short_failed": 18
+  },
+  "after": {
+    "completed_exact": 92,
+    "completed_coarse": 0,
+    "failed": 21,
+    "short_failed": 18
+  },
+  "finalized_at": "2026-07-16T08:31:00Z",
+  "post_acceptance_correction": {
+    "segment_id": "segment_000036",
+    "action": "undo_recovery",
+    "reason": "formal quality review rejected provisional exact recovery because coverage 0.164931 was below the 0.20 acceptance floor",
+    "coverage": 0.164931,
+    "minimum_coverage": 0.2,
+    "restored_alignment_state": "failed",
+    "other_recoveries_preserved": true,
+    "retained_exact_segment_id": "segment_000086",
+    "retained_exact_coverage": 0.453669,
+    "retained_exact_content_score": 1.0
+  },
+  "elapsed_ms": 539844,
+  "qwen_model_load_error": null,
+  "qwen_attempts": [
+    {
+      "segment_id": "segment_000013",
+      "requested_strategy": "qwen",
+      "strategy": "qwen",
+      "language_route": "japanese",
+      "text_source": "original_transcript",
+      "original_text": "うん。",
+      "selected_text": "うん。",
+      "text_changed": false,
+      "actor": "goal-a-real-data",
+      "started_at": "2026-07-16T07:06:53.828463+00:00",
+      "status": "failed",
+      "alignment_state": "failed",
+      "error_code": "QWEN_RETRY_FAILED",
+      "error": "alignment token timing unreliable: covered 0.240s of 8.329s",
+      "backend_evidence": {
+        "status": "failed",
+        "error": "alignment token timing unreliable: covered 0.240s of 8.329s",
+        "token_count": 1,
+        "coverage": 0.028815,
+        "raw_model_output": [
+          {
+            "items": [
+              {
+                "text": "うん",
+                "start_time": 6.8,
+                "end_time": 7.04
+              }
+            ]
+          }
+        ]
+      },
+      "elapsed_ms": 1187,
+      "finished_at": "2026-07-16T07:06:55.013947+00:00",
+      "original_state_preserved": true,
+      "wall_elapsed_ms": 1187
+    },
+    {
+      "segment_id": "segment_000019",
+      "requested_strategy": "qwen",
+      "strategy": "qwen",
+      "language_route": "japanese",
+      "text_source": "original_transcript",
+      "original_text": "うん。",
+      "selected_text": "うん。",
+      "text_changed": false,
+      "actor": "goal-a-real-data",
+      "started_at": "2026-07-16T07:06:55.015947+00:00",
+      "status": "failed",
+      "alignment_state": "failed",
+      "error_code": "QWEN_RETRY_FAILED",
+      "error": "alignment token timing unreliable: covered 0.160s of 6.559s",
+      "backend_evidence": {
+        "status": "failed",
+        "error": "alignment token timing unreliable: covered 0.160s of 6.559s",
+        "token_count": 1,
+        "coverage": 0.024394,
+        "raw_model_output": [
+          {
+            "items": [
+              {
+                "text": "うん",
+                "start_time": 5.44,
+                "end_time": 5.6
+              }
+            ]
+          }
+        ]
+      },
+      "elapsed_ms": 63,
+      "finished_at": "2026-07-16T07:06:55.078569+00:00",
+      "original_state_preserved": true,
+      "wall_elapsed_ms": 63
+    },
+    {
+      "segment_id": "segment_000026",
+      "requested_strategy": "qwen",
+      "strategy": "qwen",
+      "language_route": "japanese",
+      "text_source": "original_transcript",
+      "original_text": "お父様。",
+      "selected_text": "お父様。",
+      "text_changed": false,
+      "actor": "goal-a-real-data",
+      "started_at": "2026-07-16T07:06:55.082079+00:00",
+      "status": "failed",
+      "alignment_state": "failed",
+      "error_code": "QWEN_RETRY_FAILED",
+      "error": "alignment token timing unreliable: covered 0.640s of 14.479s",
+      "backend_evidence": {
+        "status": "failed",
+        "error": "alignment token timing unreliable: covered 0.640s of 14.479s",
+        "token_count": 3,
+        "coverage": 0.044202,
+        "raw_model_output": [
+          {
+            "items": [
+              {
+                "text": "お",
+                "start_time": 3.36,
+                "end_time": 3.52
+              },
+              {
+                "text": "父",
+                "start_time": 3.6,
+                "end_time": 3.68
+              },
+              {
+                "text": "様",
+                "start_time": 3.76,
+                "end_time": 4.0
+              }
+            ]
+          }
+        ]
+      },
+      "elapsed_ms": 78,
+      "finished_at": "2026-07-16T07:06:55.151045+00:00",
+      "original_state_preserved": true,
+      "wall_elapsed_ms": 78
+    },
+    {
+      "segment_id": "segment_000031",
+      "requested_strategy": "qwen",
+      "strategy": "qwen",
+      "language_route": "japanese",
+      "text_source": "original_transcript",
+      "original_text": "あれ、ご飯。",
+      "selected_text": "あれ、ご飯。",
+      "text_changed": false,
+      "actor": "goal-a-real-data",
+      "started_at": "2026-07-16T07:06:55.155045+00:00",
+      "status": "failed",
+      "alignment_state": "failed",
+      "error_code": "QWEN_RETRY_FAILED",
+      "error": "alignment token timing unreliable: covered 1.440s of 11.855s",
+      "backend_evidence": {
+        "status": "failed",
+        "error": "alignment token timing unreliable: covered 1.440s of 11.855s",
+        "token_count": 2,
+        "coverage": 0.121468,
+        "raw_model_output": [
+          {
+            "items": [
+              {
+                "text": "あれ",
+                "start_time": 1.6,
+                "end_time": 2.0
+              },
+              {
+                "text": "ご飯",
+                "start_time": 2.48,
+                "end_time": 3.04
+              }
+            ]
+          }
+        ]
+      },
+      "elapsed_ms": 62,
+      "finished_at": "2026-07-16T07:06:55.222666+00:00",
+      "original_state_preserved": true,
+      "wall_elapsed_ms": 62
+    },
+    {
+      "segment_id": "segment_000044",
+      "requested_strategy": "qwen",
+      "strategy": "qwen",
+      "language_route": "japanese",
+      "text_source": "original_transcript",
+      "original_text": "くら。",
+      "selected_text": "くら。",
+      "text_changed": false,
+      "actor": "goal-a-real-data",
+      "started_at": "2026-07-16T07:06:55.226170+00:00",
+      "status": "failed",
+      "alignment_state": "failed",
+      "error_code": "QWEN_RETRY_FAILED",
+      "error": "alignment token timing unreliable: covered 0.320s of 6.785s",
+      "backend_evidence": {
+        "status": "failed",
+        "error": "alignment token timing unreliable: covered 0.320s of 6.785s",
+        "token_count": 1,
+        "coverage": 0.047163,
+        "raw_model_output": [
+          {
+            "items": [
+              {
+                "text": "くら",
+                "start_time": 2.0,
+                "end_time": 2.32
+              }
+            ]
+          }
+        ]
+      },
+      "elapsed_ms": 47,
+      "finished_at": "2026-07-16T07:06:55.282500+00:00",
+      "original_state_preserved": true,
+      "wall_elapsed_ms": 63
+    },
+    {
+      "segment_id": "segment_000054",
+      "requested_strategy": "qwen",
+      "strategy": "qwen",
+      "language_route": "japanese",
+      "text_source": "original_transcript",
+      "original_text": "絶対取り戻さなきゃ。",
+      "selected_text": "絶対取り戻さなきゃ。",
+      "text_changed": false,
+      "actor": "goal-a-real-data",
+      "started_at": "2026-07-16T07:06:55.285500+00:00",
+      "status": "failed",
+      "alignment_state": "failed",
+      "error_code": "QWEN_RETRY_FAILED",
+      "error": "alignment token timing unreliable: covered 2.080s of 11.112s",
+      "backend_evidence": {
+        "status": "failed",
+        "error": "alignment token timing unreliable: covered 2.080s of 11.112s",
+        "token_count": 3,
+        "coverage": 0.187185,
+        "raw_model_output": [
+          {
+            "items": [
+              {
+                "text": "絶対",
+                "start_time": 4.32,
+                "end_time": 4.96
+              },
+              {
+                "text": "取り戻さ",
+                "start_time": 5.52,
+                "end_time": 6.16
+              },
+              {
+                "text": "なきゃ",
+                "start_time": 6.16,
+                "end_time": 6.4
+              }
+            ]
+          }
+        ]
+      },
+      "elapsed_ms": 62,
+      "finished_at": "2026-07-16T07:06:55.344927+00:00",
+      "original_state_preserved": true,
+      "wall_elapsed_ms": 62
+    },
+    {
+      "segment_id": "segment_000067",
+      "requested_strategy": "qwen",
+      "strategy": "qwen",
+      "language_route": "japanese",
+      "text_source": "original_transcript",
+      "original_text": "え。",
+      "selected_text": "え。",
+      "text_changed": false,
+      "actor": "goal-a-real-data",
+      "started_at": "2026-07-16T07:06:55.347932+00:00",
+      "status": "failed",
+      "alignment_state": "failed",
+      "error_code": "QWEN_RETRY_FAILED",
+      "error": "alignment token timing unreliable: covered 0.320s of 3.426s",
+      "backend_evidence": {
+        "status": "failed",
+        "error": "alignment token timing unreliable: covered 0.320s of 3.426s",
+        "token_count": 1,
+        "coverage": 0.093403,
+        "raw_model_output": [
+          {
+            "items": [
+              {
+                "text": "え",
+                "start_time": 2.72,
+                "end_time": 3.04
+              }
+            ]
+          }
+        ]
+      },
+      "elapsed_ms": 63,
+      "finished_at": "2026-07-16T07:06:55.406279+00:00",
+      "original_state_preserved": true,
+      "wall_elapsed_ms": 63
+    },
+    {
+      "segment_id": "segment_000076",
+      "requested_strategy": "qwen",
+      "strategy": "qwen",
+      "language_route": "japanese",
+      "text_source": "original_transcript",
+      "original_text": "俺を。",
+      "selected_text": "俺を。",
+      "text_changed": false,
+      "actor": "goal-a-real-data",
+      "started_at": "2026-07-16T07:06:55.408314+00:00",
+      "status": "failed",
+      "alignment_state": "failed",
+      "error_code": "QWEN_RETRY_FAILED",
+      "error": "alignment token timing unreliable: covered 0.000s of 13.711s",
+      "backend_evidence": {
+        "status": "failed",
+        "error": "alignment token timing unreliable: covered 0.000s of 13.711s",
+        "token_count": 2,
+        "coverage": 0.0,
+        "raw_model_output": [
+          {
+            "items": [
+              {
+                "text": "俺",
+                "start_time": 8.96,
+                "end_time": 8.96
+              },
+              {
+                "text": "を",
+                "start_time": 8.96,
+                "end_time": 8.96
+              }
+            ]
+          }
+        ]
+      },
+      "elapsed_ms": 62,
+      "finished_at": "2026-07-16T07:06:55.470454+00:00",
+      "original_state_preserved": true,
+      "wall_elapsed_ms": 62
+    },
+    {
+      "segment_id": "segment_000093",
+      "requested_strategy": "qwen",
+      "strategy": "qwen",
+      "language_route": "japanese",
+      "text_source": "original_transcript",
+      "original_text": "はい。",
+      "selected_text": "はい。",
+      "text_changed": false,
+      "actor": "goal-a-real-data",
+      "started_at": "2026-07-16T07:06:55.473457+00:00",
+      "status": "failed",
+      "alignment_state": "failed",
+      "error_code": "QWEN_RETRY_FAILED",
+      "error": "alignment token timing unreliable: covered 0.080s of 3.496s",
+      "backend_evidence": {
+        "status": "failed",
+        "error": "alignment token timing unreliable: covered 0.080s of 3.496s",
+        "token_count": 1,
+        "coverage": 0.022883,
+        "raw_model_output": [
+          {
+            "items": [
+              {
+                "text": "はい",
+                "start_time": 0.0,
+                "end_time": 0.08
+              }
+            ]
+          }
+        ]
+      },
+      "elapsed_ms": 63,
+      "finished_at": "2026-07-16T07:06:55.524319+00:00",
+      "original_state_preserved": true,
+      "wall_elapsed_ms": 63
+    },
+    {
+      "segment_id": "segment_000094",
+      "requested_strategy": "qwen",
+      "strategy": "qwen",
+      "language_route": "japanese",
+      "text_source": "original_transcript",
+      "original_text": "肉台、早く。",
+      "selected_text": "肉台、早く。",
+      "text_changed": false,
+      "actor": "goal-a-real-data",
+      "started_at": "2026-07-16T07:06:55.527327+00:00",
+      "status": "failed",
+      "alignment_state": "failed",
+      "error_code": "QWEN_RETRY_FAILED",
+      "error": "alignment token timing unreliable: zero-duration ratio 0.50 with covered 7.440s of 15.600s",
+      "backend_evidence": {
+        "status": "failed",
+        "error": "alignment token timing unreliable: zero-duration ratio 0.50 with covered 7.440s of 15.600s",
+        "token_count": 2,
+        "coverage": 0.476923,
+        "raw_model_output": [
+          {
+            "items": [
+              {
+                "text": "肉台",
+                "start_time": 8.08,
+                "end_time": 15.52
+              },
+              {
+                "text": "早く",
+                "start_time": 15.52,
+                "end_time": 15.52
+              }
+            ]
+          }
+        ]
+      },
+      "elapsed_ms": 62,
+      "finished_at": "2026-07-16T07:06:55.591569+00:00",
+      "original_state_preserved": true,
+      "wall_elapsed_ms": 62
+    },
+    {
+      "segment_id": "segment_000096",
+      "requested_strategy": "qwen",
+      "strategy": "qwen",
+      "language_route": "japanese",
+      "text_source": "original_transcript",
+      "original_text": "うん。うん。",
+      "selected_text": "うん。うん。",
+      "text_changed": false,
+      "actor": "goal-a-real-data",
+      "started_at": "2026-07-16T07:06:55.594080+00:00",
+      "status": "failed",
+      "alignment_state": "failed",
+      "error_code": "QWEN_RETRY_FAILED",
+      "error": "alignment token timing unreliable: covered 0.080s of 15.599s",
+      "backend_evidence": {
+        "status": "failed",
+        "error": "alignment token timing unreliable: covered 0.080s of 15.599s",
+        "token_count": 2,
+        "coverage": 0.005129,
+        "raw_model_output": [
+          {
+            "items": [
+              {
+                "text": "うん",
+                "start_time": 12.64,
+                "end_time": 12.64
+              },
+              {
+                "text": "うん",
+                "start_time": 12.64,
+                "end_time": 12.72
+              }
+            ]
+          }
+        ]
+      },
+      "elapsed_ms": 63,
+      "finished_at": "2026-07-16T07:06:55.648640+00:00",
+      "original_state_preserved": true,
+      "wall_elapsed_ms": 63
+    },
+    {
+      "segment_id": "segment_000097",
+      "requested_strategy": "qwen",
+      "strategy": "qwen",
+      "language_route": "japanese",
+      "text_source": "original_transcript",
+      "original_text": "はい。",
+      "selected_text": "はい。",
+      "text_changed": false,
+      "actor": "goal-a-real-data",
+      "started_at": "2026-07-16T07:06:55.651149+00:00",
+      "status": "failed",
+      "alignment_state": "failed",
+      "error_code": "QWEN_RETRY_FAILED",
+      "error": "alignment token timing unreliable: covered 0.000s of 8.439s",
+      "backend_evidence": {
+        "status": "failed",
+        "error": "alignment token timing unreliable: covered 0.000s of 8.439s",
+        "token_count": 1,
+        "coverage": 0.0,
+        "raw_model_output": [
+          {
+            "items": [
+              {
+                "text": "はい",
+                "start_time": 7.28,
+                "end_time": 7.28
+              }
+            ]
+          }
+        ]
+      },
+      "elapsed_ms": 47,
+      "finished_at": "2026-07-16T07:06:55.706206+00:00",
+      "original_state_preserved": true,
+      "wall_elapsed_ms": 47
+    },
+    {
+      "segment_id": "segment_000098",
+      "requested_strategy": "qwen",
+      "strategy": "qwen",
+      "language_route": "japanese",
+      "text_source": "original_transcript",
+      "original_text": "うん。",
+      "selected_text": "うん。",
+      "text_changed": false,
+      "actor": "goal-a-real-data",
+      "started_at": "2026-07-16T07:06:55.709206+00:00",
+      "status": "failed",
+      "alignment_state": "failed",
+      "error_code": "QWEN_RETRY_FAILED",
+      "error": "alignment token timing unreliable: covered 0.160s of 15.063s",
+      "backend_evidence": {
+        "status": "failed",
+        "error": "alignment token timing unreliable: covered 0.160s of 15.063s",
+        "token_count": 1,
+        "coverage": 0.010622,
+        "raw_model_output": [
+          {
+            "items": [
+              {
+                "text": "うん",
+                "start_time": 12.32,
+                "end_time": 12.48
+              }
+            ]
+          }
+        ]
+      },
+      "elapsed_ms": 62,
+      "finished_at": "2026-07-16T07:06:55.764912+00:00",
+      "original_state_preserved": true,
+      "wall_elapsed_ms": 62
+    },
+    {
+      "segment_id": "segment_000099",
+      "requested_strategy": "qwen",
+      "strategy": "qwen",
+      "language_route": "japanese",
+      "text_source": "original_transcript",
+      "original_text": "不。",
+      "selected_text": "不。",
+      "text_changed": false,
+      "actor": "goal-a-real-data",
+      "started_at": "2026-07-16T07:06:55.767417+00:00",
+      "status": "failed",
+      "alignment_state": "failed",
+      "error_code": "QWEN_RETRY_FAILED",
+      "error": "alignment token timing unreliable: covered 0.080s of 7.569s",
+      "backend_evidence": {
+        "status": "failed",
+        "error": "alignment token timing unreliable: covered 0.080s of 7.569s",
+        "token_count": 1,
+        "coverage": 0.010569,
+        "raw_model_output": [
+          {
+            "items": [
+              {
+                "text": "不",
+                "start_time": 4.24,
+                "end_time": 4.32
+              }
+            ]
+          }
+        ]
+      },
+      "elapsed_ms": 63,
+      "finished_at": "2026-07-16T07:06:55.823184+00:00",
+      "original_state_preserved": true,
+      "wall_elapsed_ms": 63
+    },
+    {
+      "segment_id": "segment_000100",
+      "requested_strategy": "qwen",
+      "strategy": "qwen",
+      "language_route": "japanese",
+      "text_source": "original_transcript",
+      "original_text": "うん。",
+      "selected_text": "うん。",
+      "text_changed": false,
+      "actor": "goal-a-real-data",
+      "started_at": "2026-07-16T07:06:55.826187+00:00",
+      "status": "failed",
+      "alignment_state": "failed",
+      "error_code": "QWEN_RETRY_FAILED",
+      "error": "alignment token timing unreliable: covered 0.000s of 11.493s",
+      "backend_evidence": {
+        "status": "failed",
+        "error": "alignment token timing unreliable: covered 0.000s of 11.493s",
+        "token_count": 1,
+        "coverage": 0.0,
+        "raw_model_output": [
+          {
+            "items": [
+              {
+                "text": "うん",
+                "start_time": 5.12,
+                "end_time": 5.12
+              }
+            ]
+          }
+        ]
+      },
+      "elapsed_ms": 47,
+      "finished_at": "2026-07-16T07:06:55.872821+00:00",
+      "original_state_preserved": true,
+      "wall_elapsed_ms": 47
+    },
+    {
+      "segment_id": "segment_000101",
+      "requested_strategy": "qwen",
+      "strategy": "qwen",
+      "language_route": "japanese",
+      "text_source": "original_transcript",
+      "original_text": "うん、うん。",
+      "selected_text": "うん、うん。",
+      "text_changed": false,
+      "actor": "goal-a-real-data",
+      "started_at": "2026-07-16T07:06:55.874821+00:00",
+      "status": "failed",
+      "alignment_state": "failed",
+      "error_code": "QWEN_RETRY_FAILED",
+      "error": "alignment token timing unreliable: covered 0.160s of 12.842s",
+      "backend_evidence": {
+        "status": "failed",
+        "error": "alignment token timing unreliable: covered 0.160s of 12.842s",
+        "token_count": 2,
+        "coverage": 0.018689,
+        "raw_model_output": [
+          {
+            "items": [
+              {
+                "text": "うん",
+                "start_time": 8.24,
+                "end_time": 8.24
+              },
+              {
+                "text": "うん",
+                "start_time": 8.32,
+                "end_time": 8.48
+              }
+            ]
+          }
+        ]
+      },
+      "elapsed_ms": 62,
+      "finished_at": "2026-07-16T07:06:55.928031+00:00",
+      "original_state_preserved": true,
+      "wall_elapsed_ms": 62
+    },
+    {
+      "segment_id": "segment_000102",
+      "requested_strategy": "qwen",
+      "strategy": "qwen",
+      "language_route": "japanese",
+      "text_source": "original_transcript",
+      "original_text": "うん。",
+      "selected_text": "うん。",
+      "text_changed": false,
+      "actor": "goal-a-real-data",
+      "started_at": "2026-07-16T07:06:55.931032+00:00",
+      "status": "failed",
+      "alignment_state": "failed",
+      "error_code": "QWEN_RETRY_FAILED",
+      "error": "alignment token timing unreliable: covered 0.000s of 7.823s",
+      "backend_evidence": {
+        "status": "failed",
+        "error": "alignment token timing unreliable: covered 0.000s of 7.823s",
+        "token_count": 1,
+        "coverage": 0.0,
+        "raw_model_output": [
+          {
+            "items": [
+              {
+                "text": "うん",
+                "start_time": 7.12,
+                "end_time": 7.12
+              }
+            ]
+          }
+        ]
+      },
+      "elapsed_ms": 47,
+      "finished_at": "2026-07-16T07:06:55.982798+00:00",
+      "original_state_preserved": true,
+      "wall_elapsed_ms": 47
+    },
+    {
+      "segment_id": "segment_000104",
+      "requested_strategy": "qwen",
+      "strategy": "qwen",
+      "language_route": "japanese",
+      "text_source": "original_transcript",
+      "original_text": "おいしい。",
+      "selected_text": "おいしい。",
+      "text_changed": false,
+      "actor": "goal-a-real-data",
+      "started_at": "2026-07-16T07:06:55.985830+00:00",
+      "status": "failed",
+      "alignment_state": "failed",
+      "error_code": "QWEN_RETRY_FAILED",
+      "error": "alignment token timing unreliable: covered 0.640s of 9.198s",
+      "backend_evidence": {
+        "status": "failed",
+        "error": "alignment token timing unreliable: covered 0.640s of 9.198s",
+        "token_count": 1,
+        "coverage": 0.06958,
+        "raw_model_output": [
+          {
+            "items": [
+              {
+                "text": "おいしい",
+                "start_time": 6.64,
+                "end_time": 7.28
+              }
+            ]
+          }
+        ]
+      },
+      "elapsed_ms": 63,
+      "finished_at": "2026-07-16T07:06:56.041588+00:00",
+      "original_state_preserved": true,
+      "wall_elapsed_ms": 63
+    },
+    {
+      "segment_id": "segment_000110",
+      "requested_strategy": "qwen",
+      "strategy": "qwen",
+      "language_route": "japanese",
+      "text_source": "original_transcript",
+      "original_text": "Searching where we are coming from.",
+      "selected_text": "Searching where we are coming from.",
+      "text_changed": false,
+      "actor": "goal-a-real-data",
+      "started_at": "2026-07-16T07:06:56.044095+00:00",
+      "status": "failed",
+      "alignment_state": "failed",
+      "error_code": "QWEN_RETRY_FAILED",
+      "error": "alignment token timing unreliable: local density 9 chars in 0.160s (56.2 cps)",
+      "backend_evidence": {
+        "status": "failed",
+        "error": "alignment token timing unreliable: local density 9 chars in 0.160s (56.2 cps)",
+        "token_count": 6,
+        "coverage": 0.916064,
+        "raw_model_output": [
+          {
+            "items": [
+              {
+                "text": "Searching",
+                "start_time": 0.48,
+                "end_time": 0.64
+              },
+              {
+                "text": "where",
+                "start_time": 3.68,
+                "end_time": 6.24
+              },
+              {
+                "text": "we",
+                "start_time": 6.72,
+                "end_time": 6.88
+              },
+              {
+                "text": "are",
+                "start_time": 6.9,
+                "end_time": 6.92
+              },
+              {
+                "text": "coming",
+                "start_time": 6.94,
+                "end_time": 6.96
+              },
+              {
+                "text": "from",
+                "start_time": 8.8,
+                "end_time": 8.96
+              }
+            ]
+          }
+        ]
+      },
+      "elapsed_ms": 62,
+      "finished_at": "2026-07-16T07:06:56.102724+00:00",
+      "original_state_preserved": true,
+      "wall_elapsed_ms": 62
+    },
+    {
+      "segment_id": "segment_000127",
+      "requested_strategy": "qwen",
+      "strategy": "qwen",
+      "language_route": "japanese",
+      "text_source": "original_transcript",
+      "original_text": "あれは。",
+      "selected_text": "あれは。",
+      "text_changed": false,
+      "actor": "goal-a-real-data",
+      "started_at": "2026-07-16T07:06:56.106234+00:00",
+      "status": "failed",
+      "alignment_state": "failed",
+      "error_code": "QWEN_RETRY_FAILED",
+      "error": "alignment token timing unreliable: covered 0.320s of 13.164s",
+      "backend_evidence": {
+        "status": "failed",
+        "error": "alignment token timing unreliable: covered 0.320s of 13.164s",
+        "token_count": 2,
+        "coverage": 0.024309,
+        "raw_model_output": [
+          {
+            "items": [
+              {
+                "text": "あれ",
+                "start_time": 12.8,
+                "end_time": 13.04
+              },
+              {
+                "text": "は",
+                "start_time": 13.04,
+                "end_time": 13.12
+              }
+            ]
+          }
+        ]
+      },
+      "elapsed_ms": 47,
+      "finished_at": "2026-07-16T07:06:56.159619+00:00",
+      "original_state_preserved": true,
+      "wall_elapsed_ms": 47
+    }
+  ],
+  "mfa_attempts": [
+    {
+      "segment_id": "segment_000013",
+      "strategy": "mfa-local",
+      "status": "skipped",
+      "reason": "short-response routed to VAD; Japanese dictionary alignment is not a safe first choice"
+    },
+    {
+      "segment_id": "segment_000019",
+      "strategy": "mfa-local",
+      "status": "skipped",
+      "reason": "short-response routed to VAD; Japanese dictionary alignment is not a safe first choice"
+    },
+    {
+      "segment_id": "segment_000026",
+      "strategy": "mfa-local",
+      "status": "skipped",
+      "reason": "short-response routed to VAD; Japanese dictionary alignment is not a safe first choice"
+    },
+    {
+      "segment_id": "segment_000031",
+      "strategy": "mfa-local",
+      "status": "skipped",
+      "reason": "short-response routed to VAD; Japanese dictionary alignment is not a safe first choice"
+    },
+    {
+      "segment_id": "segment_000044",
+      "strategy": "mfa-local",
+      "status": "skipped",
+      "reason": "short-response routed to VAD; Japanese dictionary alignment is not a safe first choice"
+    },
+    {
+      "segment_id": "segment_000067",
+      "strategy": "mfa-local",
+      "status": "skipped",
+      "reason": "short-response routed to VAD; Japanese dictionary alignment is not a safe first choice"
+    },
+    {
+      "segment_id": "segment_000076",
+      "strategy": "mfa-local",
+      "status": "skipped",
+      "reason": "short-response routed to VAD; Japanese dictionary alignment is not a safe first choice"
+    },
+    {
+      "segment_id": "segment_000093",
+      "strategy": "mfa-local",
+      "status": "skipped",
+      "reason": "short-response routed to VAD; Japanese dictionary alignment is not a safe first choice"
+    },
+    {
+      "segment_id": "segment_000094",
+      "strategy": "mfa-local",
+      "status": "skipped",
+      "reason": "short-response routed to VAD; Japanese dictionary alignment is not a safe first choice"
+    },
+    {
+      "segment_id": "segment_000096",
+      "strategy": "mfa-local",
+      "status": "skipped",
+      "reason": "short-response routed to VAD; Japanese dictionary alignment is not a safe first choice"
+    },
+    {
+      "segment_id": "segment_000097",
+      "strategy": "mfa-local",
+      "status": "skipped",
+      "reason": "short-response routed to VAD; Japanese dictionary alignment is not a safe first choice"
+    },
+    {
+      "segment_id": "segment_000098",
+      "strategy": "mfa-local",
+      "status": "skipped",
+      "reason": "short-response routed to VAD; Japanese dictionary alignment is not a safe first choice"
+    },
+    {
+      "segment_id": "segment_000099",
+      "strategy": "mfa-local",
+      "status": "skipped",
+      "reason": "short-response routed to VAD; Japanese dictionary alignment is not a safe first choice"
+    },
+    {
+      "segment_id": "segment_000100",
+      "strategy": "mfa-local",
+      "status": "skipped",
+      "reason": "short-response routed to VAD; Japanese dictionary alignment is not a safe first choice"
+    },
+    {
+      "segment_id": "segment_000101",
+      "strategy": "mfa-local",
+      "status": "skipped",
+      "reason": "short-response routed to VAD; Japanese dictionary alignment is not a safe first choice"
+    },
+    {
+      "segment_id": "segment_000102",
+      "strategy": "mfa-local",
+      "status": "skipped",
+      "reason": "short-response routed to VAD; Japanese dictionary alignment is not a safe first choice"
+    },
+    {
+      "segment_id": "segment_000104",
+      "strategy": "mfa-local",
+      "status": "skipped",
+      "reason": "short-response routed to VAD; Japanese dictionary alignment is not a safe first choice"
+    },
+    {
+      "segment_id": "segment_000127",
+      "strategy": "mfa-local",
+      "status": "skipped",
+      "reason": "short-response routed to VAD; Japanese dictionary alignment is not a safe first choice"
+    },
+    {
+      "segment_id": "segment_000036",
+      "requested_strategy": "mfa-local",
+      "strategy": "mfa-local",
+      "language_route": "japanese",
+      "text_source": "original_transcript",
+      "original_text": "わけがわからないわ。",
+      "selected_text": "わけがわからないわ。",
+      "text_changed": false,
+      "actor": "goal-a-real-data",
+      "started_at": "2026-07-16T07:04:41.136120+00:00",
+      "status": "completed_exact",
+      "alignment_state": "completed_exact",
+      "token_count": 4,
+      "coverage": 0.164931,
+      "backend_evidence": {
+        "environment_available": true,
+        "status": "completed",
+        "reason": "",
+        "elapsed_ms": 121594,
+        "clip": "E:\\project\\qwen3-asr\\workspaces\\align-recovery-sayonara-lara-02-20260716-143833\\experiments\\mfa-align-experiment\\candidate_001\\corpus\\clip.wav",
+        "lab": "E:\\project\\qwen3-asr\\workspaces\\align-recovery-sayonara-lara-02-20260716-143833\\experiments\\mfa-align-experiment\\candidate_001\\corpus\\clip.lab",
+        "lab_text": "わけがわからないわ",
+        "word_quality": {
+          "word_count": 4,
+          "timed_count": 4,
+          "unknown_count": 0,
+          "known_timed_count": 4,
+          "usable": true
+        },
+        "stdout_tail": "   1%                                     1/100  [ 0:00:02 < -:--:-- , ? it/s ]\n 100% ------------------------------------- 1/1  [ 0:00:01 < 0:00:00 , ? it/s ]\n 100% ------------------------------------- 1/1  [ 0:00:02 < 0:00:00 , ? it/s ]\n 100% ------------------------------------- 1/1  [ 0:00:01 < 0:00:00 , ? it/s ]\n 100% ------------------------------------- 1/1  [ 0:00:01 < 0:00:00 , ? it/s ]\n 100% ------------------------------------- 1/1  [ 0:00:01 < 0:00:00 , ? it/s ]\n 100% ------------------------------------- 1/1  [ 0:00:04 < 0:00:00 , ? it/s ]\n 100% ------------------------------------- 1/1  [ 0:00:01 < 0:00:00 , ? it/s ]\n 100% ------------------------------------- 1/1  [ 0:00:00 < 0:00:00 , ? it/s ]\n",
+        "stderr_tail": " INFO     Setting up corpus information...                                     \n INFO     Loading corpus from source files...                                  \n INFO     Found 1 speaker across 1 file, average number of utterances per      \n          speaker: 1.0                                                         \n INFO     Initializing multiprocessing jobs...                                 \n INFO     Normalizing text...                                                  \n INFO     Generating MFCCs...                                                  \n INFO     Calculating CMVN...                                                  \n INFO     Generating final features...                                         \n INFO     Creating corpus split...                                             \n INFO     Compiling training graphs...                                         \n INFO     Performing first-pass alignment...                                   \n INFO     Generating alignments...                                             \n INFO     Collecting phone and word alignments from alignment lattices...      \n INFO     Analyzing alignment quality...                                       \n INFO     Exporting alignment TextGrids to                                     \n          E:\\project\\qwen3-asr\\workspaces\\align-recovery-sayonara-lara-02-20260\n          716-143833\\experiments\\mfa-align-experiment\\candidate_001\\out...     \n INFO     Finished exporting TextGrids to                                      \n          E:\\project\\qwen3-asr\\workspaces\\align-recovery-sayonara-lara-02-20260\n          716-143833\\experiments\\mfa-align-experiment\\candidate_001\\out!       \n INFO     Done! Everything took 116.976 seconds                                \n",
+        "recognized_text": "わけがわからないわ",
+        "content_score": 1.0,
+        "min_content_score": 0.7
+      },
+      "elapsed_ms": 2391,
+      "finished_at": "2026-07-16T07:04:43.529269+00:00",
+      "backup_path": "E:\\project\\qwen3-asr\\workspaces\\align-recovery-sayonara-lara-02-20260716-143833\\reports\\recovery-backups\\segment_000036-20260716-150443-529269",
+      "writeback": "completed"
+    },
+    {
+      "segment_id": "segment_000054",
+      "requested_strategy": "mfa-local",
+      "strategy": "mfa-local",
+      "language_route": "japanese",
+      "text_source": "original_transcript",
+      "original_text": "絶対取り戻さなきゃ。",
+      "selected_text": "絶対取り戻さなきゃ。",
+      "text_changed": false,
+      "actor": "goal-a-real-data",
+      "started_at": "2026-07-16T07:04:43.550353+00:00",
+      "status": "rejected",
+      "alignment_state": "failed",
+      "error_code": "MFA_CONTENT_MISMATCH",
+      "error": "mfa-local content score 0.364 is below 0.700",
+      "backend_evidence": {
+        "environment_available": true,
+        "status": "completed",
+        "reason": "",
+        "elapsed_ms": 120250,
+        "clip": "E:\\project\\qwen3-asr\\workspaces\\align-recovery-sayonara-lara-02-20260716-143833\\experiments\\mfa-align-experiment\\candidate_002\\corpus\\clip.wav",
+        "lab": "E:\\project\\qwen3-asr\\workspaces\\align-recovery-sayonara-lara-02-20260716-143833\\experiments\\mfa-align-experiment\\candidate_002\\corpus\\clip.lab",
+        "lab_text": "絶対取り戻さなきゃ",
+        "word_quality": {
+          "word_count": 2,
+          "timed_count": 2,
+          "unknown_count": 1,
+          "known_timed_count": 1,
+          "usable": true
+        },
+        "stdout_tail": "   1%                                     1/100  [ 0:00:02 < -:--:-- , ? it/s ]\n 100% ------------------------------------- 1/1  [ 0:00:01 < 0:00:00 , ? it/s ]\n 100% ------------------------------------- 1/1  [ 0:00:02 < 0:00:00 , ? it/s ]\n 100% ------------------------------------- 1/1  [ 0:00:01 < 0:00:00 , ? it/s ]\n 100% ------------------------------------- 1/1  [ 0:00:01 < 0:00:00 , ? it/s ]\n 100% ------------------------------------- 1/1  [ 0:00:01 < 0:00:00 , ? it/s ]\n 100% ------------------------------------- 1/1  [ 0:00:04 < 0:00:00 , ? it/s ]\n 100% ------------------------------------- 1/1  [ 0:00:01 < 0:00:00 , ? it/s ]\n 100% ------------------------------------- 1/1  [ 0:00:00 < 0:00:00 , ? it/s ]\n",
+        "stderr_tail": " INFO     Setting up corpus information...                                     \n INFO     Loading corpus from source files...                                  \n INFO     Found 1 speaker across 1 file, average number of utterances per      \n          speaker: 1.0                                                         \n INFO     Initializing multiprocessing jobs...                                 \n INFO     Normalizing text...                                                  \n INFO     Generating MFCCs...                                                  \n INFO     Calculating CMVN...                                                  \n INFO     Generating final features...                                         \n INFO     Creating corpus split...                                             \n INFO     Compiling training graphs...                                         \n INFO     Performing first-pass alignment...                                   \n INFO     Generating alignments...                                             \n INFO     Collecting phone and word alignments from alignment lattices...      \n INFO     Analyzing alignment quality...                                       \n INFO     Exporting alignment TextGrids to                                     \n          E:\\project\\qwen3-asr\\workspaces\\align-recovery-sayonara-lara-02-20260\n          716-143833\\experiments\\mfa-align-experiment\\candidate_002\\out...     \n INFO     Finished exporting TextGrids to                                      \n          E:\\project\\qwen3-asr\\workspaces\\align-recovery-sayonara-lara-02-20260\n          716-143833\\experiments\\mfa-align-experiment\\candidate_002\\out!       \n INFO     Done! Everything took 115.842 seconds                                \n",
+        "recognized_text": "絶対",
+        "content_score": 0.36363636363636365
+      },
+      "elapsed_ms": 2406,
+      "finished_at": "2026-07-16T07:04:45.951404+00:00",
+      "original_state_preserved": true
+    },
+    {
+      "segment_id": "segment_000086",
+      "requested_strategy": "mfa-local",
+      "strategy": "mfa-local",
+      "language_route": "japanese",
+      "text_source": "original_transcript",
+      "original_text": "何？足が息が苦しい。",
+      "selected_text": "何？足が息が苦しい。",
+      "text_changed": false,
+      "actor": "goal-a-real-data",
+      "started_at": "2026-07-16T07:04:45.953401+00:00",
+      "status": "completed_exact",
+      "alignment_state": "completed_exact",
+      "token_count": 5,
+      "coverage": 0.453669,
+      "backend_evidence": {
+        "environment_available": true,
+        "status": "completed",
+        "reason": "",
+        "elapsed_ms": 119967,
+        "clip": "E:\\project\\qwen3-asr\\workspaces\\align-recovery-sayonara-lara-02-20260716-143833\\experiments\\mfa-align-experiment\\candidate_003\\corpus\\clip.wav",
+        "lab": "E:\\project\\qwen3-asr\\workspaces\\align-recovery-sayonara-lara-02-20260716-143833\\experiments\\mfa-align-experiment\\candidate_003\\corpus\\clip.lab",
+        "lab_text": "何 足が息が苦しい",
+        "word_quality": {
+          "word_count": 5,
+          "timed_count": 5,
+          "unknown_count": 0,
+          "known_timed_count": 5,
+          "usable": true
+        },
+        "stdout_tail": "   1%                                     1/100  [ 0:00:01 < -:--:-- , ? it/s ]\n 100% ------------------------------------- 1/1  [ 0:00:01 < 0:00:00 , ? it/s ]\n 100% ------------------------------------- 1/1  [ 0:00:02 < 0:00:00 , ? it/s ]\n 100% ------------------------------------- 1/1  [ 0:00:01 < 0:00:00 , ? it/s ]\n 100% ------------------------------------- 1/1  [ 0:00:01 < 0:00:00 , ? it/s ]\n 100% ------------------------------------- 1/1  [ 0:00:01 < 0:00:00 , ? it/s ]\n 100% ------------------------------------- 1/1  [ 0:00:04 < 0:00:00 , ? it/s ]\n 100% ------------------------------------- 1/1  [ 0:00:01 < 0:00:00 , ? it/s ]\n 100% ------------------------------------- 1/1  [ 0:00:00 < 0:00:00 , ? it/s ]\n",
+        "stderr_tail": " INFO     Setting up corpus information...                                     \n INFO     Loading corpus from source files...                                  \n INFO     Found 1 speaker across 1 file, average number of utterances per      \n          speaker: 1.0                                                         \n INFO     Initializing multiprocessing jobs...                                 \n INFO     Normalizing text...                                                  \n INFO     Generating MFCCs...                                                  \n INFO     Calculating CMVN...                                                  \n INFO     Generating final features...                                         \n INFO     Creating corpus split...                                             \n INFO     Compiling training graphs...                                         \n INFO     Performing first-pass alignment...                                   \n INFO     Generating alignments...                                             \n INFO     Collecting phone and word alignments from alignment lattices...      \n INFO     Analyzing alignment quality...                                       \n INFO     Exporting alignment TextGrids to                                     \n          E:\\project\\qwen3-asr\\workspaces\\align-recovery-sayonara-lara-02-20260\n          716-143833\\experiments\\mfa-align-experiment\\candidate_003\\out...     \n INFO     Finished exporting TextGrids to                                      \n          E:\\project\\qwen3-asr\\workspaces\\align-recovery-sayonara-lara-02-20260\n          716-143833\\experiments\\mfa-align-experiment\\candidate_003\\out!       \n INFO     Done! Everything took 115.441 seconds                                \n",
+        "recognized_text": "何_足が息が苦しい",
+        "content_score": 1.0,
+        "min_content_score": 0.7
+      },
+      "elapsed_ms": 2515,
+      "finished_at": "2026-07-16T07:04:48.464710+00:00",
+      "backup_path": "E:\\project\\qwen3-asr\\workspaces\\align-recovery-sayonara-lara-02-20260716-143833\\reports\\recovery-backups\\segment_000086-20260716-150448-464710",
+      "writeback": "completed"
+    },
+    {
+      "segment_id": "segment_000110",
+      "requested_strategy": "mfa-local",
+      "strategy": "mfa-local",
+      "language_route": "japanese",
+      "text_source": "original_transcript",
+      "original_text": "Searching where we are coming from.",
+      "selected_text": "Searching where we are coming from.",
+      "text_changed": false,
+      "actor": "goal-a-real-data",
+      "started_at": "2026-07-16T07:04:48.484576+00:00",
+      "status": "rejected",
+      "alignment_state": "failed",
+      "error_code": "MFA_CONTENT_MISMATCH",
+      "error": "mfa-local content score 0.000 is below 0.700",
+      "backend_evidence": {
+        "environment_available": true,
+        "status": "completed",
+        "reason": "",
+        "elapsed_ms": 120125,
+        "clip": "E:\\project\\qwen3-asr\\workspaces\\align-recovery-sayonara-lara-02-20260716-143833\\experiments\\mfa-align-experiment\\candidate_004\\corpus\\clip.wav",
+        "lab": "E:\\project\\qwen3-asr\\workspaces\\align-recovery-sayonara-lara-02-20260716-143833\\experiments\\mfa-align-experiment\\candidate_004\\corpus\\clip.lab",
+        "lab_text": "素敵な名前ね",
+        "word_quality": {
+          "word_count": 4,
+          "timed_count": 4,
+          "unknown_count": 0,
+          "known_timed_count": 4,
+          "usable": true
+        },
+        "stdout_tail": "   1%                                     1/100  [ 0:00:02 < -:--:-- , ? it/s ]\n 100% ------------------------------------- 1/1  [ 0:00:01 < 0:00:00 , ? it/s ]\n 100% ------------------------------------- 1/1  [ 0:00:02 < 0:00:00 , ? it/s ]\n 100% ------------------------------------- 1/1  [ 0:00:01 < 0:00:00 , ? it/s ]\n 100% ------------------------------------- 1/1  [ 0:00:01 < 0:00:00 , ? it/s ]\n 100% ------------------------------------- 1/1  [ 0:00:01 < 0:00:00 , ? it/s ]\n 100% ------------------------------------- 1/1  [ 0:00:04 < 0:00:00 , ? it/s ]\n 100% ------------------------------------- 1/1  [ 0:00:01 < 0:00:00 , ? it/s ]\n 100% ------------------------------------- 1/1  [ 0:00:00 < 0:00:00 , ? it/s ]\n",
+        "stderr_tail": " INFO     Setting up corpus information...                                     \n INFO     Loading corpus from source files...                                  \n INFO     Found 1 speaker across 1 file, average number of utterances per      \n          speaker: 1.0                                                         \n INFO     Initializing multiprocessing jobs...                                 \n INFO     Normalizing text...                                                  \n INFO     Generating MFCCs...                                                  \n INFO     Calculating CMVN...                                                  \n INFO     Generating final features...                                         \n INFO     Creating corpus split...                                             \n INFO     Compiling training graphs...                                         \n INFO     Performing first-pass alignment...                                   \n INFO     Generating alignments...                                             \n INFO     Collecting phone and word alignments from alignment lattices...      \n INFO     Analyzing alignment quality...                                       \n INFO     Exporting alignment TextGrids to                                     \n          E:\\project\\qwen3-asr\\workspaces\\align-recovery-sayonara-lara-02-20260\n          716-143833\\experiments\\mfa-align-experiment\\candidate_004\\out...     \n INFO     Finished exporting TextGrids to                                      \n          E:\\project\\qwen3-asr\\workspaces\\align-recovery-sayonara-lara-02-20260\n          716-143833\\experiments\\mfa-align-experiment\\candidate_004\\out!       \n INFO     Done! Everything took 115.741 seconds                                \n",
+        "recognized_text": "素敵な名前ね",
+        "content_score": 0.0
+      },
+      "elapsed_ms": 2406,
+      "finished_at": "2026-07-16T07:04:50.881241+00:00",
+      "original_state_preserved": true
+    }
+  ],
+  "vad_attempts": [
+    {
+      "segment_id": "segment_000013",
+      "strategy": "vad",
+      "status": "localized",
+      "region_count": 1,
+      "unique_mapping": true,
+      "regions": [
+        {
+          "index": 0,
+          "start_ms": 153407,
+          "end_ms": 154344
+        }
+      ],
+      "elapsed_ms": 1813,
+      "coarse_writeback": "not_attempted_transcript_unverified"
+    },
+    {
+      "segment_id": "segment_000019",
+      "strategy": "vad",
+      "status": "localized",
+      "region_count": 1,
+      "unique_mapping": true,
+      "regions": [
+        {
+          "index": 0,
+          "start_ms": 219236,
+          "end_ms": 220947
+        }
+      ],
+      "elapsed_ms": 594,
+      "coarse_writeback": "not_attempted_transcript_unverified"
+    },
+    {
+      "segment_id": "segment_000026",
+      "strategy": "vad",
+      "status": "localized",
+      "region_count": 2,
+      "unique_mapping": false,
+      "regions": [
+        {
+          "index": 0,
+          "start_ms": 298111,
+          "end_ms": 299250
+        },
+        {
+          "index": 1,
+          "start_ms": 307392,
+          "end_ms": 309250
+        }
+      ],
+      "elapsed_ms": 609,
+      "coarse_writeback": "not_attempted_transcript_unverified"
+    },
+    {
+      "segment_id": "segment_000031",
+      "strategy": "vad",
+      "status": "localized",
+      "region_count": 2,
+      "unique_mapping": false,
+      "regions": [
+        {
+          "index": 0,
+          "start_ms": 356490,
+          "end_ms": 358641
+        },
+        {
+          "index": 1,
+          "start_ms": 364978,
+          "end_ms": 366168
+        }
+      ],
+      "elapsed_ms": 609,
+      "coarse_writeback": "not_attempted_transcript_unverified"
+    },
+    {
+      "segment_id": "segment_000044",
+      "strategy": "vad",
+      "status": "localized",
+      "region_count": 1,
+      "unique_mapping": true,
+      "regions": [
+        {
+          "index": 0,
+          "start_ms": 500569,
+          "end_ms": 501066
+        }
+      ],
+      "elapsed_ms": 594,
+      "coarse_writeback": "not_attempted_transcript_unverified"
+    },
+    {
+      "segment_id": "segment_000067",
+      "strategy": "vad",
+      "status": "localized",
+      "region_count": 1,
+      "unique_mapping": true,
+      "regions": [
+        {
+          "index": 0,
+          "start_ms": 749104,
+          "end_ms": 749956
+        }
+      ],
+      "elapsed_ms": 547,
+      "coarse_writeback": "not_attempted_transcript_unverified"
+    },
+    {
+      "segment_id": "segment_000076",
+      "strategy": "vad",
+      "status": "localized",
+      "region_count": 2,
+      "unique_mapping": false,
+      "regions": [
+        {
+          "index": 0,
+          "start_ms": 846262,
+          "end_ms": 847130
+        },
+        {
+          "index": 1,
+          "start_ms": 848253,
+          "end_ms": 849189
+        }
+      ],
+      "elapsed_ms": 656,
+      "coarse_writeback": "not_attempted_transcript_unverified"
+    },
+    {
+      "segment_id": "segment_000093",
+      "strategy": "vad",
+      "status": "failed",
+      "error_code": "VAD_NO_SPEECH",
+      "error": "VAD found no speech in the failed segment"
+    },
+    {
+      "segment_id": "segment_000094",
+      "strategy": "vad",
+      "status": "localized",
+      "region_count": 3,
+      "unique_mapping": false,
+      "regions": [
+        {
+          "index": 0,
+          "start_ms": 1048145,
+          "end_ms": 1048879
+        },
+        {
+          "index": 1,
+          "start_ms": 1049090,
+          "end_ms": 1049504
+        },
+        {
+          "index": 2,
+          "start_ms": 1049664,
+          "end_ms": 1050398
+        }
+      ],
+      "elapsed_ms": 641,
+      "coarse_writeback": "not_attempted_transcript_unverified"
+    },
+    {
+      "segment_id": "segment_000096",
+      "strategy": "vad",
+      "status": "failed",
+      "error_code": "VAD_NO_SPEECH",
+      "error": "VAD found no speech in the failed segment"
+    },
+    {
+      "segment_id": "segment_000097",
+      "strategy": "vad",
+      "status": "failed",
+      "error_code": "VAD_NO_SPEECH",
+      "error": "VAD found no speech in the failed segment"
+    },
+    {
+      "segment_id": "segment_000098",
+      "strategy": "vad",
+      "status": "failed",
+      "error_code": "VAD_NO_SPEECH",
+      "error": "VAD found no speech in the failed segment"
+    },
+    {
+      "segment_id": "segment_000099",
+      "strategy": "vad",
+      "status": "localized",
+      "region_count": 1,
+      "unique_mapping": true,
+      "regions": [
+        {
+          "index": 0,
+          "start_ms": 1101791,
+          "end_ms": 1102255
+        }
+      ],
+      "elapsed_ms": 578,
+      "coarse_writeback": "not_attempted_transcript_unverified"
+    },
+    {
+      "segment_id": "segment_000100",
+      "strategy": "vad",
+      "status": "localized",
+      "region_count": 1,
+      "unique_mapping": true,
+      "regions": [
+        {
+          "index": 0,
+          "start_ms": 1109520,
+          "end_ms": 1110152
+        }
+      ],
+      "elapsed_ms": 594,
+      "coarse_writeback": "not_attempted_transcript_unverified"
+    },
+    {
+      "segment_id": "segment_000101",
+      "strategy": "vad",
+      "status": "localized",
+      "region_count": 1,
+      "unique_mapping": true,
+      "regions": [
+        {
+          "index": 0,
+          "start_ms": 1123535,
+          "end_ms": 1124150
+        }
+      ],
+      "elapsed_ms": 625,
+      "coarse_writeback": "not_attempted_transcript_unverified"
+    },
+    {
+      "segment_id": "segment_000102",
+      "strategy": "vad",
+      "status": "localized",
+      "region_count": 1,
+      "unique_mapping": true,
+      "regions": [
+        {
+          "index": 0,
+          "start_ms": 1134055,
+          "end_ms": 1134502
+        }
+      ],
+      "elapsed_ms": 594,
+      "coarse_writeback": "not_attempted_transcript_unverified"
+    },
+    {
+      "segment_id": "segment_000104",
+      "strategy": "vad",
+      "status": "localized",
+      "region_count": 2,
+      "unique_mapping": false,
+      "regions": [
+        {
+          "index": 0,
+          "start_ms": 1152812,
+          "end_ms": 1153377
+        },
+        {
+          "index": 1,
+          "start_ms": 1153605,
+          "end_ms": 1155368
+        }
+      ],
+      "elapsed_ms": 625,
+      "coarse_writeback": "not_attempted_transcript_unverified"
+    },
+    {
+      "segment_id": "segment_000127",
+      "strategy": "vad",
+      "status": "localized",
+      "region_count": 1,
+      "unique_mapping": true,
+      "regions": [
+        {
+          "index": 0,
+          "start_ms": 1422509,
+          "end_ms": 1422984
+        }
+      ],
+      "elapsed_ms": 625,
+      "coarse_writeback": "not_attempted_transcript_unverified"
+    }
+  ],
+  "decision": "质量复核后的正式结果为新增 exact=1、coarse=0：保留 segment_000086；segment_000036 因 coverage 0.164931 低于 0.20 正式门槛而目标级撤销。其余 21 条继续保持 failed，并保留 backend 拒绝、不可执行或 transcript 未核验的证据；未放宽内容、时间或状态门。"
+}

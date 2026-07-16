@@ -29,6 +29,8 @@ def test_contract_freezes_align_states_and_secret_policy() -> None:
     assert contract["api_version"] == "v1"
     assert contract["data"]["align_states"] == ["completed_exact", "completed_coarse", "failed"]
     assert contract["data"]["music_region_state"] == "SKIPPED_MUSIC_REGION"
+    assert contract["data"]["recovery"]["strategies"] == ["auto", "qwen", "mfa-local"]
+    assert contract["data"]["recovery"]["completed_coarse_requires_verified_transcript"] is True
     assert "environment-only" in contract["data"]["security"]["secrets"]
     assert "POST /api/v1/workspace/review/edit" in contract["data"]["endpoints"]
     assert "POST /api/v1/workspace/review/undo" in contract["data"]["endpoints"]

@@ -56,6 +56,19 @@ def api_contract() -> dict[str, Any]:
         data={
             "align_states": list(ALIGN_STATES),
             "music_region_state": MUSIC_REGION_STATE,
+            "recovery": {
+                "actions": [
+                    "verify_transcript",
+                    "localize_vad",
+                    "route_language",
+                    "retry_align",
+                    "accept_completed_coarse",
+                    "undo_recovery",
+                ],
+                "strategies": ["auto", "qwen", "mfa-local"],
+                "retry_default_text_source": "original_transcript",
+                "completed_coarse_requires_verified_transcript": True,
+            },
             "endpoints": {
                 "GET /api/v1/contract": {"query": [], "response": "contract"},
                 "GET /api/v1/job": {"query": [], "response": "job_state"},

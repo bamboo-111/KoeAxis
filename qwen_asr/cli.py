@@ -25,6 +25,7 @@ from qwen_asr.commands import (
     cmd_transcribe,
     cmd_translate,
 )
+from qwen_asr.commands.recover_align import cmd_recover_align
 from qwen_asr.credentials import resolve_llm_api_key
 from qwen_asr.defaults import (
     DEFAULT_ALIGN_MODEL,
@@ -217,6 +218,18 @@ def build_parser() -> argparse.ArgumentParser:
     align.add_argument("--asr-reference-max-new-tokens", type=int, default=512)
     align.add_argument("--asr-reference-language", default=None)
     align.set_defaults(func=cmd_align)
+
+    recover_align = subparsers.add_parser("recover-align", parents=[common, model_common])
+    recover_align.add_argument("--segment-id", required=True)
+    recover_align.add_argument("--strategy", choices=["auto", "qwen", "mfa-local"], default="auto")
+    recover_align.add_argument("--language-route", default="auto")
+    recover_align.add_argument("--verified-text", default="")
+    recover_align.add_argument("--use-verified-text", action="store_true")
+    recover_align.add_argument("--actor", default="cli-local-user")
+    recover_align.add_argument("--model", default=DEFAULT_ALIGN_MODEL)
+    recover_align.add_argument("--mfa-padding-ms", type=int, default=700)
+    recover_align.add_argument("--mfa-min-content-score", type=float, default=0.70)
+    recover_align.set_defaults(func=cmd_recover_align)
 
     mfa_align_experiment = subparsers.add_parser("mfa-align-experiment", parents=[common])
     mfa_align_experiment.add_argument("--ass-quality-report", action="append", default=[])

@@ -1,0 +1,1355 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-07-16T07:11:12.151540+00:00",
+  "status": "PASS",
+  "elapsed_ms": 16875,
+  "datasets": {
+    "konoato01": {
+      "source": "E:\\project\\qwen3-asr\\workspaces\\clean-regression-20260712-002943\\konoato01",
+      "workdir": "E:\\project\\qwen3-asr\\workspaces\\align-recovery-dual-regression-20260716-150825\\konoato01",
+      "transcript_sha256": "ea4780c8fd3fba11222bff01d1ddb1adbdc51048463eeaad2e09073296dfc725",
+      "before": {
+        "segment_count": 118,
+        "completed_exact": 100,
+        "completed_coarse": 0,
+        "failed": 18,
+        "short_failed": 6,
+        "illegal_time_count": 191,
+        "out_of_range_token_count": 2,
+        "non_monotonic_segment_count": 0,
+        "severe_overlap_count": 117
+      },
+      "attempts": [
+        {
+          "segment_id": "segment_000002",
+          "requested_strategy": "qwen",
+          "strategy": "qwen",
+          "language_route": "japanese",
+          "text_source": "original_transcript",
+          "original_text": "パパ、パパ、愛ちゃん。",
+          "selected_text": "パパ、パパ、愛ちゃん。",
+          "text_changed": false,
+          "actor": "goal-a-dual-regression",
+          "started_at": "2026-07-16T07:11:09.277384+00:00",
+          "status": "failed",
+          "alignment_state": "failed",
+          "error_code": "QWEN_RETRY_FAILED",
+          "error": "alignment token timing unreliable: covered 2.160s of 11.569s",
+          "backend_evidence": {
+            "status": "failed",
+            "error": "alignment token timing unreliable: covered 2.160s of 11.569s",
+            "token_count": 4,
+            "coverage": 0.186706,
+            "raw_model_output": [
+              {
+                "items": [
+                  {
+                    "text": "パパ",
+                    "start_time": 8.88,
+                    "end_time": 9.76
+                  },
+                  {
+                    "text": "パパ",
+                    "start_time": 10.24,
+                    "end_time": 10.32
+                  },
+                  {
+                    "text": "愛",
+                    "start_time": 10.32,
+                    "end_time": 11.04
+                  },
+                  {
+                    "text": "ちゃん",
+                    "start_time": 11.04,
+                    "end_time": 11.04
+                  }
+                ]
+              }
+            ]
+          },
+          "elapsed_ms": 828,
+          "finished_at": "2026-07-16T07:11:10.110985+00:00",
+          "original_state_preserved": true
+        },
+        {
+          "segment_id": "segment_000005",
+          "requested_strategy": "qwen",
+          "strategy": "qwen",
+          "language_route": "japanese",
+          "text_source": "original_transcript",
+          "original_text": "ああ。",
+          "selected_text": "ああ。",
+          "text_changed": false,
+          "actor": "goal-a-dual-regression",
+          "started_at": "2026-07-16T07:11:10.112985+00:00",
+          "status": "failed",
+          "alignment_state": "failed",
+          "error_code": "QWEN_RETRY_FAILED",
+          "error": "alignment token timing unreliable: covered 0.000s of 15.600s",
+          "backend_evidence": {
+            "status": "failed",
+            "error": "alignment token timing unreliable: covered 0.000s of 15.600s",
+            "token_count": 1,
+            "coverage": 0.0,
+            "raw_model_output": [
+              {
+                "items": [
+                  {
+                    "text": "ああ",
+                    "start_time": 0.0,
+                    "end_time": 0.0
+                  }
+                ]
+              }
+            ]
+          },
+          "elapsed_ms": 78,
+          "finished_at": "2026-07-16T07:11:10.179042+00:00",
+          "original_state_preserved": true
+        },
+        {
+          "segment_id": "segment_000006",
+          "requested_strategy": "qwen",
+          "strategy": "qwen",
+          "language_route": "japanese",
+          "text_source": "original_transcript",
+          "original_text": "あ。",
+          "selected_text": "あ。",
+          "text_changed": false,
+          "actor": "goal-a-dual-regression",
+          "started_at": "2026-07-16T07:11:10.181044+00:00",
+          "status": "failed",
+          "alignment_state": "failed",
+          "error_code": "QWEN_RETRY_FAILED",
+          "error": "alignment token timing unreliable: covered 0.000s of 6.154s",
+          "backend_evidence": {
+            "status": "failed",
+            "error": "alignment token timing unreliable: covered 0.000s of 6.154s",
+            "token_count": 1,
+            "coverage": 0.0,
+            "raw_model_output": [
+              {
+                "items": [
+                  {
+                    "text": "あ",
+                    "start_time": 0.0,
+                    "end_time": 0.0
+                  }
+                ]
+              }
+            ]
+          },
+          "elapsed_ms": 63,
+          "finished_at": "2026-07-16T07:11:10.254240+00:00",
+          "original_state_preserved": true
+        },
+        {
+          "segment_id": "segment_000008",
+          "requested_strategy": "qwen",
+          "strategy": "qwen",
+          "language_route": "japanese",
+          "text_source": "original_transcript",
+          "original_text": "あれ。",
+          "selected_text": "あれ。",
+          "text_changed": false,
+          "actor": "goal-a-dual-regression",
+          "started_at": "2026-07-16T07:11:10.256242+00:00",
+          "status": "failed",
+          "alignment_state": "failed",
+          "error_code": "QWEN_RETRY_FAILED",
+          "error": "alignment token timing unreliable: covered 0.160s of 6.253s",
+          "backend_evidence": {
+            "status": "failed",
+            "error": "alignment token timing unreliable: covered 0.160s of 6.253s",
+            "token_count": 1,
+            "coverage": 0.025588,
+            "raw_model_output": [
+              {
+                "items": [
+                  {
+                    "text": "あれ",
+                    "start_time": 0.0,
+                    "end_time": 0.16
+                  }
+                ]
+              }
+            ]
+          },
+          "elapsed_ms": 47,
+          "finished_at": "2026-07-16T07:11:10.317410+00:00",
+          "original_state_preserved": true
+        },
+        {
+          "segment_id": "segment_000010",
+          "requested_strategy": "qwen",
+          "strategy": "qwen",
+          "language_route": "japanese",
+          "text_source": "original_transcript",
+          "original_text": "いらっしゃ。",
+          "selected_text": "いらっしゃ。",
+          "text_changed": false,
+          "actor": "goal-a-dual-regression",
+          "started_at": "2026-07-16T07:11:10.320414+00:00",
+          "status": "failed",
+          "alignment_state": "failed",
+          "error_code": "QWEN_RETRY_FAILED",
+          "error": "alignment token timing unreliable: covered 0.720s of 15.600s",
+          "backend_evidence": {
+            "status": "failed",
+            "error": "alignment token timing unreliable: covered 0.720s of 15.600s",
+            "token_count": 1,
+            "coverage": 0.046154,
+            "raw_model_output": [
+              {
+                "items": [
+                  {
+                    "text": "いらっしゃ",
+                    "start_time": 14.8,
+                    "end_time": 15.52
+                  }
+                ]
+              }
+            ]
+          },
+          "elapsed_ms": 62,
+          "finished_at": "2026-07-16T07:11:10.389383+00:00",
+          "original_state_preserved": true
+        },
+        {
+          "segment_id": "segment_000011",
+          "requested_strategy": "qwen",
+          "strategy": "qwen",
+          "language_route": "japanese",
+          "text_source": "original_transcript",
+          "original_text": "いらっしゃ。",
+          "selected_text": "いらっしゃ。",
+          "text_changed": false,
+          "actor": "goal-a-dual-regression",
+          "started_at": "2026-07-16T07:11:10.391384+00:00",
+          "status": "failed",
+          "alignment_state": "failed",
+          "error_code": "QWEN_RETRY_FAILED",
+          "error": "alignment token timing unreliable: covered 0.560s of 5.059s",
+          "backend_evidence": {
+            "status": "failed",
+            "error": "alignment token timing unreliable: covered 0.560s of 5.059s",
+            "token_count": 1,
+            "coverage": 0.110694,
+            "raw_model_output": [
+              {
+                "items": [
+                  {
+                    "text": "いらっしゃ",
+                    "start_time": 0.0,
+                    "end_time": 0.56
+                  }
+                ]
+              }
+            ]
+          },
+          "elapsed_ms": 78,
+          "finished_at": "2026-07-16T07:11:10.467797+00:00",
+          "original_state_preserved": true
+        },
+        {
+          "segment_id": "segment_000012",
+          "requested_strategy": "qwen",
+          "strategy": "qwen",
+          "language_route": "japanese",
+          "text_source": "original_transcript",
+          "original_text": "まあまあ見せてよ。",
+          "selected_text": "まあまあ見せてよ。",
+          "text_changed": false,
+          "actor": "goal-a-dual-regression",
+          "started_at": "2026-07-16T07:11:10.469798+00:00",
+          "status": "failed",
+          "alignment_state": "failed",
+          "error_code": "QWEN_RETRY_FAILED",
+          "error": "alignment token timing unreliable: covered 0.880s of 14.734s",
+          "backend_evidence": {
+            "status": "failed",
+            "error": "alignment token timing unreliable: covered 0.880s of 14.734s",
+            "token_count": 4,
+            "coverage": 0.776435,
+            "raw_model_output": [
+              {
+                "items": [
+                  {
+                    "text": "まあまあ",
+                    "start_time": 2.8,
+                    "end_time": 3.36
+                  },
+                  {
+                    "text": "見せ",
+                    "start_time": 3.36,
+                    "end_time": 3.68
+                  },
+                  {
+                    "text": "て",
+                    "start_time": 14.16,
+                    "end_time": 14.16
+                  },
+                  {
+                    "text": "よ",
+                    "start_time": 14.24,
+                    "end_time": 14.24
+                  }
+                ]
+              }
+            ]
+          },
+          "elapsed_ms": 79,
+          "finished_at": "2026-07-16T07:11:10.542835+00:00",
+          "original_state_preserved": true
+        },
+        {
+          "segment_id": "segment_000016",
+          "requested_strategy": "qwen",
+          "strategy": "qwen",
+          "language_route": "japanese",
+          "text_source": "original_transcript",
+          "original_text": "もうゴリゴリっす。",
+          "selected_text": "もうゴリゴリっす。",
+          "text_changed": false,
+          "actor": "goal-a-dual-regression",
+          "started_at": "2026-07-16T07:11:10.545343+00:00",
+          "status": "failed",
+          "alignment_state": "failed",
+          "error_code": "QWEN_RETRY_FAILED",
+          "error": "alignment token timing unreliable: covered 0.800s of 9.232s",
+          "backend_evidence": {
+            "status": "failed",
+            "error": "alignment token timing unreliable: covered 0.800s of 9.232s",
+            "token_count": 3,
+            "coverage": 0.086655,
+            "raw_model_output": [
+              {
+                "items": [
+                  {
+                    "text": "もう",
+                    "start_time": 4.48,
+                    "end_time": 4.64
+                  },
+                  {
+                    "text": "ゴリゴリ",
+                    "start_time": 4.72,
+                    "end_time": 5.12
+                  },
+                  {
+                    "text": "っす",
+                    "start_time": 5.2,
+                    "end_time": 5.28
+                  }
+                ]
+              }
+            ]
+          },
+          "elapsed_ms": 62,
+          "finished_at": "2026-07-16T07:11:10.613043+00:00",
+          "original_state_preserved": true
+        },
+        {
+          "segment_id": "segment_000027",
+          "requested_strategy": "qwen",
+          "strategy": "qwen",
+          "language_route": "japanese",
+          "text_source": "original_transcript",
+          "original_text": "でもやっぱり一番好きなの。",
+          "selected_text": "でもやっぱり一番好きなの。",
+          "text_changed": false,
+          "actor": "goal-a-dual-regression",
+          "started_at": "2026-07-16T07:11:10.615549+00:00",
+          "status": "failed",
+          "alignment_state": "failed",
+          "error_code": "QWEN_RETRY_FAILED",
+          "error": "alignment token timing unreliable: covered 2.640s of 14.126s",
+          "backend_evidence": {
+            "status": "failed",
+            "error": "alignment token timing unreliable: covered 2.640s of 14.126s",
+            "token_count": 7,
+            "coverage": 0.186889,
+            "raw_model_output": [
+              {
+                "items": [
+                  {
+                    "text": "で",
+                    "start_time": 1.28,
+                    "end_time": 1.36
+                  },
+                  {
+                    "text": "も",
+                    "start_time": 1.36,
+                    "end_time": 1.52
+                  },
+                  {
+                    "text": "やっぱり",
+                    "start_time": 1.52,
+                    "end_time": 1.6
+                  },
+                  {
+                    "text": "一番",
+                    "start_time": 2.32,
+                    "end_time": 3.36
+                  },
+                  {
+                    "text": "好き",
+                    "start_time": 3.52,
+                    "end_time": 3.68
+                  },
+                  {
+                    "text": "な",
+                    "start_time": 3.68,
+                    "end_time": 3.76
+                  },
+                  {
+                    "text": "の",
+                    "start_time": 3.84,
+                    "end_time": 3.92
+                  }
+                ]
+              }
+            ]
+          },
+          "elapsed_ms": 62,
+          "finished_at": "2026-07-16T07:11:10.688833+00:00",
+          "original_state_preserved": true
+        },
+        {
+          "segment_id": "segment_000028",
+          "requested_strategy": "qwen",
+          "strategy": "qwen",
+          "language_route": "japanese",
+          "text_source": "original_transcript",
+          "original_text": "ヤスミさん。",
+          "selected_text": "ヤスミさん。",
+          "text_changed": false,
+          "actor": "goal-a-dual-regression",
+          "started_at": "2026-07-16T07:11:10.689834+00:00",
+          "status": "failed",
+          "alignment_state": "failed",
+          "error_code": "QWEN_RETRY_FAILED",
+          "error": "alignment token timing unreliable: covered 0.880s of 12.142s",
+          "backend_evidence": {
+            "status": "failed",
+            "error": "alignment token timing unreliable: covered 0.880s of 12.142s",
+            "token_count": 2,
+            "coverage": 0.072476,
+            "raw_model_output": [
+              {
+                "items": [
+                  {
+                    "text": "ヤスミ",
+                    "start_time": 10.16,
+                    "end_time": 10.72
+                  },
+                  {
+                    "text": "さん",
+                    "start_time": 10.72,
+                    "end_time": 11.04
+                  }
+                ]
+              }
+            ]
+          },
+          "elapsed_ms": 63,
+          "finished_at": "2026-07-16T07:11:10.753981+00:00",
+          "original_state_preserved": true
+        },
+        {
+          "segment_id": "segment_000040",
+          "requested_strategy": "qwen",
+          "strategy": "qwen",
+          "language_route": "japanese",
+          "text_source": "original_transcript",
+          "original_text": "お、危ない！すみません。",
+          "selected_text": "お、危ない！すみません。",
+          "text_changed": false,
+          "actor": "goal-a-dual-regression",
+          "started_at": "2026-07-16T07:11:10.756985+00:00",
+          "status": "failed",
+          "alignment_state": "failed",
+          "error_code": "QWEN_RETRY_FAILED",
+          "error": "alignment token timing unreliable: covered 0.080s of 6.911s",
+          "backend_evidence": {
+            "status": "failed",
+            "error": "alignment token timing unreliable: covered 0.080s of 6.911s",
+            "token_count": 5,
+            "coverage": 0.324121,
+            "raw_model_output": [
+              {
+                "items": [
+                  {
+                    "text": "お",
+                    "start_time": 0.0,
+                    "end_time": 0.0
+                  },
+                  {
+                    "text": "危ない",
+                    "start_time": 1.44,
+                    "end_time": 1.44
+                  },
+                  {
+                    "text": "すみ",
+                    "start_time": 2.16,
+                    "end_time": 2.16
+                  },
+                  {
+                    "text": "ませ",
+                    "start_time": 2.16,
+                    "end_time": 2.16
+                  },
+                  {
+                    "text": "ん",
+                    "start_time": 2.16,
+                    "end_time": 2.24
+                  }
+                ]
+              }
+            ]
+          },
+          "elapsed_ms": 47,
+          "finished_at": "2026-07-16T07:11:10.816341+00:00",
+          "original_state_preserved": true
+        },
+        {
+          "segment_id": "segment_000060",
+          "requested_strategy": "qwen",
+          "strategy": "qwen",
+          "language_route": "japanese",
+          "text_source": "original_transcript",
+          "original_text": "手島先生。",
+          "selected_text": "手島先生。",
+          "text_changed": false,
+          "actor": "goal-a-dual-regression",
+          "started_at": "2026-07-16T07:11:10.818393+00:00",
+          "status": "failed",
+          "alignment_state": "failed",
+          "error_code": "QWEN_RETRY_FAILED",
+          "error": "alignment token timing unreliable: covered 0.800s of 5.873s",
+          "backend_evidence": {
+            "status": "failed",
+            "error": "alignment token timing unreliable: covered 0.800s of 5.873s",
+            "token_count": 2,
+            "coverage": 0.136217,
+            "raw_model_output": [
+              {
+                "items": [
+                  {
+                    "text": "手島",
+                    "start_time": 4.4,
+                    "end_time": 4.72
+                  },
+                  {
+                    "text": "先生",
+                    "start_time": 4.72,
+                    "end_time": 5.2
+                  }
+                ]
+              }
+            ]
+          },
+          "elapsed_ms": 78,
+          "finished_at": "2026-07-16T07:11:10.883395+00:00",
+          "original_state_preserved": true
+        },
+        {
+          "segment_id": "segment_000063",
+          "requested_strategy": "qwen",
+          "strategy": "qwen",
+          "language_route": "japanese",
+          "text_source": "original_transcript",
+          "original_text": "休みこんなとき漫画の主人公なら。",
+          "selected_text": "休みこんなとき漫画の主人公なら。",
+          "text_changed": false,
+          "actor": "goal-a-dual-regression",
+          "started_at": "2026-07-16T07:11:10.885901+00:00",
+          "status": "failed",
+          "alignment_state": "failed",
+          "error_code": "QWEN_RETRY_FAILED",
+          "error": "alignment token timing unreliable: covered 2.000s of 11.400s",
+          "backend_evidence": {
+            "status": "failed",
+            "error": "alignment token timing unreliable: covered 2.000s of 11.400s",
+            "token_count": 7,
+            "coverage": 0.175439,
+            "raw_model_output": [
+              {
+                "items": [
+                  {
+                    "text": "休みこんな",
+                    "start_time": 8.08,
+                    "end_time": 8.4
+                  },
+                  {
+                    "text": "とき",
+                    "start_time": 8.4,
+                    "end_time": 8.64
+                  },
+                  {
+                    "text": "漫画",
+                    "start_time": 8.64,
+                    "end_time": 8.96
+                  },
+                  {
+                    "text": "の",
+                    "start_time": 8.96,
+                    "end_time": 9.04
+                  },
+                  {
+                    "text": "主人",
+                    "start_time": 9.04,
+                    "end_time": 9.44
+                  },
+                  {
+                    "text": "公",
+                    "start_time": 9.52,
+                    "end_time": 9.68
+                  },
+                  {
+                    "text": "なら",
+                    "start_time": 9.68,
+                    "end_time": 10.08
+                  }
+                ]
+              }
+            ]
+          },
+          "elapsed_ms": 78,
+          "finished_at": "2026-07-16T07:11:10.960283+00:00",
+          "original_state_preserved": true
+        },
+        {
+          "segment_id": "segment_000066",
+          "requested_strategy": "qwen",
+          "strategy": "qwen",
+          "language_route": "japanese",
+          "text_source": "original_transcript",
+          "original_text": "でもまた遊んでね。",
+          "selected_text": "でもまた遊んでね。",
+          "text_changed": false,
+          "actor": "goal-a-dual-regression",
+          "started_at": "2026-07-16T07:11:10.962909+00:00",
+          "status": "failed",
+          "alignment_state": "failed",
+          "error_code": "QWEN_RETRY_FAILED",
+          "error": "alignment token timing unreliable: covered 1.840s of 10.759s",
+          "backend_evidence": {
+            "status": "failed",
+            "error": "alignment token timing unreliable: covered 1.840s of 10.759s",
+            "token_count": 6,
+            "coverage": 0.17102,
+            "raw_model_output": [
+              {
+                "items": [
+                  {
+                    "text": "で",
+                    "start_time": 0.88,
+                    "end_time": 0.96
+                  },
+                  {
+                    "text": "も",
+                    "start_time": 0.96,
+                    "end_time": 1.12
+                  },
+                  {
+                    "text": "また",
+                    "start_time": 1.6,
+                    "end_time": 2.0
+                  },
+                  {
+                    "text": "遊ん",
+                    "start_time": 2.0,
+                    "end_time": 2.4
+                  },
+                  {
+                    "text": "で",
+                    "start_time": 2.4,
+                    "end_time": 2.64
+                  },
+                  {
+                    "text": "ね",
+                    "start_time": 2.64,
+                    "end_time": 2.72
+                  }
+                ]
+              }
+            ]
+          },
+          "elapsed_ms": 63,
+          "finished_at": "2026-07-16T07:11:11.025035+00:00",
+          "original_state_preserved": true
+        },
+        {
+          "segment_id": "segment_000083",
+          "requested_strategy": "qwen",
+          "strategy": "qwen",
+          "language_route": "japanese",
+          "text_source": "original_transcript",
+          "original_text": "あははは。",
+          "selected_text": "あははは。",
+          "text_changed": false,
+          "actor": "goal-a-dual-regression",
+          "started_at": "2026-07-16T07:11:11.028039+00:00",
+          "status": "failed",
+          "alignment_state": "failed",
+          "error_code": "QWEN_RETRY_FAILED",
+          "error": "alignment token timing unreliable: covered 0.160s of 15.188s",
+          "backend_evidence": {
+            "status": "failed",
+            "error": "alignment token timing unreliable: covered 0.160s of 15.188s",
+            "token_count": 1,
+            "coverage": 0.010535,
+            "raw_model_output": [
+              {
+                "items": [
+                  {
+                    "text": "あははは",
+                    "start_time": 9.28,
+                    "end_time": 9.44
+                  }
+                ]
+              }
+            ]
+          },
+          "elapsed_ms": 62,
+          "finished_at": "2026-07-16T07:11:11.094740+00:00",
+          "original_state_preserved": true
+        },
+        {
+          "segment_id": "segment_000095",
+          "requested_strategy": "qwen",
+          "strategy": "qwen",
+          "language_route": "japanese",
+          "text_source": "original_transcript",
+          "original_text": "ちょっといいですか。",
+          "selected_text": "ちょっといいですか。",
+          "text_changed": false,
+          "actor": "goal-a-dual-regression",
+          "started_at": "2026-07-16T07:11:11.097740+00:00",
+          "status": "failed",
+          "alignment_state": "failed",
+          "error_code": "QWEN_RETRY_FAILED",
+          "error": "alignment token timing unreliable: covered 1.360s of 13.255s",
+          "backend_evidence": {
+            "status": "failed",
+            "error": "alignment token timing unreliable: covered 1.360s of 13.255s",
+            "token_count": 4,
+            "coverage": 0.102603,
+            "raw_model_output": [
+              {
+                "items": [
+                  {
+                    "text": "ちょっと",
+                    "start_time": 6.96,
+                    "end_time": 7.6
+                  },
+                  {
+                    "text": "いい",
+                    "start_time": 7.6,
+                    "end_time": 7.84
+                  },
+                  {
+                    "text": "です",
+                    "start_time": 7.84,
+                    "end_time": 8.0
+                  },
+                  {
+                    "text": "か",
+                    "start_time": 8.08,
+                    "end_time": 8.32
+                  }
+                ]
+              }
+            ]
+          },
+          "elapsed_ms": 63,
+          "finished_at": "2026-07-16T07:11:11.160879+00:00",
+          "original_state_preserved": true
+        },
+        {
+          "segment_id": "segment_000097",
+          "requested_strategy": "qwen",
+          "strategy": "qwen",
+          "language_route": "japanese",
+          "text_source": "original_transcript",
+          "original_text": "六百円です。",
+          "selected_text": "六百円です。",
+          "text_changed": false,
+          "actor": "goal-a-dual-regression",
+          "started_at": "2026-07-16T07:11:11.163903+00:00",
+          "status": "failed",
+          "alignment_state": "failed",
+          "error_code": "QWEN_RETRY_FAILED",
+          "error": "alignment token timing unreliable: covered 0.800s of 7.906s",
+          "backend_evidence": {
+            "status": "failed",
+            "error": "alignment token timing unreliable: covered 0.800s of 7.906s",
+            "token_count": 3,
+            "coverage": 0.101189,
+            "raw_model_output": [
+              {
+                "items": [
+                  {
+                    "text": "六百",
+                    "start_time": 3.68,
+                    "end_time": 3.76
+                  },
+                  {
+                    "text": "円",
+                    "start_time": 3.92,
+                    "end_time": 4.16
+                  },
+                  {
+                    "text": "です",
+                    "start_time": 4.16,
+                    "end_time": 4.48
+                  }
+                ]
+              }
+            ]
+          },
+          "elapsed_ms": 62,
+          "finished_at": "2026-07-16T07:11:11.227033+00:00",
+          "original_state_preserved": true
+        },
+        {
+          "segment_id": "segment_000111",
+          "requested_strategy": "qwen",
+          "strategy": "qwen",
+          "language_route": "japanese",
+          "text_source": "original_transcript",
+          "original_text": "ああ。",
+          "selected_text": "ああ。",
+          "text_changed": false,
+          "actor": "goal-a-dual-regression",
+          "started_at": "2026-07-16T07:11:11.229036+00:00",
+          "status": "failed",
+          "alignment_state": "failed",
+          "error_code": "QWEN_RETRY_FAILED",
+          "error": "alignment token timing unreliable: covered 0.000s of 8.998s",
+          "backend_evidence": {
+            "status": "failed",
+            "error": "alignment token timing unreliable: covered 0.000s of 8.998s",
+            "token_count": 1,
+            "coverage": 0.0,
+            "raw_model_output": [
+              {
+                "items": [
+                  {
+                    "text": "ああ",
+                    "start_time": 0.96,
+                    "end_time": 0.96
+                  }
+                ]
+              }
+            ]
+          },
+          "elapsed_ms": 63,
+          "finished_at": "2026-07-16T07:11:11.292610+00:00",
+          "original_state_preserved": true
+        }
+      ],
+      "after": {
+        "segment_count": 118,
+        "completed_exact": 100,
+        "completed_coarse": 0,
+        "failed": 18,
+        "short_failed": 6,
+        "illegal_time_count": 191,
+        "out_of_range_token_count": 2,
+        "non_monotonic_segment_count": 0,
+        "severe_overlap_count": 117
+      },
+      "content_changed_ids": [],
+      "checks": {
+        "failed_not_increased": true,
+        "short_failed_not_increased": true,
+        "content_preserved": true,
+        "illegal_time_not_increased": true,
+        "out_of_range_not_increased": true,
+        "non_monotonic_not_increased": true,
+        "severe_overlap_not_increased": true
+      }
+    },
+    "madougushi02": {
+      "source": "E:\\project\\qwen3-asr\\workspaces\\clean-regression-20260712-002943\\madougushi02",
+      "workdir": "E:\\project\\qwen3-asr\\workspaces\\align-recovery-dual-regression-20260716-150825\\madougushi02",
+      "transcript_sha256": "eb7eb8f12a5dab2eb3d1e23a0d54b1cabc5a4527da0d9b640ec1d0a55c2d620a",
+      "before": {
+        "segment_count": 127,
+        "completed_exact": 116,
+        "completed_coarse": 0,
+        "failed": 11,
+        "short_failed": 9,
+        "illegal_time_count": 171,
+        "out_of_range_token_count": 7,
+        "non_monotonic_segment_count": 0,
+        "severe_overlap_count": 126
+      },
+      "attempts": [
+        {
+          "segment_id": "segment_000020",
+          "requested_strategy": "qwen",
+          "strategy": "qwen",
+          "language_route": "japanese",
+          "text_source": "original_transcript",
+          "original_text": "あ",
+          "selected_text": "あ",
+          "text_changed": false,
+          "actor": "goal-a-dual-regression",
+          "started_at": "2026-07-16T07:11:11.303134+00:00",
+          "status": "failed",
+          "alignment_state": "failed",
+          "error_code": "QWEN_RETRY_FAILED",
+          "error": "alignment token timing unreliable: covered 0.000s of 7.335s",
+          "backend_evidence": {
+            "status": "failed",
+            "error": "alignment token timing unreliable: covered 0.000s of 7.335s",
+            "token_count": 1,
+            "coverage": 0.0,
+            "raw_model_output": [
+              {
+                "items": [
+                  {
+                    "text": "あ",
+                    "start_time": 0.0,
+                    "end_time": 0.0
+                  }
+                ]
+              }
+            ]
+          },
+          "elapsed_ms": 47,
+          "finished_at": "2026-07-16T07:11:11.359210+00:00",
+          "original_state_preserved": true
+        },
+        {
+          "segment_id": "segment_000025",
+          "requested_strategy": "qwen",
+          "strategy": "qwen",
+          "language_route": "japanese",
+          "text_source": "original_transcript",
+          "original_text": "あ。",
+          "selected_text": "あ。",
+          "text_changed": false,
+          "actor": "goal-a-dual-regression",
+          "started_at": "2026-07-16T07:11:11.361211+00:00",
+          "status": "failed",
+          "alignment_state": "failed",
+          "error_code": "QWEN_RETRY_FAILED",
+          "error": "alignment token timing unreliable: covered 1.040s of 6.813s",
+          "backend_evidence": {
+            "status": "failed",
+            "error": "alignment token timing unreliable: covered 1.040s of 6.813s",
+            "token_count": 1,
+            "coverage": 0.152649,
+            "raw_model_output": [
+              {
+                "items": [
+                  {
+                    "text": "あ",
+                    "start_time": 5.12,
+                    "end_time": 6.16
+                  }
+                ]
+              }
+            ]
+          },
+          "elapsed_ms": 63,
+          "finished_at": "2026-07-16T07:11:11.418773+00:00",
+          "original_state_preserved": true
+        },
+        {
+          "segment_id": "segment_000054",
+          "requested_strategy": "qwen",
+          "strategy": "qwen",
+          "language_route": "japanese",
+          "text_source": "original_transcript",
+          "original_text": "うん。",
+          "selected_text": "うん。",
+          "text_changed": false,
+          "actor": "goal-a-dual-regression",
+          "started_at": "2026-07-16T07:11:11.421282+00:00",
+          "status": "failed",
+          "alignment_state": "failed",
+          "error_code": "QWEN_RETRY_FAILED",
+          "error": "alignment token timing unreliable: covered 0.000s of 13.933s",
+          "backend_evidence": {
+            "status": "failed",
+            "error": "alignment token timing unreliable: covered 0.000s of 13.933s",
+            "token_count": 1,
+            "coverage": 0.0,
+            "raw_model_output": [
+              {
+                "items": [
+                  {
+                    "text": "うん",
+                    "start_time": 13.68,
+                    "end_time": 13.68
+                  }
+                ]
+              }
+            ]
+          },
+          "elapsed_ms": 62,
+          "finished_at": "2026-07-16T07:11:11.482097+00:00",
+          "original_state_preserved": true
+        },
+        {
+          "segment_id": "segment_000055",
+          "requested_strategy": "qwen",
+          "strategy": "qwen",
+          "language_route": "japanese",
+          "text_source": "original_transcript",
+          "original_text": "あ。",
+          "selected_text": "あ。",
+          "text_changed": false,
+          "actor": "goal-a-dual-regression",
+          "started_at": "2026-07-16T07:11:11.485603+00:00",
+          "status": "failed",
+          "alignment_state": "failed",
+          "error_code": "QWEN_RETRY_FAILED",
+          "error": "alignment token timing unreliable: covered 0.480s of 15.600s",
+          "backend_evidence": {
+            "status": "failed",
+            "error": "alignment token timing unreliable: covered 0.480s of 15.600s",
+            "token_count": 1,
+            "coverage": 0.030769,
+            "raw_model_output": [
+              {
+                "items": [
+                  {
+                    "text": "あ",
+                    "start_time": 0.32,
+                    "end_time": 0.8
+                  }
+                ]
+              }
+            ]
+          },
+          "elapsed_ms": 63,
+          "finished_at": "2026-07-16T07:11:11.542666+00:00",
+          "original_state_preserved": true
+        },
+        {
+          "segment_id": "segment_000056",
+          "requested_strategy": "qwen",
+          "strategy": "qwen",
+          "language_route": "japanese",
+          "text_source": "original_transcript",
+          "original_text": "あ。",
+          "selected_text": "あ。",
+          "text_changed": false,
+          "actor": "goal-a-dual-regression",
+          "started_at": "2026-07-16T07:11:11.545176+00:00",
+          "status": "failed",
+          "alignment_state": "failed",
+          "error_code": "QWEN_RETRY_FAILED",
+          "error": "alignment token timing unreliable: covered 0.160s of 15.600s",
+          "backend_evidence": {
+            "status": "failed",
+            "error": "alignment token timing unreliable: covered 0.160s of 15.600s",
+            "token_count": 1,
+            "coverage": 0.010256,
+            "raw_model_output": [
+              {
+                "items": [
+                  {
+                    "text": "あ",
+                    "start_time": 11.52,
+                    "end_time": 11.68
+                  }
+                ]
+              }
+            ]
+          },
+          "elapsed_ms": 62,
+          "finished_at": "2026-07-16T07:11:11.603251+00:00",
+          "original_state_preserved": true
+        },
+        {
+          "segment_id": "segment_000057",
+          "requested_strategy": "qwen",
+          "strategy": "qwen",
+          "language_route": "japanese",
+          "text_source": "original_transcript",
+          "original_text": "ねえ、ねえ",
+          "selected_text": "ねえ、ねえ",
+          "text_changed": false,
+          "actor": "goal-a-dual-regression",
+          "started_at": "2026-07-16T07:11:11.605762+00:00",
+          "status": "failed",
+          "alignment_state": "failed",
+          "error_code": "QWEN_RETRY_FAILED",
+          "error": "alignment token timing unreliable: covered 2.400s of 14.339s",
+          "backend_evidence": {
+            "status": "failed",
+            "error": "alignment token timing unreliable: covered 2.400s of 14.339s",
+            "token_count": 2,
+            "coverage": 0.167376,
+            "raw_model_output": [
+              {
+                "items": [
+                  {
+                    "text": "ねえ",
+                    "start_time": 8.96,
+                    "end_time": 11.36
+                  },
+                  {
+                    "text": "ねえ",
+                    "start_time": 11.36,
+                    "end_time": 11.36
+                  }
+                ]
+              }
+            ]
+          },
+          "elapsed_ms": 63,
+          "finished_at": "2026-07-16T07:11:11.667364+00:00",
+          "original_state_preserved": true
+        },
+        {
+          "segment_id": "segment_000070",
+          "requested_strategy": "qwen",
+          "strategy": "qwen",
+          "language_route": "japanese",
+          "text_source": "original_transcript",
+          "original_text": "は。",
+          "selected_text": "は。",
+          "text_changed": false,
+          "actor": "goal-a-dual-regression",
+          "started_at": "2026-07-16T07:11:11.670366+00:00",
+          "status": "failed",
+          "alignment_state": "failed",
+          "error_code": "QWEN_RETRY_FAILED",
+          "error": "alignment token timing unreliable: covered 0.800s of 8.514s",
+          "backend_evidence": {
+            "status": "failed",
+            "error": "alignment token timing unreliable: covered 0.800s of 8.514s",
+            "token_count": 1,
+            "coverage": 0.093963,
+            "raw_model_output": [
+              {
+                "items": [
+                  {
+                    "text": "は",
+                    "start_time": 1.12,
+                    "end_time": 1.92
+                  }
+                ]
+              }
+            ]
+          },
+          "elapsed_ms": 62,
+          "finished_at": "2026-07-16T07:11:11.730926+00:00",
+          "original_state_preserved": true
+        },
+        {
+          "segment_id": "segment_000076",
+          "requested_strategy": "qwen",
+          "strategy": "qwen",
+          "language_route": "japanese",
+          "text_source": "original_transcript",
+          "original_text": "帰っていらした。",
+          "selected_text": "帰っていらした。",
+          "text_changed": false,
+          "actor": "goal-a-dual-regression",
+          "started_at": "2026-07-16T07:11:11.733973+00:00",
+          "status": "failed",
+          "alignment_state": "failed",
+          "error_code": "QWEN_RETRY_FAILED",
+          "error": "alignment token timing unreliable: zero-duration ratio 0.50 with covered 1.760s of 4.127s",
+          "backend_evidence": {
+            "status": "failed",
+            "error": "alignment token timing unreliable: zero-duration ratio 0.50 with covered 1.760s of 4.127s",
+            "token_count": 4,
+            "coverage": 0.562152,
+            "raw_model_output": [
+              {
+                "items": [
+                  {
+                    "text": "帰っ",
+                    "start_time": 0.0,
+                    "end_time": 1.68
+                  },
+                  {
+                    "text": "て",
+                    "start_time": 1.68,
+                    "end_time": 1.76
+                  },
+                  {
+                    "text": "いらし",
+                    "start_time": 2.32,
+                    "end_time": 2.32
+                  },
+                  {
+                    "text": "た",
+                    "start_time": 2.32,
+                    "end_time": 2.32
+                  }
+                ]
+              }
+            ]
+          },
+          "elapsed_ms": 63,
+          "finished_at": "2026-07-16T07:11:11.790308+00:00",
+          "original_state_preserved": true
+        },
+        {
+          "segment_id": "segment_000089",
+          "requested_strategy": "qwen",
+          "strategy": "qwen",
+          "language_route": "japanese",
+          "text_source": "original_transcript",
+          "original_text": "あ。",
+          "selected_text": "あ。",
+          "text_changed": false,
+          "actor": "goal-a-dual-regression",
+          "started_at": "2026-07-16T07:11:11.792811+00:00",
+          "status": "failed",
+          "alignment_state": "failed",
+          "error_code": "QWEN_RETRY_FAILED",
+          "error": "alignment token timing unreliable: covered 0.000s of 8.481s",
+          "backend_evidence": {
+            "status": "failed",
+            "error": "alignment token timing unreliable: covered 0.000s of 8.481s",
+            "token_count": 1,
+            "coverage": 0.0,
+            "raw_model_output": [
+              {
+                "items": [
+                  {
+                    "text": "あ",
+                    "start_time": 3.68,
+                    "end_time": 3.68
+                  }
+                ]
+              }
+            ]
+          },
+          "elapsed_ms": 62,
+          "finished_at": "2026-07-16T07:11:11.850053+00:00",
+          "original_state_preserved": true
+        },
+        {
+          "segment_id": "segment_000111",
+          "requested_strategy": "qwen",
+          "strategy": "qwen",
+          "language_route": "japanese",
+          "text_source": "original_transcript",
+          "original_text": "可哀想。何があったの？",
+          "selected_text": "可哀想。何があったの？",
+          "text_changed": false,
+          "actor": "goal-a-dual-regression",
+          "started_at": "2026-07-16T07:11:11.852560+00:00",
+          "status": "failed",
+          "alignment_state": "failed",
+          "error_code": "QWEN_RETRY_FAILED",
+          "error": "alignment token timing unreliable: covered 1.760s of 10.585s",
+          "backend_evidence": {
+            "status": "failed",
+            "error": "alignment token timing unreliable: covered 1.760s of 10.585s",
+            "token_count": 6,
+            "coverage": 0.166273,
+            "raw_model_output": [
+              {
+                "items": [
+                  {
+                    "text": "可哀想",
+                    "start_time": 7.44,
+                    "end_time": 7.68
+                  },
+                  {
+                    "text": "何",
+                    "start_time": 7.68,
+                    "end_time": 7.68
+                  },
+                  {
+                    "text": "が",
+                    "start_time": 8.4,
+                    "end_time": 8.64
+                  },
+                  {
+                    "text": "あっ",
+                    "start_time": 8.64,
+                    "end_time": 8.64
+                  },
+                  {
+                    "text": "た",
+                    "start_time": 8.64,
+                    "end_time": 9.2
+                  },
+                  {
+                    "text": "の",
+                    "start_time": 9.2,
+                    "end_time": 9.2
+                  }
+                ]
+              }
+            ]
+          },
+          "elapsed_ms": 47,
+          "finished_at": "2026-07-16T07:11:11.910616+00:00",
+          "original_state_preserved": true
+        },
+        {
+          "segment_id": "segment_000122",
+          "requested_strategy": "qwen",
+          "strategy": "qwen",
+          "language_route": "japanese",
+          "text_source": "original_transcript",
+          "original_text": "あ",
+          "selected_text": "あ",
+          "text_changed": false,
+          "actor": "goal-a-dual-regression",
+          "started_at": "2026-07-16T07:11:11.914119+00:00",
+          "status": "failed",
+          "alignment_state": "failed",
+          "error_code": "QWEN_RETRY_FAILED",
+          "error": "alignment token timing unreliable: covered 0.000s of 5.337s",
+          "backend_evidence": {
+            "status": "failed",
+            "error": "alignment token timing unreliable: covered 0.000s of 5.337s",
+            "token_count": 1,
+            "coverage": 0.0,
+            "raw_model_output": [
+              {
+                "items": [
+                  {
+                    "text": "あ",
+                    "start_time": 0.0,
+                    "end_time": 0.0
+                  }
+                ]
+              }
+            ]
+          },
+          "elapsed_ms": 46,
+          "finished_at": "2026-07-16T07:11:11.967311+00:00",
+          "original_state_preserved": true
+        }
+      ],
+      "after": {
+        "segment_count": 127,
+        "completed_exact": 116,
+        "completed_coarse": 0,
+        "failed": 11,
+        "short_failed": 9,
+        "illegal_time_count": 171,
+        "out_of_range_token_count": 7,
+        "non_monotonic_segment_count": 0,
+        "severe_overlap_count": 126
+      },
+      "content_changed_ids": [],
+      "checks": {
+        "failed_not_increased": true,
+        "short_failed_not_increased": true,
+        "content_preserved": true,
+        "illegal_time_not_increased": true,
+        "out_of_range_not_increased": true,
+        "non_monotonic_not_increased": true,
+        "severe_overlap_not_increased": true
+      }
+    }
+  }
+}

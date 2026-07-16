@@ -10,9 +10,11 @@ The minimal `run` path is `prepare -> transcribe -> quality-gate -> export`. Opt
 
 Production defaults use silence-first segmentation with a 15 second maximum segment window, project-local `.model-cache`, `local_files_only` enabled unless explicitly disabled, adaptive ASR batching, and stage checkpoints for resumable `transcribe` and `align`. The CLI leaves `batch_size` unset initially; adaptive resolution selects 3, 4, or 5 from the current segment-duration distribution, while fixed mode falls back to 5 when no explicit size is supplied.
 
-Qwen ForcedAligner is the only production main aligner. Split has one production implementation, `rule`; the rejected LLM split variants and MFA full-alignment backend are absent from CLI, Web, and PipelineRunner. MFA local remains available only as an explicit, default-off proofread-realignment fallback. Translation LLM, MiMo, the generic LLM client, timing legality checks, and the mandatory pre-export quality gate remain supported.
+Qwen ForcedAligner is the only production main aligner. Split has one production implementation, `rule`; the rejected LLM split variants and MFA full-alignment backend are absent from CLI, Web, and PipelineRunner. MFA local remains an explicit, default-off local fallback for applicable Japanese proofread or failed-segment recovery candidates; it is never a full-dataset replacement. Translation LLM, MiMo, the generic LLM client, timing legality checks, and the mandatory pre-export quality gate remain supported.
 
-After Align, the Web recovery layer routes every failed dialogue segment. Music regions are represented separately as `SKIPPED_MUSIC_REGION`; they remain inspectable but are excluded from dialogue recovery counts and the live alignment quality gate. A recovery action that accepts `completed_coarse` first backs up aligned manifest/checkpoint/event evidence, atomically updates shared alignment state, and leaves the prior quality FAIL visible until quality is rerun.
+After Align, `recover-align` and the Web recovery layer route every failed dialogue segment through the same executor. Music regions are represented separately as `SKIPPED_MUSIC_REGION`; they remain inspectable but are excluded from dialogue recovery counts and the live alignment quality gate. Qwen retry uses the original transcript unless verified text is explicitly opted in. `route_language` changes actual backend selection, and MFA local is Japanese-only. Exact results pass the same token timing/content validator regardless of backend.
+
+VAD is localization evidence, not transcript authority. A recovery action that accepts `completed_coarse` requires verified text plus one unique or manually selected VAD region inside the original segment, bounded duration for short responses, and safe neighbor overlap. It first backs up aligned manifest/checkpoint/event evidence, atomically updates shared alignment state, records the original failure and operator, and leaves the prior quality FAIL visible until quality is rerun. Multiple ambiguous regions or no speech preserve `failed`.
 
 Web cue editing writes only `drafts/web-review.json`. Each edit validates cue identity, non-empty source text, positive timing, non-overlap, and expected revision; it backs up an existing draft and appends `reports/web_review_history.jsonl`. A dirty review draft invalidates quality/normalize/export presentation without silently replacing `normalized_segments.json` or exported subtitles. Undo restores the previous draft cue while preserving formal manifests and audit history.
 
@@ -22,6 +24,7 @@ Web cue editing writes only `drafts/web-review.json`. Each edit validates cue id
 - `transcribe`: reads `segments.json`, writes `transcript_segments.json`, `transcript.txt`, `transcript_events.jsonl`, `transcript_checkpoint.json`, and optional `transcribe.profile.json`.
 - `correct`: reads `transcript_segments.json`, writes `corrected_segments.json`, and updates `transcript_segments.json`.
 - `align`: reads `transcript_segments.json`, writes `aligned_segments.json`, `aligned_events.jsonl`, and `aligned_checkpoint.json`.
+- `recover-align`: reads one failed entry from aligned state, invokes Qwen or applicable Japanese MFA local, and updates only that segment after backup and shared exact validation; failed attempts preserve the original state.
 - `mfa`: optional local proofread fallback plus standalone experiment tooling; MFA environments, corpora, pretrained models, and micromamba files are local state under `tools/` and are not tracked as source.
 - `split`: rule-only production stage; reads `aligned_segments.json`, writes `split_segments.json` and `subtitles.split.srt`.
 - `translate`: reads `split_segments.json`, writes `translated_segments.json` and `subtitles.translated.srt`.
@@ -29,7 +32,7 @@ Web cue editing writes only `drafts/web-review.json`. Each edit validates cue id
 - `quality`: optional quality gates; content, ASS, diff, final quality, and proofread-realign checks write reports while preserving source segment schema.
 - `normalize`: reads the best configured subtitle source, writes `normalized_segments.json` and `subtitles.normalized.srt`.
 - `export`: reads the selected subtitle source, writes `subtitles.srt` and/or `subtitles.vtt`.
-- `web recovery`: writes recovery state/action evidence below `reports/` and, only for an explicitly accepted coarse fallback, backed-up aligned state.
+- `web recovery`: writes recovery state/action evidence below `reports/`; real retry, exact success, guarded coarse acceptance, and target-level undo all use backed-up aligned state through the shared recovery executor/service.
 - `web review`: writes `drafts/web-review.json`, `reports/web_review_history.jsonl`, and `reports/review-backups/`; it does not overwrite formal manifests.
 
 ## Progress

@@ -18,10 +18,17 @@
 - Web 前后端整理 W0-W8 已收口：版本化 API、Align 三态、22 个对白失败恢复队列、370 cue 审校草稿/撤销、质量证据跳转、受控预览下载、阶段启动、移动端导航与密钥零泄漏均已实现。
 - 最新 Web 收口证据：Web 定向 `48 passed in 0.66s`，完整 `604 passed in 10.97s`；`scripts/local_check.ps1` 再次得到 `604 passed in 10.51s`；全范围 Ruff、compileall、Node 语法和 `git diff --check` 通过。
 - Playwright 验证 1440×900、1280×720、390×844，控制台 0 error/0 warning、失败请求 0、媒体 Range 206、370 cue 缓存切换 33.7ms，字幕预览/下载 UTF-8 正常。
+- Align 失败恢复 Goal A 已完成 A0-A7 的实现与真实数据验收：CLI/Web 共用真实 executor，Qwen retry 默认原 transcript，verified text 显式启用，MFA local 仅日语，coarse 受 transcript/VAD/邻接/短范围硬门保护，目标级 undo 保留后续其他恢复。
+- Sayonara Lara 主对白从 `91 exact / 0 coarse / 22 failed` 改善到正式数据 `92 exact / 0 coarse / 21 failed`；唯一正式 exact 晋升为 `segment_000086`。18 个短应答全部真实执行 VAD，未核验文本没有写入 coarse。正式 quality 仍为 FAIL，时间异常为 0，normalized/export ASS 指标有一项真实改善。
+- 双数据集定向回归 PASS：Konoato01 保持 `100 exact / 18 failed`，Madougushi02 保持 `116 exact / 11 failed`，未新增短对白缺失、内容守恒失败、非法时间、越界 token、非单调或严重重叠。
+- Web 隔离验收副本验证 `segment_000013` 的核验 + coarse、`segment_000093` 的 VAD_NO_SPEECH 拒绝、`segment_000086` exact 筛选、音频 Range 206、刷新持久化和真实 quality-gate FAIL；该副本的 `1 coarse` 仅用于交互验收，不计入正式结果。证据见 `reports/align_recovery_web_acceptance.md`。
+- Align 恢复最终验证：定向测试 `30 passed`；`scripts/local_check.ps1` 为 `616 passed in 11.66s`；独立完整 pytest 为 `616 passed in 10.88s`；compileall、全范围 Ruff、Node 语法、`git diff --check` 和 6/6 固定证据 SHA-256 均通过。
 
 当前验收证据以 `reports/final_acceptance.md` 为准。该报告现为 `COMPLETE`，P0-P7 必做项和最终验收均已通过。
 
 Web 专项验收以 `reports/web_frontend_backend_final_acceptance.md`、同名 JSON、`reports/web_api_contract_v1.json` 和 `reports/web_playwright_screenshot_index.md` 为准。
+
+Align 恢复专项以 `reports/align_recovery_final_acceptance.md`、同名 JSON、`reports/align_recovery_sayonara_result.json`、`reports/align_recovery_dual_dataset_regression.json` 和 `reports/align_recovery_web_acceptance.json` 为准。
 
 ## 当前规范
 

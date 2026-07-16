@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-07-16T07:57:44.299486+00:00",
+  "status": "PASS",
+  "diagnostic_only": true,
+  "quality_gate_bypassed": true,
+  "bypass_scope": "isolated derived Goal A workspace only",
+  "formal_quality_status": "FAIL",
+  "formal_quality_summary": {
+    "fail_count": 2,
+    "warn_count": 3,
+    "pass_count": 6
+  },
+  "source": "mimo",
+  "source_segment_count": 371,
+  "normalized_segment_count": 371,
+  "elapsed_ms": 32,
+  "artifacts": {
+    "normalized_manifest": {
+      "path": "E:\\project\\qwen3-asr\\workspaces\\align-recovery-sayonara-lara-02-20260716-143833\\manifests\\normalized_segments.json",
+      "sha256": "3d88144cdd836ac4a058635168542e2d01c2771f92f2cfd4d339dbb33f1516e8"
+    },
+    "normalized_srt": {
+      "path": "E:\\project\\qwen3-asr\\workspaces\\align-recovery-sayonara-lara-02-20260716-143833\\drafts\\subtitles.normalized.srt",
+      "sha256": "52f5c269aad00139d7e23c518aa54a8550d1751626e2017c162d7cbd1e82ee2b"
+    },
+    "export_cache_srt": {
+      "path": "E:\\project\\qwen3-asr\\workspaces\\align-recovery-sayonara-lara-02-20260716-143833\\export-cache\\subtitles.srt",
+      "sha256": "52f5c269aad00139d7e23c518aa54a8550d1751626e2017c162d7cbd1e82ee2b"
+    },
+    "export_cache_vtt": {
+      "path": "E:\\project\\qwen3-asr\\workspaces\\align-recovery-sayonara-lara-02-20260716-143833\\export-cache\\subtitles.vtt",
+      "sha256": "0d163d543000d9b8bdf5acf4e01cc60336f41b21536284ea95742d6e46ff3476"
+    },
+    "target_srt": {
+      "path": "E:\\project\\qwen3-asr\\workspaces\\align-recovery-sayonara-lara-02-20260716-143833\\exports\\subtitles.srt",
+      "sha256": "52f5c269aad00139d7e23c518aa54a8550d1751626e2017c162d7cbd1e82ee2b"
+    },
+    "target_vtt": {
+      "path": "E:\\project\\qwen3-asr\\workspaces\\align-recovery-sayonara-lara-02-20260716-143833\\exports\\subtitles.vtt",
+      "sha256": "0d163d543000d9b8bdf5acf4e01cc60336f41b21536284ea95742d6e46ff3476"
+    }
+  },
+  "content_identity": {
+    "normalized_srt_equals_export_srt": true,
+    "cache_srt_equals_target_srt": true,
+    "cache_vtt_equals_target_vtt": true
+  }
+}

@@ -35,13 +35,13 @@
         <section class="view" data-view-panel="recovery" aria-labelledby="recoveryTitle" hidden>
           <div class="view-header"><div><h1 id="recoveryTitle">失败片段恢复</h1><p>所有 failed 对白进入队列；音乐区域不计入对白失败。</p></div><div id="recoveryMetrics" class="metrics"></div></div>
           <div class="split-pane">
-            <div class="list-pane"><div class="toolbar"><label>筛选 <select id="recoveryFilter"><option value="all">全部失败</option><option value="short">短应答优先</option></select></label></div><div id="recoveryList" class="recovery-list" role="listbox" aria-label="恢复任务"></div></div>
+            <div class="list-pane"><div class="toolbar"><label>队列 <select id="recoveryFilter"><option value="all">全部失败</option><option value="short">短应答优先</option></select></label><label>根因 <select id="recoveryReasonFilter"><option value="all">全部根因</option><option value="short_response">短应答</option><option value="no_tokens">无 token</option><option value="zero_duration_token">零时长 token</option><option value="low_coverage">低覆盖</option><option value="short_window_rewrite">短窗改写拒绝</option><option value="timing_unreliable">时间不可靠</option><option value="mixed_language">混合语言</option></select></label></div><div id="recoveryList" class="recovery-list" role="listbox" aria-label="恢复任务"></div></div>
             <div id="recoveryDetail" class="detail-pane empty-state">选择一个失败片段查看音频、上下文和恢复动作。</div>
           </div>
         </section>
         <section class="view" data-view-panel="review" aria-labelledby="reviewTitle" hidden>
           <div class="view-header"><div><h1 id="reviewTitle">字幕审校</h1><p>cue、音频、Align 状态、编辑草稿与参考字幕只读对照联动。</p></div><div id="reviewMetrics" class="metrics"></div></div>
-          <div class="toolbar"><label>筛选 <select id="reviewFilter"><option value="all">全部 cue</option><option value="failed">Align 失败</option><option value="coarse">粗略完成</option><option value="issues">疑点/待处理</option></select></label><span id="reviewSource" class="path-text"></span><div class="action-row"><span id="reviewDraftState" class="status-chip neutral">正式源</span><button id="undoReviewButton" class="button" disabled>撤销上次编辑</button></div></div>
+          <div class="toolbar"><label>筛选 <select id="reviewFilter"><option value="all">全部 cue</option><option value="exact">精确完成</option><option value="coarse">粗略完成</option><option value="failed">Align 失败</option><option value="issues">疑点/待处理</option></select></label><span id="reviewSource" class="path-text"></span><div class="action-row"><span id="reviewDraftState" class="status-chip neutral">正式源</span><button id="undoReviewButton" class="button" disabled>撤销上次编辑</button></div></div>
           <div class="review-layout">
             <div class="review-cues table-wrap"><table><thead><tr><th>时间</th><th>原文 / 翻译</th><th>状态</th></tr></thead><tbody id="reviewCueRows"></tbody></table></div>
             <div id="reviewDetail" class="review-detail empty-state">选择一条 cue 查看对照。</div>

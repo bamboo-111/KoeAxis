@@ -19,6 +19,8 @@ This project is split into stable entrypoints and implementation packages.
 - `qwen_asr/mfa_experiment.py` and its focused helpers isolate the optional MFA local proofread fallback from the default Qwen align path. The rejected full-alignment experiment lives at `tools/mfa_full_alignment.py` and is not imported by production modules.
 - `qwen_asr/quality_suspects.py`, `qwen_asr/content_quality.py`, `qwen_asr/ass_quality.py`, `qwen_asr/ass_quality_diff.py`, and `qwen_asr/final_quality.py` provide layered quality gates for subtitle content, timing, ASS diff checks, and final acceptance.
 - `qwen_asr/proofread_realign.py` and `qwen_asr/mimo_proofread.py` handle suspects-only proofreading, checkpointed LLM calls, protected edit application, and optional post-proofread realignment.
+- `qwen_asr/recovery_executor.py` is the production single-segment recovery boundary shared by `recover-align` and Web/API. It owns strategy resolution, Qwen original-transcript retry, Japanese-only MFA local execution, exact timing/content validation, aligned-state backup, workspace locking, and target-segment undo.
+- `qwen_asr/recovery_service.py` owns the auditable recovery workflow around that executor: transcript verification, language routing, VAD localization, guarded coarse acceptance, append-only events, and API-safe error translation.
 - `optimizer/` contains rule-only subtitle splitting, cleanup, translation, and shared LLM client utilities. The LLM client remains for translation and proofreading, not production split.
 - `optimizer/splitter.py` remains the compatibility entrypoint for the sole production split implementation. Boundary, readability, display-duration, and timing helpers keep public input and output schemas stable.
 
@@ -32,13 +34,15 @@ Source-level benchmark metadata remains in `benchmarks/`: environment notes, sum
 
 - `qwen_asr/web/workspace_api.py` owns versioned envelopes, workspace scope checks, quality/export inventories, and API error translation.
 - `qwen_asr/web/stage_service.py`, `stage_start_service.py`, and `job_state.py` expose structured stage state, safe CLI payload preparation, and restart-reconciled job persistence.
-- `qwen_asr/recovery_service.py` owns failed-dialogue recovery tasks and append-only action evidence; it reuses the production VAD adapter.
+- `qwen_asr/recovery_service.py` owns failed-dialogue recovery tasks and append-only action evidence; it reuses the production VAD adapter and calls `recovery_executor.py` for real retry/undo work instead of recording a request-only state.
 - `qwen_asr/review_service.py` combines cue/audio/reference data and owns `drafts/web-review.json`, automatic draft backups, revision checks, JSONL audit, and last-edit undo. Formal manifests are never silently overwritten by Web editing.
 - `qwen_asr/alignment_state.py` is the shared authority for `completed_exact`, `completed_coarse`, `failed`, and `SKIPPED_MUSIC_REGION` across CLI, quality, recovery, and Web.
 - `qwen_asr/artifact_state.py` remains the shared completion/outdated authority. A dirty review draft marks `quality-gate`, `normalize`, and `export` outdated without deleting formal artifacts.
 - `qwen_asr/web/templates/workbench.html` plus `static/workbench.css` and `static/workbench.js` implement the default workbench. The legacy configuration UI remains isolated at `/legacy`.
 
 All Web file access is inventory-based or constrained to the selected first-level workspace and manifest-linked media roots. API credentials are environment-only; versioned start requests reject credential fields before process creation.
+
+Recovery writes are confined to the selected first-level workspace. Exact recovery and coarse acceptance back up aligned manifest/checkpoint/events before atomic writes. A failed backend attempt leaves the original failed segment untouched. Coarse acceptance additionally requires verified text, one unambiguous or explicitly selected VAD region inside the original segment, bounded short-response duration, and safe neighbor overlap. Reference ASS files remain read-only evaluation context and never become executor transcript input.
 
 ## Compatibility Rules
 

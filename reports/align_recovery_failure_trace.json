@@ -1,0 +1,2299 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-07-16T06:42:58.508103+00:00",
+  "status": "COMPLETE",
+  "source_workspace": "workspaces\\full-regression-sayonara-lara-02-20260715-234059",
+  "derived_workspace": "workspaces\\align-recovery-sayonara-lara-02-20260716-143833",
+  "counts": {
+    "dialogue_failed": 22,
+    "short_response": 18,
+    "short_window_attempted": 22
+  },
+  "root_causes": {
+    "qwen_timing_failure_then_short_window_content_guard_rejection": 19,
+    "qwen_token_coverage_below_safety_threshold": 2,
+    "language_route_mismatch": 1
+  },
+  "manual_audio_verification_required": [
+    "segment_000013",
+    "segment_000019",
+    "segment_000026",
+    "segment_000031",
+    "segment_000036",
+    "segment_000044",
+    "segment_000054",
+    "segment_000067",
+    "segment_000076",
+    "segment_000086",
+    "segment_000093",
+    "segment_000094",
+    "segment_000096",
+    "segment_000097",
+    "segment_000098",
+    "segment_000099",
+    "segment_000100",
+    "segment_000101",
+    "segment_000102",
+    "segment_000104",
+    "segment_000110",
+    "segment_000127"
+  ],
+  "items": [
+    {
+      "segment_id": "segment_000013",
+      "original_transcript": "うん。",
+      "normalized_char_count": 2,
+      "route": "short_response",
+      "language": "Japanese",
+      "original_range_ms": [
+        146878,
+        155207
+      ],
+      "token_count": 1,
+      "coverage": 0.028815,
+      "error": "ASR short-window fallback changed transcript content: reference_chars=2 aligned_chars=0",
+      "neighbor_context": {
+        "previous": "segment_000012",
+        "next": "segment_000014"
+      },
+      "short_window": {
+        "attempted": true,
+        "window_count": 3,
+        "completed_window_alignments": 0,
+        "merged_asr_text": "はい。ああ。うん。",
+        "content_error": "ASR short-window fallback changed transcript content: reference_chars=2 aligned_chars=0",
+        "windows": [
+          {
+            "window_segment_id": "segment_000013-w01",
+            "audio_path": "E:\\project\\qwen3-asr\\workspaces\\full-regression-sayonara-lara-02-20260715-234059\\diagnostics\\align-fallback\\asr-short-window\\segment_000013\\segment_000013-w01.wav",
+            "global_start_time": 146.878,
+            "global_end_time": 149.878,
+            "asr_status": "completed",
+            "asr_text": "はい。",
+            "asr_error": null,
+            "align_status": "failed",
+            "align_error": "alignment token timing unreliable: covered 0.160s of 3.000s",
+            "token_count": 1
+          },
+          {
+            "window_segment_id": "segment_000013-w02",
+            "audio_path": "E:\\project\\qwen3-asr\\workspaces\\full-regression-sayonara-lara-02-20260715-234059\\diagnostics\\align-fallback\\asr-short-window\\segment_000013\\segment_000013-w02.wav",
+            "global_start_time": 149.878,
+            "global_end_time": 152.878,
+            "asr_status": "completed",
+            "asr_text": "ああ。",
+            "asr_error": null,
+            "align_status": "failed",
+            "align_error": "alignment token timing unreliable: covered 0.080s of 3.000s",
+            "token_count": 1
+          },
+          {
+            "window_segment_id": "segment_000013-w03",
+            "audio_path": "E:\\project\\qwen3-asr\\workspaces\\full-regression-sayonara-lara-02-20260715-234059\\diagnostics\\align-fallback\\asr-short-window\\segment_000013\\segment_000013-w03.wav",
+            "global_start_time": 152.878,
+            "global_end_time": 155.207,
+            "asr_status": "completed",
+            "asr_text": "うん。",
+            "asr_error": null,
+            "align_status": "failed",
+            "align_error": "alignment token timing unreliable: covered 0.240s of 2.329s",
+            "token_count": 1
+          }
+        ]
+      },
+      "transcript_evidence_state": "unknown_requires_audio_verification",
+      "observed_conditions": [
+        "transcript_correctness_unknown",
+        "low_coverage",
+        "asr_rewrite_rejected",
+        "neighbor_overlap_risk"
+      ],
+      "attempted_capabilities": [
+        "qwen_primary_align",
+        "asr_short_window_fallback"
+      ],
+      "skipped_capabilities": [
+        {
+          "capability": "mfa_local_fallback",
+          "skip_reason": "not connected to initial Align recovery executor"
+        },
+        {
+          "capability": "vad_coarse",
+          "skip_reason": "not executed in the immutable baseline and transcript is not yet verified"
+        },
+        {
+          "capability": "language_route_executor",
+          "skip_reason": "route_language currently persists state only"
+        }
+      ],
+      "final_root_cause": "qwen_timing_failure_then_short_window_content_guard_rejection",
+      "confidence": "HIGH"
+    },
+    {
+      "segment_id": "segment_000019",
+      "original_transcript": "うん。",
+      "normalized_char_count": 2,
+      "route": "short_response",
+      "language": "Japanese",
+      "original_range_ms": [
+        219236,
+        225795
+      ],
+      "token_count": 1,
+      "coverage": 0.024394,
+      "error": "ASR short-window fallback changed transcript content: reference_chars=2 aligned_chars=1",
+      "neighbor_context": {
+        "previous": "segment_000018",
+        "next": "segment_000020"
+      },
+      "short_window": {
+        "attempted": true,
+        "window_count": 3,
+        "completed_window_alignments": 1,
+        "merged_asr_text": "ね。うん。は。",
+        "content_error": "ASR short-window fallback changed transcript content: reference_chars=2 aligned_chars=1",
+        "windows": [
+          {
+            "window_segment_id": "segment_000019-w01",
+            "audio_path": "E:\\project\\qwen3-asr\\workspaces\\full-regression-sayonara-lara-02-20260715-234059\\diagnostics\\align-fallback\\asr-short-window\\segment_000019\\segment_000019-w01.wav",
+            "global_start_time": 219.236,
+            "global_end_time": 222.236,
+            "asr_status": "completed",
+            "asr_text": "ね。",
+            "asr_error": null,
+            "align_status": "failed",
+            "align_error": "alignment token timing unreliable: covered 0.080s of 3.000s",
+            "token_count": 1
+          },
+          {
+            "window_segment_id": "segment_000019-w02",
+            "audio_path": "E:\\project\\qwen3-asr\\workspaces\\full-regression-sayonara-lara-02-20260715-234059\\diagnostics\\align-fallback\\asr-short-window\\segment_000019\\segment_000019-w02.wav",
+            "global_start_time": 222.236,
+            "global_end_time": 225.236,
+            "asr_status": "completed",
+            "asr_text": "うん。",
+            "asr_error": null,
+            "align_status": "failed",
+            "align_error": "alignment token timing unreliable: covered 0.080s of 3.000s",
+            "token_count": 1
+          },
+          {
+            "window_segment_id": "segment_000019-w03",
+            "audio_path": "E:\\project\\qwen3-asr\\workspaces\\full-regression-sayonara-lara-02-20260715-234059\\diagnostics\\align-fallback\\asr-short-window\\segment_000019\\segment_000019-w03.wav",
+            "global_start_time": 225.236,
+            "global_end_time": 225.795,
+            "asr_status": "completed",
+            "asr_text": "は。",
+            "asr_error": null,
+            "align_status": "completed",
+            "align_error": null,
+            "token_count": 1
+          }
+        ]
+      },
+      "transcript_evidence_state": "unknown_requires_audio_verification",
+      "observed_conditions": [
+        "transcript_correctness_unknown",
+        "low_coverage",
+        "asr_rewrite_rejected",
+        "neighbor_overlap_risk"
+      ],
+      "attempted_capabilities": [
+        "qwen_primary_align",
+        "asr_short_window_fallback"
+      ],
+      "skipped_capabilities": [
+        {
+          "capability": "mfa_local_fallback",
+          "skip_reason": "not connected to initial Align recovery executor"
+        },
+        {
+          "capability": "vad_coarse",
+          "skip_reason": "not executed in the immutable baseline and transcript is not yet verified"
+        },
+        {
+          "capability": "language_route_executor",
+          "skip_reason": "route_language currently persists state only"
+        }
+      ],
+      "final_root_cause": "qwen_timing_failure_then_short_window_content_guard_rejection",
+      "confidence": "HIGH"
+    },
+    {
+      "segment_id": "segment_000026",
+      "original_transcript": "お父様。",
+      "normalized_char_count": 3,
+      "route": "short_response",
+      "language": "Japanese",
+      "original_range_ms": [
+        294771,
+        309250
+      ],
+      "token_count": 3,
+      "coverage": 0.044202,
+      "error": "ASR short-window fallback changed transcript content: reference_chars=3 aligned_chars=5",
+      "neighbor_context": {
+        "previous": "segment_000025",
+        "next": "segment_000027"
+      },
+      "short_window": {
+        "attempted": true,
+        "window_count": 5,
+        "completed_window_alignments": 2,
+        "merged_asr_text": "はい。お父様。あ。はい。ああ。",
+        "content_error": "ASR short-window fallback changed transcript content: reference_chars=3 aligned_chars=5",
+        "windows": [
+          {
+            "window_segment_id": "segment_000026-w01",
+            "audio_path": "E:\\project\\qwen3-asr\\workspaces\\full-regression-sayonara-lara-02-20260715-234059\\diagnostics\\align-fallback\\asr-short-window\\segment_000026\\segment_000026-w01.wav",
+            "global_start_time": 294.771,
+            "global_end_time": 297.771,
+            "asr_status": "completed",
+            "asr_text": "はい。",
+            "asr_error": null,
+            "align_status": "failed",
+            "align_error": "alignment token timing unreliable: covered 0.080s of 3.000s",
+            "token_count": 1
+          },
+          {
+            "window_segment_id": "segment_000026-w02",
+            "audio_path": "E:\\project\\qwen3-asr\\workspaces\\full-regression-sayonara-lara-02-20260715-234059\\diagnostics\\align-fallback\\asr-short-window\\segment_000026\\segment_000026-w02.wav",
+            "global_start_time": 297.771,
+            "global_end_time": 300.771,
+            "asr_status": "completed",
+            "asr_text": "お父様。",
+            "asr_error": null,
+            "align_status": "completed",
+            "align_error": null,
+            "token_count": 3
+          },
+          {
+            "window_segment_id": "segment_000026-w03",
+            "audio_path": "E:\\project\\qwen3-asr\\workspaces\\full-regression-sayonara-lara-02-20260715-234059\\diagnostics\\align-fallback\\asr-short-window\\segment_000026\\segment_000026-w03.wav",
+            "global_start_time": 300.771,
+            "global_end_time": 303.771,
+            "asr_status": "completed",
+            "asr_text": "あ。",
+            "asr_error": null,
+            "align_status": "failed",
+            "align_error": "alignment token timing unreliable: covered 0.080s of 3.000s",
+            "token_count": 1
+          },
+          {
+            "window_segment_id": "segment_000026-w04",
+            "audio_path": "E:\\project\\qwen3-asr\\workspaces\\full-regression-sayonara-lara-02-20260715-234059\\diagnostics\\align-fallback\\asr-short-window\\segment_000026\\segment_000026-w04.wav",
+            "global_start_time": 303.771,
+            "global_end_time": 306.771,
+            "asr_status": "completed",
+            "asr_text": "はい。",
+            "asr_error": null,
+            "align_status": "failed",
+            "align_error": "alignment token timing unreliable: covered 0.080s of 3.000s",
+            "token_count": 1
+          },
+          {
+            "window_segment_id": "segment_000026-w05",
+            "audio_path": "E:\\project\\qwen3-asr\\workspaces\\full-regression-sayonara-lara-02-20260715-234059\\diagnostics\\align-fallback\\asr-short-window\\segment_000026\\segment_000026-w05.wav",
+            "global_start_time": 306.771,
+            "global_end_time": 309.25,
+            "asr_status": "completed",
+            "asr_text": "ああ。",
+            "asr_error": null,
+            "align_status": "completed",
+            "align_error": null,
+            "token_count": 1
+          }
+        ]
+      },
+      "transcript_evidence_state": "unknown_requires_audio_verification",
+      "observed_conditions": [
+        "transcript_correctness_unknown",
+        "low_coverage",
+        "asr_rewrite_rejected",
+        "neighbor_overlap_risk"
+      ],
+      "attempted_capabilities": [
+        "qwen_primary_align",
+        "asr_short_window_fallback"
+      ],
+      "skipped_capabilities": [
+        {
+          "capability": "mfa_local_fallback",
+          "skip_reason": "not connected to initial Align recovery executor"
+        },
+        {
+          "capability": "vad_coarse",
+          "skip_reason": "not executed in the immutable baseline and transcript is not yet verified"
+        },
+        {
+          "capability": "language_route_executor",
+          "skip_reason": "route_language currently persists state only"
+        }
+      ],
+      "final_root_cause": "qwen_timing_failure_then_short_window_content_guard_rejection",
+      "confidence": "HIGH"
+    },
+    {
+      "segment_id": "segment_000031",
+      "original_transcript": "あれ、ご飯。",
+      "normalized_char_count": 4,
+      "route": "short_response",
+      "language": "Japanese",
+      "original_range_ms": [
+        355057,
+        366912
+      ],
+      "token_count": 2,
+      "coverage": 0.121468,
+      "error": "ASR short-window fallback changed transcript content: reference_chars=4 aligned_chars=6",
+      "neighbor_context": {
+        "previous": "segment_000030",
+        "next": "segment_000032"
+      },
+      "short_window": {
+        "attempted": true,
+        "window_count": 4,
+        "completed_window_alignments": 2,
+        "merged_asr_text": "あれ、ご飯。うん。うん。うんうんうん。",
+        "content_error": "ASR short-window fallback changed transcript content: reference_chars=4 aligned_chars=6",
+        "windows": [
+          {
+            "window_segment_id": "segment_000031-w01",
+            "audio_path": "E:\\project\\qwen3-asr\\workspaces\\full-regression-sayonara-lara-02-20260715-234059\\diagnostics\\align-fallback\\asr-short-window\\segment_000031\\segment_000031-w01.wav",
+            "global_start_time": 355.057,
+            "global_end_time": 358.057,
+            "asr_status": "completed",
+            "asr_text": "あれ、ご飯。",
+            "asr_error": null,
+            "align_status": "completed",
+            "align_error": null,
+            "token_count": 2
+          },
+          {
+            "window_segment_id": "segment_000031-w02",
+            "audio_path": "E:\\project\\qwen3-asr\\workspaces\\full-regression-sayonara-lara-02-20260715-234059\\diagnostics\\align-fallback\\asr-short-window\\segment_000031\\segment_000031-w02.wav",
+            "global_start_time": 358.057,
+            "global_end_time": 361.057,
+            "asr_status": "completed",
+            "asr_text": "うん。",
+            "asr_error": null,
+            "align_status": "completed",
+            "align_error": null,
+            "token_count": 1
+          },
+          {
+            "window_segment_id": "segment_000031-w03",
+            "audio_path": "E:\\project\\qwen3-asr\\workspaces\\full-regression-sayonara-lara-02-20260715-234059\\diagnostics\\align-fallback\\asr-short-window\\segment_000031\\segment_000031-w03.wav",
+            "global_start_time": 361.057,
+            "global_end_time": 364.057,
+            "asr_status": "completed",
+            "asr_text": "うん。",
+            "asr_error": null,
+            "align_status": "failed",
+            "align_error": "alignment token timing unreliable: covered 0.080s of 3.000s",
+            "token_count": 1
+          },
+          {
+            "window_segment_id": "segment_000031-w04",
+            "audio_path": "E:\\project\\qwen3-asr\\workspaces\\full-regression-sayonara-lara-02-20260715-234059\\diagnostics\\align-fallback\\asr-short-window\\segment_000031\\segment_000031-w04.wav",
+            "global_start_time": 364.057,
+            "global_end_time": 366.912,
+            "asr_status": "completed",
+            "asr_text": "うんうんうん。",
+            "asr_error": null,
+            "align_status": "failed",
+            "align_error": "alignment token timing unreliable: zero-duration ratio 0.67 with covered 0.640s of 2.855s",
+            "token_count": 3
+          }
+        ]
+      },
+      "transcript_evidence_state": "unknown_requires_audio_verification",
+      "observed_conditions": [
+        "transcript_correctness_unknown",
+        "low_coverage",
+        "asr_rewrite_rejected",
+        "neighbor_overlap_risk"
+      ],
+      "attempted_capabilities": [
+        "qwen_primary_align",
+        "asr_short_window_fallback"
+      ],
+      "skipped_capabilities": [
+        {
+          "capability": "mfa_local_fallback",
+          "skip_reason": "not connected to initial Align recovery executor"
+        },
+        {
+          "capability": "vad_coarse",
+          "skip_reason": "not executed in the immutable baseline and transcript is not yet verified"
+        },
+        {
+          "capability": "language_route_executor",
+          "skip_reason": "route_language currently persists state only"
+        }
+      ],
+      "final_root_cause": "qwen_timing_failure_then_short_window_content_guard_rejection",
+      "confidence": "HIGH"
+    },
+    {
+      "segment_id": "segment_000036",
+      "original_transcript": "わけがわからないわ。",
+      "normalized_char_count": 9,
+      "route": "standard",
+      "language": "Japanese",
+      "original_range_ms": [
+        414844,
+        421756
+      ],
+      "token_count": 5,
+      "coverage": 0.196759,
+      "error": "ASR short-window fallback changed transcript content: reference_chars=9 aligned_chars=11",
+      "neighbor_context": {
+        "previous": "segment_000035",
+        "next": "segment_000037"
+      },
+      "short_window": {
+        "attempted": true,
+        "window_count": 3,
+        "completed_window_alignments": 2,
+        "merged_asr_text": "うん。わけがわからないわ。はい。",
+        "content_error": "ASR short-window fallback changed transcript content: reference_chars=9 aligned_chars=11",
+        "windows": [
+          {
+            "window_segment_id": "segment_000036-w01",
+            "audio_path": "E:\\project\\qwen3-asr\\workspaces\\full-regression-sayonara-lara-02-20260715-234059\\diagnostics\\align-fallback\\asr-short-window\\segment_000036\\segment_000036-w01.wav",
+            "global_start_time": 414.844,
+            "global_end_time": 417.844,
+            "asr_status": "completed",
+            "asr_text": "うん。",
+            "asr_error": null,
+            "align_status": "completed",
+            "align_error": null,
+            "token_count": 1
+          },
+          {
+            "window_segment_id": "segment_000036-w02",
+            "audio_path": "E:\\project\\qwen3-asr\\workspaces\\full-regression-sayonara-lara-02-20260715-234059\\diagnostics\\align-fallback\\asr-short-window\\segment_000036\\segment_000036-w02.wav",
+            "global_start_time": 417.844,
+            "global_end_time": 420.844,
+            "asr_status": "completed",
+            "asr_text": "わけがわからないわ。",
+            "asr_error": null,
+            "align_status": "completed",
+            "align_error": null,
+            "token_count": 5
+          },
+          {
+            "window_segment_id": "segment_000036-w03",
+            "audio_path": "E:\\project\\qwen3-asr\\workspaces\\full-regression-sayonara-lara-02-20260715-234059\\diagnostics\\align-fallback\\asr-short-window\\segment_000036\\segment_000036-w03.wav",
+            "global_start_time": 420.844,
+            "global_end_time": 421.756,
+            "asr_status": "completed",
+            "asr_text": "はい。",
+            "asr_error": null,
+            "align_status": "failed",
+            "align_error": "alignment token timing unreliable: covered 0.080s of 0.912s",
+            "token_count": 1
+          }
+        ]
+      },
+      "transcript_evidence_state": "unknown_requires_audio_verification",
+      "observed_conditions": [
+        "transcript_correctness_unknown",
+        "low_coverage",
+        "asr_rewrite_rejected",
+        "neighbor_overlap_risk"
+      ],
+      "attempted_capabilities": [
+        "qwen_primary_align",
+        "asr_short_window_fallback"
+      ],
+      "skipped_capabilities": [
+        {
+          "capability": "mfa_local_fallback",
+          "skip_reason": "not connected to initial Align recovery executor"
+        },
+        {
+          "capability": "vad_coarse",
+          "skip_reason": "not executed in the immutable baseline and transcript is not yet verified"
+        },
+        {
+          "capability": "language_route_executor",
+          "skip_reason": "route_language currently persists state only"
+        }
+      ],
+      "final_root_cause": "qwen_timing_failure_then_short_window_content_guard_rejection",
+      "confidence": "HIGH"
+    },
+    {
+      "segment_id": "segment_000044",
+      "original_transcript": "くら。",
+      "normalized_char_count": 2,
+      "route": "short_response",
+      "language": "Japanese",
+      "original_range_ms": [
+        498511,
+        505296
+      ],
+      "token_count": 1,
+      "coverage": 0.047163,
+      "error": "ASR short-window fallback changed transcript content: reference_chars=2 aligned_chars=2",
+      "neighbor_context": {
+        "previous": "segment_000043",
+        "next": "segment_000045"
+      },
+      "short_window": {
+        "attempted": true,
+        "window_count": 3,
+        "completed_window_alignments": 1,
+        "merged_asr_text": "くら。あ。はい。",
+        "content_error": "ASR short-window fallback changed transcript content: reference_chars=2 aligned_chars=2",
+        "windows": [
+          {
+            "window_segment_id": "segment_000044-w01",
+            "audio_path": "E:\\project\\qwen3-asr\\workspaces\\full-regression-sayonara-lara-02-20260715-234059\\diagnostics\\align-fallback\\asr-short-window\\segment_000044\\segment_000044-w01.wav",
+            "global_start_time": 498.511,
+            "global_end_time": 501.511,
+            "asr_status": "completed",
+            "asr_text": "くら。",
+            "asr_error": null,
+            "align_status": "failed",
+            "align_error": "alignment token timing unreliable: covered 0.320s of 3.000s",
+            "token_count": 1
+          },
+          {
+            "window_segment_id": "segment_000044-w02",
+            "audio_path": "E:\\project\\qwen3-asr\\workspaces\\full-regression-sayonara-lara-02-20260715-234059\\diagnostics\\align-fallback\\asr-short-window\\segment_000044\\segment_000044-w02.wav",
+            "global_start_time": 501.511,
+            "global_end_time": 504.511,
+            "asr_status": "completed",
+            "asr_text": "あ。",
+            "asr_error": null,
+            "align_status": "failed",
+            "align_error": "alignment token timing unreliable: covered 0.160s of 3.000s",
+            "token_count": 1
+          },
+          {
+            "window_segment_id": "segment_000044-w03",
+            "audio_path": "E:\\project\\qwen3-asr\\workspaces\\full-regression-sayonara-lara-02-20260715-234059\\diagnostics\\align-fallback\\asr-short-window\\segment_000044\\segment_000044-w03.wav",
+            "global_start_time": 504.511,
+            "global_end_time": 505.296,
+            "asr_status": "completed",
+            "asr_text": "はい。",
+            "asr_error": null,
+            "align_status": "completed",
+            "align_error": null,
+            "token_count": 1
+          }
+        ]
+      },
+      "transcript_evidence_state": "unknown_requires_audio_verification",
+      "observed_conditions": [
+        "transcript_correctness_unknown",
+        "low_coverage",
+        "asr_rewrite_rejected",
+        "neighbor_overlap_risk"
+      ],
+      "attempted_capabilities": [
+        "qwen_primary_align",
+        "asr_short_window_fallback"
+      ],
+      "skipped_capabilities": [
+        {
+          "capability": "mfa_local_fallback",
+          "skip_reason": "not connected to initial Align recovery executor"
+        },
+        {
+          "capability": "vad_coarse",
+          "skip_reason": "not executed in the immutable baseline and transcript is not yet verified"
+        },
+        {
+          "capability": "language_route_executor",
+          "skip_reason": "route_language currently persists state only"
+        }
+      ],
+      "final_root_cause": "qwen_timing_failure_then_short_window_content_guard_rejection",
+      "confidence": "HIGH"
+    },
+    {
+      "segment_id": "segment_000054",
+      "original_transcript": "絶対取り戻さなきゃ。",
+      "normalized_char_count": 9,
+      "route": "standard",
+      "language": "Japanese",
+      "original_range_ms": [
+        610975,
+        622087
+      ],
+      "token_count": 3,
+      "coverage": 0.187185,
+      "error": "ASR short-window fallback changed transcript content: reference_chars=9 aligned_chars=0",
+      "neighbor_context": {
+        "previous": "segment_000053",
+        "next": "segment_000055"
+      },
+      "short_window": {
+        "attempted": true,
+        "window_count": 4,
+        "completed_window_alignments": 0,
+        "merged_asr_text": "ねえ、俺。絶対取り戻す。さなきゃ。ああ。",
+        "content_error": "ASR short-window fallback changed transcript content: reference_chars=9 aligned_chars=0",
+        "windows": [
+          {
+            "window_segment_id": "segment_000054-w01",
+            "audio_path": "E:\\project\\qwen3-asr\\workspaces\\full-regression-sayonara-lara-02-20260715-234059\\diagnostics\\align-fallback\\asr-short-window\\segment_000054\\segment_000054-w01.wav",
+            "global_start_time": 610.975,
+            "global_end_time": 613.975,
+            "asr_status": "completed",
+            "asr_text": "ねえ、俺。",
+            "asr_error": null,
+            "align_status": "failed",
+            "align_error": "alignment token timing unreliable: covered 0.080s of 3.000s",
+            "token_count": 2
+          },
+          {
+            "window_segment_id": "segment_000054-w02",
+            "audio_path": "E:\\project\\qwen3-asr\\workspaces\\full-regression-sayonara-lara-02-20260715-234059\\diagnostics\\align-fallback\\asr-short-window\\segment_000054\\segment_000054-w02.wav",
+            "global_start_time": 613.975,
+            "global_end_time": 616.975,
+            "asr_status": "completed",
+            "asr_text": "絶対取り戻す。",
+            "asr_error": null,
+            "align_status": "failed",
+            "align_error": "alignment token timing unreliable: zero-duration ratio 0.50 with covered 0.640s of 3.000s",
+            "token_count": 2
+          },
+          {
+            "window_segment_id": "segment_000054-w03",
+            "audio_path": "E:\\project\\qwen3-asr\\workspaces\\full-regression-sayonara-lara-02-20260715-234059\\diagnostics\\align-fallback\\asr-short-window\\segment_000054\\segment_000054-w03.wav",
+            "global_start_time": 616.975,
+            "global_end_time": 619.975,
+            "asr_status": "completed",
+            "asr_text": "さなきゃ。",
+            "asr_error": null,
+            "align_status": "failed",
+            "align_error": "alignment token timing unreliable: covered 0.240s of 3.000s",
+            "token_count": 1
+          },
+          {
+            "window_segment_id": "segment_000054-w04",
+            "audio_path": "E:\\project\\qwen3-asr\\workspaces\\full-regression-sayonara-lara-02-20260715-234059\\diagnostics\\align-fallback\\asr-short-window\\segment_000054\\segment_000054-w04.wav",
+            "global_start_time": 619.975,
+            "global_end_time": 622.087,
+            "asr_status": "completed",
+            "asr_text": "ああ。",
+            "asr_error": null,
+            "align_status": "failed",
+            "align_error": "alignment token timing unreliable: covered 0.000s of 2.112s",
+            "token_count": 1
+          }
+        ]
+      },
+      "transcript_evidence_state": "unknown_requires_audio_verification",
+      "observed_conditions": [
+        "transcript_correctness_unknown",
+        "low_coverage",
+        "asr_rewrite_rejected",
+        "neighbor_overlap_risk"
+      ],
+      "attempted_capabilities": [
+        "qwen_primary_align",
+        "asr_short_window_fallback"
+      ],
+      "skipped_capabilities": [
+        {
+          "capability": "mfa_local_fallback",
+          "skip_reason": "not connected to initial Align recovery executor"
+        },
+        {
+          "capability": "vad_coarse",
+          "skip_reason": "not executed in the immutable baseline and transcript is not yet verified"
+        },
+        {
+          "capability": "language_route_executor",
+          "skip_reason": "route_language currently persists state only"
+        }
+      ],
+      "final_root_cause": "qwen_timing_failure_then_short_window_content_guard_rejection",
+      "confidence": "HIGH"
+    },
+    {
+      "segment_id": "segment_000067",
+      "original_transcript": "え。",
+      "normalized_char_count": 1,
+      "route": "short_response",
+      "language": "Japanese",
+      "original_range_ms": [
+        749088,
+        752514
+      ],
+      "token_count": 1,
+      "coverage": 0.093403,
+      "error": "ASR short-window fallback changed transcript content: reference_chars=1 aligned_chars=2",
+      "neighbor_context": {
+        "previous": "segment_000066",
+        "next": "segment_000068"
+      },
+      "short_window": {
+        "attempted": true,
+        "window_count": 2,
+        "completed_window_alignments": 1,
+        "merged_asr_text": "え。はい。",
+        "content_error": "ASR short-window fallback changed transcript content: reference_chars=1 aligned_chars=2",
+        "windows": [
+          {
+            "window_segment_id": "segment_000067-w01",
+            "audio_path": "E:\\project\\qwen3-asr\\workspaces\\full-regression-sayonara-lara-02-20260715-234059\\diagnostics\\align-fallback\\asr-short-window\\segment_000067\\segment_000067-w01.wav",
+            "global_start_time": 749.088,
+            "global_end_time": 752.088,
+            "asr_status": "completed",
+            "asr_text": "え。",
+            "asr_error": null,
+            "align_status": "failed",
+            "align_error": "alignment token timing unreliable: covered 0.240s of 3.000s",
+            "token_count": 1
+          },
+          {
+            "window_segment_id": "segment_000067-w02",
+            "audio_path": "E:\\project\\qwen3-asr\\workspaces\\full-regression-sayonara-lara-02-20260715-234059\\diagnostics\\align-fallback\\asr-short-window\\segment_000067\\segment_000067-w02.wav",
+            "global_start_time": 752.088,
+            "global_end_time": 752.514,
+            "asr_status": "completed",
+            "asr_text": "はい。",
+            "asr_error": null,
+            "align_status": "completed",
+            "align_error": null,
+            "token_count": 1
+          }
+        ]
+      },
+      "transcript_evidence_state": "unknown_requires_audio_verification",
+      "observed_conditions": [
+        "transcript_correctness_unknown",
+        "low_coverage",
+        "asr_rewrite_rejected",
+        "neighbor_overlap_risk"
+      ],
+      "attempted_capabilities": [
+        "qwen_primary_align",
+        "asr_short_window_fallback"
+      ],
+      "skipped_capabilities": [
+        {
+          "capability": "mfa_local_fallback",
+          "skip_reason": "not connected to initial Align recovery executor"
+        },
+        {
+          "capability": "vad_coarse",
+          "skip_reason": "not executed in the immutable baseline and transcript is not yet verified"
+        },
+        {
+          "capability": "language_route_executor",
+          "skip_reason": "route_language currently persists state only"
+        }
+      ],
+      "final_root_cause": "qwen_timing_failure_then_short_window_content_guard_rejection",
+      "confidence": "HIGH"
+    },
+    {
+      "segment_id": "segment_000076",
+      "original_transcript": "俺を。",
+      "normalized_char_count": 2,
+      "route": "short_response",
+      "language": "Japanese",
+      "original_range_ms": [
+        839479,
+        853190
+      ],
+      "token_count": 2,
+      "coverage": 0.0,
+      "error": "ASR short-window fallback changed transcript content: reference_chars=2 aligned_chars=8",
+      "neighbor_context": {
+        "previous": "segment_000075",
+        "next": "segment_000077"
+      },
+      "short_window": {
+        "attempted": true,
+        "window_count": 5,
+        "completed_window_alignments": 2,
+        "merged_asr_text": "ねえ、ねえねえ、俺は。あれを。はい。ね。",
+        "content_error": "ASR short-window fallback changed transcript content: reference_chars=2 aligned_chars=8",
+        "windows": [
+          {
+            "window_segment_id": "segment_000076-w01",
+            "audio_path": "E:\\project\\qwen3-asr\\workspaces\\full-regression-sayonara-lara-02-20260715-234059\\diagnostics\\align-fallback\\asr-short-window\\segment_000076\\segment_000076-w01.wav",
+            "global_start_time": 839.479,
+            "global_end_time": 842.479,
+            "asr_status": "completed",
+            "asr_text": "ねえ、ねえ",
+            "asr_error": null,
+            "align_status": "completed",
+            "align_error": null,
+            "token_count": 2
+          },
+          {
+            "window_segment_id": "segment_000076-w02",
+            "audio_path": "E:\\project\\qwen3-asr\\workspaces\\full-regression-sayonara-lara-02-20260715-234059\\diagnostics\\align-fallback\\asr-short-window\\segment_000076\\segment_000076-w02.wav",
+            "global_start_time": 842.479,
+            "global_end_time": 845.479,
+            "asr_status": "completed",
+            "asr_text": "ねえ、俺は。",
+            "asr_error": null,
+            "align_status": "completed",
+            "align_error": null,
+            "token_count": 3
+          },
+          {
+            "window_segment_id": "segment_000076-w03",
+            "audio_path": "E:\\project\\qwen3-asr\\workspaces\\full-regression-sayonara-lara-02-20260715-234059\\diagnostics\\align-fallback\\asr-short-window\\segment_000076\\segment_000076-w03.wav",
+            "global_start_time": 845.479,
+            "global_end_time": 848.479,
+            "asr_status": "completed",
+            "asr_text": "あれを。",
+            "asr_error": null,
+            "align_status": "failed",
+            "align_error": "alignment token timing unreliable: covered 0.320s of 3.000s",
+            "token_count": 2
+          },
+          {
+            "window_segment_id": "segment_000076-w04",
+            "audio_path": "E:\\project\\qwen3-asr\\workspaces\\full-regression-sayonara-lara-02-20260715-234059\\diagnostics\\align-fallback\\asr-short-window\\segment_000076\\segment_000076-w04.wav",
+            "global_start_time": 848.479,
+            "global_end_time": 851.479,
+            "asr_status": "completed",
+            "asr_text": "はい。",
+            "asr_error": null,
+            "align_status": "failed",
+            "align_error": "alignment token timing unreliable: covered 0.560s of 3.000s",
+            "token_count": 1
+          },
+          {
+            "window_segment_id": "segment_000076-w05",
+            "audio_path": "E:\\project\\qwen3-asr\\workspaces\\full-regression-sayonara-lara-02-20260715-234059\\diagnostics\\align-fallback\\asr-short-window\\segment_000076\\segment_000076-w05.wav",
+            "global_start_time": 851.479,
+            "global_end_time": 853.19,
+            "asr_status": "completed",
+            "asr_text": "ね。",
+            "asr_error": null,
+            "align_status": "failed",
+            "align_error": "alignment token timing unreliable: covered 0.080s of 1.711s",
+            "token_count": 1
+          }
+        ]
+      },
+      "transcript_evidence_state": "unknown_requires_audio_verification",
+      "observed_conditions": [
+        "transcript_correctness_unknown",
+        "zero_duration_token",
+        "dense_zero_tokens",
+        "low_coverage",
+        "asr_rewrite_rejected",
+        "neighbor_overlap_risk"
+      ],
+      "attempted_capabilities": [
+        "qwen_primary_align",
+        "asr_short_window_fallback"
+      ],
+      "skipped_capabilities": [
+        {
+          "capability": "mfa_local_fallback",
+          "skip_reason": "not connected to initial Align recovery executor"
+        },
+        {
+          "capability": "vad_coarse",
+          "skip_reason": "not executed in the immutable baseline and transcript is not yet verified"
+        },
+        {
+          "capability": "language_route_executor",
+          "skip_reason": "route_language currently persists state only"
+        }
+      ],
+      "final_root_cause": "qwen_timing_failure_then_short_window_content_guard_rejection",
+      "confidence": "HIGH"
+    },
+    {
+      "segment_id": "segment_000086",
+      "original_transcript": "何？足が息が苦しい。",
+      "normalized_char_count": 8,
+      "route": "standard",
+      "language": "Japanese",
+      "original_range_ms": [
+        956169,
+        969130
+      ],
+      "token_count": 6,
+      "coverage": 0.450583,
+      "error": "ASR short-window fallback changed transcript content: reference_chars=8 aligned_chars=5",
+      "neighbor_context": {
+        "previous": "segment_000085",
+        "next": "segment_000087"
+      },
+      "short_window": {
+        "attempted": true,
+        "window_count": 5,
+        "completed_window_alignments": 1,
+        "merged_asr_text": "うん。何？足。が。気が苦しい。うん。",
+        "content_error": "ASR short-window fallback changed transcript content: reference_chars=8 aligned_chars=5",
+        "windows": [
+          {
+            "window_segment_id": "segment_000086-w01",
+            "audio_path": "E:\\project\\qwen3-asr\\workspaces\\full-regression-sayonara-lara-02-20260715-234059\\diagnostics\\align-fallback\\asr-short-window\\segment_000086\\segment_000086-w01.wav",
+            "global_start_time": 956.169,
+            "global_end_time": 959.169,
+            "asr_status": "completed",
+            "asr_text": "うん。",
+            "asr_error": null,
+            "align_status": "failed",
+            "align_error": "alignment token timing unreliable: covered 0.000s of 3.000s",
+            "token_count": 1
+          },
+          {
+            "window_segment_id": "segment_000086-w02",
+            "audio_path": "E:\\project\\qwen3-asr\\workspaces\\full-regression-sayonara-lara-02-20260715-234059\\diagnostics\\align-fallback\\asr-short-window\\segment_000086\\segment_000086-w02.wav",
+            "global_start_time": 959.169,
+            "global_end_time": 962.169,
+            "asr_status": "completed",
+            "asr_text": "何？足。",
+            "asr_error": null,
+            "align_status": "failed",
+            "align_error": "alignment token timing unreliable: covered 0.080s of 3.000s",
+            "token_count": 2
+          },
+          {
+            "window_segment_id": "segment_000086-w03",
+            "audio_path": "E:\\project\\qwen3-asr\\workspaces\\full-regression-sayonara-lara-02-20260715-234059\\diagnostics\\align-fallback\\asr-short-window\\segment_000086\\segment_000086-w03.wav",
+            "global_start_time": 962.169,
+            "global_end_time": 965.169,
+            "asr_status": "completed",
+            "asr_text": "が。",
+            "asr_error": null,
+            "align_status": "failed",
+            "align_error": "alignment token timing unreliable: covered 0.160s of 3.000s",
+            "token_count": 1
+          },
+          {
+            "window_segment_id": "segment_000086-w04",
+            "audio_path": "E:\\project\\qwen3-asr\\workspaces\\full-regression-sayonara-lara-02-20260715-234059\\diagnostics\\align-fallback\\asr-short-window\\segment_000086\\segment_000086-w04.wav",
+            "global_start_time": 965.169,
+            "global_end_time": 968.169,
+            "asr_status": "completed",
+            "asr_text": "気が苦しい。",
+            "asr_error": null,
+            "align_status": "completed",
+            "align_error": null,
+            "token_count": 3
+          },
+          {
+            "window_segment_id": "segment_000086-w05",
+            "audio_path": "E:\\project\\qwen3-asr\\workspaces\\full-regression-sayonara-lara-02-20260715-234059\\diagnostics\\align-fallback\\asr-short-window\\segment_000086\\segment_000086-w05.wav",
+            "global_start_time": 968.169,
+            "global_end_time": 969.13,
+            "asr_status": "completed",
+            "asr_text": "うん。",
+            "asr_error": null,
+            "align_status": "failed",
+            "align_error": "alignment token timing unreliable: covered 0.000s of 0.961s",
+            "token_count": 1
+          }
+        ]
+      },
+      "transcript_evidence_state": "unknown_requires_audio_verification",
+      "observed_conditions": [
+        "transcript_correctness_unknown",
+        "zero_duration_token",
+        "dense_zero_tokens",
+        "asr_rewrite_rejected",
+        "neighbor_overlap_risk"
+      ],
+      "attempted_capabilities": [
+        "qwen_primary_align",
+        "asr_short_window_fallback"
+      ],
+      "skipped_capabilities": [
+        {
+          "capability": "mfa_local_fallback",
+          "skip_reason": "not connected to initial Align recovery executor"
+        },
+        {
+          "capability": "vad_coarse",
+          "skip_reason": "not executed in the immutable baseline and transcript is not yet verified"
+        },
+        {
+          "capability": "language_route_executor",
+          "skip_reason": "route_language currently persists state only"
+        }
+      ],
+      "final_root_cause": "qwen_timing_failure_then_short_window_content_guard_rejection",
+      "confidence": "HIGH"
+    },
+    {
+      "segment_id": "segment_000093",
+      "original_transcript": "はい。",
+      "normalized_char_count": 2,
+      "route": "short_response",
+      "language": "Japanese",
+      "original_range_ms": [
+        1037370,
+        1040866
+      ],
+      "token_count": 1,
+      "coverage": 0.022883,
+      "error": "alignment token timing unreliable: covered 0.560s of 3.496s",
+      "neighbor_context": {
+        "previous": "segment_000092",
+        "next": "segment_000094"
+      },
+      "short_window": {
+        "attempted": true,
+        "window_count": 2,
+        "completed_window_alignments": 1,
+        "merged_asr_text": "はい。はい。",
+        "content_error": null,
+        "windows": [
+          {
+            "window_segment_id": "segment_000093-w01",
+            "audio_path": "E:\\project\\qwen3-asr\\workspaces\\full-regression-sayonara-lara-02-20260715-234059\\diagnostics\\align-fallback\\asr-short-window\\segment_000093\\segment_000093-w01.wav",
+            "global_start_time": 1037.37,
+            "global_end_time": 1040.37,
+            "asr_status": "completed",
+            "asr_text": "はい。",
+            "asr_error": null,
+            "align_status": "failed",
+            "align_error": "alignment token timing unreliable: covered 0.080s of 3.000s",
+            "token_count": 1
+          },
+          {
+            "window_segment_id": "segment_000093-w02",
+            "audio_path": "E:\\project\\qwen3-asr\\workspaces\\full-regression-sayonara-lara-02-20260715-234059\\diagnostics\\align-fallback\\asr-short-window\\segment_000093\\segment_000093-w02.wav",
+            "global_start_time": 1040.37,
+            "global_end_time": 1040.866,
+            "asr_status": "completed",
+            "asr_text": "はい。",
+            "asr_error": null,
+            "align_status": "completed",
+            "align_error": null,
+            "token_count": 1
+          }
+        ]
+      },
+      "transcript_evidence_state": "unknown_requires_audio_verification",
+      "observed_conditions": [
+        "transcript_correctness_unknown",
+        "low_coverage",
+        "neighbor_overlap_risk"
+      ],
+      "attempted_capabilities": [
+        "qwen_primary_align",
+        "asr_short_window_fallback"
+      ],
+      "skipped_capabilities": [
+        {
+          "capability": "mfa_local_fallback",
+          "skip_reason": "not connected to initial Align recovery executor"
+        },
+        {
+          "capability": "vad_coarse",
+          "skip_reason": "not executed in the immutable baseline and transcript is not yet verified"
+        },
+        {
+          "capability": "language_route_executor",
+          "skip_reason": "route_language currently persists state only"
+        }
+      ],
+      "final_root_cause": "qwen_token_coverage_below_safety_threshold",
+      "confidence": "HIGH"
+    },
+    {
+      "segment_id": "segment_000094",
+      "original_transcript": "肉台、早く。",
+      "normalized_char_count": 4,
+      "route": "short_response",
+      "language": "Japanese",
+      "original_range_ms": [
+        1040266,
+        1055866
+      ],
+      "token_count": 2,
+      "coverage": 0.476923,
+      "error": "ASR short-window fallback changed transcript content: reference_chars=4 aligned_chars=4",
+      "neighbor_context": {
+        "previous": "segment_000093",
+        "next": "segment_000095"
+      },
+      "short_window": {
+        "attempted": true,
+        "window_count": 6,
+        "completed_window_alignments": 2,
+        "merged_asr_text": "はい。はい。肉台。早く。はい。はい。",
+        "content_error": "ASR short-window fallback changed transcript content: reference_chars=4 aligned_chars=4",
+        "windows": [
+          {
+            "window_segment_id": "segment_000094-w01",
+            "audio_path": "E:\\project\\qwen3-asr\\workspaces\\full-regression-sayonara-lara-02-20260715-234059\\diagnostics\\align-fallback\\asr-short-window\\segment_000094\\segment_000094-w01.wav",
+            "global_start_time": 1040.266,
+            "global_end_time": 1043.266,
+            "asr_status": "completed",
+            "asr_text": "はい。",
+            "asr_error": null,
+            "align_status": "failed",
+            "align_error": "alignment token timing unreliable: covered 0.080s of 3.000s",
+            "token_count": 1
+          },
+          {
+            "window_segment_id": "segment_000094-w02",
+            "audio_path": "E:\\project\\qwen3-asr\\workspaces\\full-regression-sayonara-lara-02-20260715-234059\\diagnostics\\align-fallback\\asr-short-window\\segment_000094\\segment_000094-w02.wav",
+            "global_start_time": 1043.266,
+            "global_end_time": 1046.266,
+            "asr_status": "completed",
+            "asr_text": "はい。",
+            "asr_error": null,
+            "align_status": "failed",
+            "align_error": "alignment token timing unreliable: covered 0.080s of 3.000s",
+            "token_count": 1
+          },
+          {
+            "window_segment_id": "segment_000094-w03",
+            "audio_path": "E:\\project\\qwen3-asr\\workspaces\\full-regression-sayonara-lara-02-20260715-234059\\diagnostics\\align-fallback\\asr-short-window\\segment_000094\\segment_000094-w03.wav",
+            "global_start_time": 1046.266,
+            "global_end_time": 1049.266,
+            "asr_status": "completed",
+            "asr_text": "肉台。",
+            "asr_error": null,
+            "align_status": "failed",
+            "align_error": "alignment token timing unreliable: covered 0.160s of 3.000s",
+            "token_count": 1
+          },
+          {
+            "window_segment_id": "segment_000094-w04",
+            "audio_path": "E:\\project\\qwen3-asr\\workspaces\\full-regression-sayonara-lara-02-20260715-234059\\diagnostics\\align-fallback\\asr-short-window\\segment_000094\\segment_000094-w04.wav",
+            "global_start_time": 1049.266,
+            "global_end_time": 1052.266,
+            "asr_status": "completed",
+            "asr_text": "早く。",
+            "asr_error": null,
+            "align_status": "failed",
+            "align_error": "alignment token timing unreliable: covered 0.320s of 3.000s",
+            "token_count": 1
+          },
+          {
+            "window_segment_id": "segment_000094-w05",
+            "audio_path": "E:\\project\\qwen3-asr\\workspaces\\full-regression-sayonara-lara-02-20260715-234059\\diagnostics\\align-fallback\\asr-short-window\\segment_000094\\segment_000094-w05.wav",
+            "global_start_time": 1052.266,
+            "global_end_time": 1055.266,
+            "asr_status": "completed",
+            "asr_text": "はい。",
+            "asr_error": null,
+            "align_status": "completed",
+            "align_error": null,
+            "token_count": 1
+          },
+          {
+            "window_segment_id": "segment_000094-w06",
+            "audio_path": "E:\\project\\qwen3-asr\\workspaces\\full-regression-sayonara-lara-02-20260715-234059\\diagnostics\\align-fallback\\asr-short-window\\segment_000094\\segment_000094-w06.wav",
+            "global_start_time": 1055.266,
+            "global_end_time": 1055.866,
+            "asr_status": "completed",
+            "asr_text": "はい。",
+            "asr_error": null,
+            "align_status": "completed",
+            "align_error": null,
+            "token_count": 1
+          }
+        ]
+      },
+      "transcript_evidence_state": "unknown_requires_audio_verification",
+      "observed_conditions": [
+        "transcript_correctness_unknown",
+        "zero_duration_token",
+        "dense_zero_tokens",
+        "asr_rewrite_rejected",
+        "neighbor_overlap_risk"
+      ],
+      "attempted_capabilities": [
+        "qwen_primary_align",
+        "asr_short_window_fallback"
+      ],
+      "skipped_capabilities": [
+        {
+          "capability": "mfa_local_fallback",
+          "skip_reason": "not connected to initial Align recovery executor"
+        },
+        {
+          "capability": "vad_coarse",
+          "skip_reason": "not executed in the immutable baseline and transcript is not yet verified"
+        },
+        {
+          "capability": "language_route_executor",
+          "skip_reason": "route_language currently persists state only"
+        }
+      ],
+      "final_root_cause": "qwen_timing_failure_then_short_window_content_guard_rejection",
+      "confidence": "HIGH"
+    },
+    {
+      "segment_id": "segment_000096",
+      "original_transcript": "うん。うん。",
+      "normalized_char_count": 4,
+      "route": "short_response",
+      "language": "Japanese",
+      "original_range_ms": [
+        1060255,
+        1075854
+      ],
+      "token_count": 2,
+      "coverage": 0.005129,
+      "error": "ASR short-window fallback changed transcript content: reference_chars=4 aligned_chars=4",
+      "neighbor_context": {
+        "previous": "segment_000095",
+        "next": "segment_000097"
+      },
+      "short_window": {
+        "attempted": true,
+        "window_count": 6,
+        "completed_window_alignments": 2,
+        "merged_asr_text": "はい。はい。はい。うん。うん。はい。",
+        "content_error": "ASR short-window fallback changed transcript content: reference_chars=4 aligned_chars=4",
+        "windows": [
+          {
+            "window_segment_id": "segment_000096-w01",
+            "audio_path": "E:\\project\\qwen3-asr\\workspaces\\full-regression-sayonara-lara-02-20260715-234059\\diagnostics\\align-fallback\\asr-short-window\\segment_000096\\segment_000096-w01.wav",
+            "global_start_time": 1060.255,
+            "global_end_time": 1063.255,
+            "asr_status": "completed",
+            "asr_text": "はい。",
+            "asr_error": null,
+            "align_status": "completed",
+            "align_error": null,
+            "token_count": 1
+          },
+          {
+            "window_segment_id": "segment_000096-w02",
+            "audio_path": "E:\\project\\qwen3-asr\\workspaces\\full-regression-sayonara-lara-02-20260715-234059\\diagnostics\\align-fallback\\asr-short-window\\segment_000096\\segment_000096-w02.wav",
+            "global_start_time": 1063.255,
+            "global_end_time": 1066.255,
+            "asr_status": "completed",
+            "asr_text": "はい。",
+            "asr_error": null,
+            "align_status": "failed",
+            "align_error": "alignment token timing unreliable: covered 0.000s of 3.000s",
+            "token_count": 1
+          },
+          {
+            "window_segment_id": "segment_000096-w03",
+            "audio_path": "E:\\project\\qwen3-asr\\workspaces\\full-regression-sayonara-lara-02-20260715-234059\\diagnostics\\align-fallback\\asr-short-window\\segment_000096\\segment_000096-w03.wav",
+            "global_start_time": 1066.255,
+            "global_end_time": 1069.255,
+            "asr_status": "completed",
+            "asr_text": "はい。",
+            "asr_error": null,
+            "align_status": "failed",
+            "align_error": "alignment token timing unreliable: covered 0.080s of 3.000s",
+            "token_count": 1
+          },
+          {
+            "window_segment_id": "segment_000096-w04",
+            "audio_path": "E:\\project\\qwen3-asr\\workspaces\\full-regression-sayonara-lara-02-20260715-234059\\diagnostics\\align-fallback\\asr-short-window\\segment_000096\\segment_000096-w04.wav",
+            "global_start_time": 1069.255,
+            "global_end_time": 1072.255,
+            "asr_status": "completed",
+            "asr_text": "うん。",
+            "asr_error": null,
+            "align_status": "completed",
+            "align_error": null,
+            "token_count": 1
+          },
+          {
+            "window_segment_id": "segment_000096-w05",
+            "audio_path": "E:\\project\\qwen3-asr\\workspaces\\full-regression-sayonara-lara-02-20260715-234059\\diagnostics\\align-fallback\\asr-short-window\\segment_000096\\segment_000096-w05.wav",
+            "global_start_time": 1072.255,
+            "global_end_time": 1075.255,
+            "asr_status": "completed",
+            "asr_text": "うん。",
+            "asr_error": null,
+            "align_status": "failed",
+            "align_error": "alignment token timing unreliable: covered 0.080s of 3.000s",
+            "token_count": 1
+          },
+          {
+            "window_segment_id": "segment_000096-w06",
+            "audio_path": "E:\\project\\qwen3-asr\\workspaces\\full-regression-sayonara-lara-02-20260715-234059\\diagnostics\\align-fallback\\asr-short-window\\segment_000096\\segment_000096-w06.wav",
+            "global_start_time": 1075.255,
+            "global_end_time": 1075.854,
+            "asr_status": "completed",
+            "asr_text": "はい。",
+            "asr_error": null,
+            "align_status": "failed",
+            "align_error": "alignment token timing unreliable: covered 0.000s of 0.599s",
+            "token_count": 1
+          }
+        ]
+      },
+      "transcript_evidence_state": "unknown_requires_audio_verification",
+      "observed_conditions": [
+        "transcript_correctness_unknown",
+        "zero_duration_token",
+        "dense_zero_tokens",
+        "low_coverage",
+        "asr_rewrite_rejected",
+        "neighbor_overlap_risk"
+      ],
+      "attempted_capabilities": [
+        "qwen_primary_align",
+        "asr_short_window_fallback"
+      ],
+      "skipped_capabilities": [
+        {
+          "capability": "mfa_local_fallback",
+          "skip_reason": "not connected to initial Align recovery executor"
+        },
+        {
+          "capability": "vad_coarse",
+          "skip_reason": "not executed in the immutable baseline and transcript is not yet verified"
+        },
+        {
+          "capability": "language_route_executor",
+          "skip_reason": "route_language currently persists state only"
+        }
+      ],
+      "final_root_cause": "qwen_timing_failure_then_short_window_content_guard_rejection",
+      "confidence": "HIGH"
+    },
+    {
+      "segment_id": "segment_000097",
+      "original_transcript": "はい。",
+      "normalized_char_count": 2,
+      "route": "short_response",
+      "language": "Japanese",
+      "original_range_ms": [
+        1075255,
+        1083694
+      ],
+      "token_count": 1,
+      "coverage": 0.0,
+      "error": "alignment token timing unreliable: covered 0.960s of 8.439s",
+      "neighbor_context": {
+        "previous": "segment_000096",
+        "next": "segment_000098"
+      },
+      "short_window": {
+        "attempted": true,
+        "window_count": 3,
+        "completed_window_alignments": 1,
+        "merged_asr_text": "はい。はい。はい。",
+        "content_error": null,
+        "windows": [
+          {
+            "window_segment_id": "segment_000097-w01",
+            "audio_path": "E:\\project\\qwen3-asr\\workspaces\\full-regression-sayonara-lara-02-20260715-234059\\diagnostics\\align-fallback\\asr-short-window\\segment_000097\\segment_000097-w01.wav",
+            "global_start_time": 1075.255,
+            "global_end_time": 1078.255,
+            "asr_status": "completed",
+            "asr_text": "はい。",
+            "asr_error": null,
+            "align_status": "failed",
+            "align_error": "alignment token timing unreliable: covered 0.080s of 3.000s",
+            "token_count": 1
+          },
+          {
+            "window_segment_id": "segment_000097-w02",
+            "audio_path": "E:\\project\\qwen3-asr\\workspaces\\full-regression-sayonara-lara-02-20260715-234059\\diagnostics\\align-fallback\\asr-short-window\\segment_000097\\segment_000097-w02.wav",
+            "global_start_time": 1078.255,
+            "global_end_time": 1081.255,
+            "asr_status": "completed",
+            "asr_text": "はい。",
+            "asr_error": null,
+            "align_status": "failed",
+            "align_error": "alignment token timing unreliable: covered 0.000s of 3.000s",
+            "token_count": 1
+          },
+          {
+            "window_segment_id": "segment_000097-w03",
+            "audio_path": "E:\\project\\qwen3-asr\\workspaces\\full-regression-sayonara-lara-02-20260715-234059\\diagnostics\\align-fallback\\asr-short-window\\segment_000097\\segment_000097-w03.wav",
+            "global_start_time": 1081.255,
+            "global_end_time": 1083.694,
+            "asr_status": "completed",
+            "asr_text": "はい。",
+            "asr_error": null,
+            "align_status": "completed",
+            "align_error": null,
+            "token_count": 1
+          }
+        ]
+      },
+      "transcript_evidence_state": "unknown_requires_audio_verification",
+      "observed_conditions": [
+        "transcript_correctness_unknown",
+        "zero_duration_token",
+        "dense_zero_tokens",
+        "low_coverage",
+        "neighbor_overlap_risk"
+      ],
+      "attempted_capabilities": [
+        "qwen_primary_align",
+        "asr_short_window_fallback"
+      ],
+      "skipped_capabilities": [
+        {
+          "capability": "mfa_local_fallback",
+          "skip_reason": "not connected to initial Align recovery executor"
+        },
+        {
+          "capability": "vad_coarse",
+          "skip_reason": "not executed in the immutable baseline and transcript is not yet verified"
+        },
+        {
+          "capability": "language_route_executor",
+          "skip_reason": "route_language currently persists state only"
+        }
+      ],
+      "final_root_cause": "qwen_token_coverage_below_safety_threshold",
+      "confidence": "HIGH"
+    },
+    {
+      "segment_id": "segment_000098",
+      "original_transcript": "うん。",
+      "normalized_char_count": 2,
+      "route": "short_response",
+      "language": "Japanese",
+      "original_range_ms": [
+        1083094,
+        1098157
+      ],
+      "token_count": 1,
+      "coverage": 0.010622,
+      "error": "ASR short-window fallback changed transcript content: reference_chars=2 aligned_chars=4",
+      "neighbor_context": {
+        "previous": "segment_000097",
+        "next": "segment_000099"
+      },
+      "short_window": {
+        "attempted": true,
+        "window_count": 6,
+        "completed_window_alignments": 2,
+        "merged_asr_text": "はい。はい。はい。はい。うん。はい。",
+        "content_error": "ASR short-window fallback changed transcript content: reference_chars=2 aligned_chars=4",
+        "windows": [
+          {
+            "window_segment_id": "segment_000098-w01",
+            "audio_path": "E:\\project\\qwen3-asr\\workspaces\\full-regression-sayonara-lara-02-20260715-234059\\diagnostics\\align-fallback\\asr-short-window\\segment_000098\\segment_000098-w01.wav",
+            "global_start_time": 1083.094,
+            "global_end_time": 1086.094,
+            "asr_status": "completed",
+            "asr_text": "はい。",
+            "asr_error": null,
+            "align_status": "failed",
+            "align_error": "alignment token timing unreliable: covered 0.080s of 3.000s",
+            "token_count": 1
+          },
+          {
+            "window_segment_id": "segment_000098-w02",
+            "audio_path": "E:\\project\\qwen3-asr\\workspaces\\full-regression-sayonara-lara-02-20260715-234059\\diagnostics\\align-fallback\\asr-short-window\\segment_000098\\segment_000098-w02.wav",
+            "global_start_time": 1086.094,
+            "global_end_time": 1089.094,
+            "asr_status": "completed",
+            "asr_text": "はい。",
+            "asr_error": null,
+            "align_status": "completed",
+            "align_error": null,
+            "token_count": 1
+          },
+          {
+            "window_segment_id": "segment_000098-w03",
+            "audio_path": "E:\\project\\qwen3-asr\\workspaces\\full-regression-sayonara-lara-02-20260715-234059\\diagnostics\\align-fallback\\asr-short-window\\segment_000098\\segment_000098-w03.wav",
+            "global_start_time": 1089.094,
+            "global_end_time": 1092.094,
+            "asr_status": "completed",
+            "asr_text": "はい。",
+            "asr_error": null,
+            "align_status": "failed",
+            "align_error": "alignment token timing unreliable: covered 0.080s of 3.000s",
+            "token_count": 1
+          },
+          {
+            "window_segment_id": "segment_000098-w04",
+            "audio_path": "E:\\project\\qwen3-asr\\workspaces\\full-regression-sayonara-lara-02-20260715-234059\\diagnostics\\align-fallback\\asr-short-window\\segment_000098\\segment_000098-w04.wav",
+            "global_start_time": 1092.094,
+            "global_end_time": 1095.094,
+            "asr_status": "completed",
+            "asr_text": "はい。",
+            "asr_error": null,
+            "align_status": "failed",
+            "align_error": "alignment token timing unreliable: covered 0.080s of 3.000s",
+            "token_count": 1
+          },
+          {
+            "window_segment_id": "segment_000098-w05",
+            "audio_path": "E:\\project\\qwen3-asr\\workspaces\\full-regression-sayonara-lara-02-20260715-234059\\diagnostics\\align-fallback\\asr-short-window\\segment_000098\\segment_000098-w05.wav",
+            "global_start_time": 1095.094,
+            "global_end_time": 1098.094,
+            "asr_status": "completed",
+            "asr_text": "うん。",
+            "asr_error": null,
+            "align_status": "failed",
+            "align_error": "alignment token timing unreliable: covered 0.160s of 3.000s",
+            "token_count": 1
+          },
+          {
+            "window_segment_id": "segment_000098-w06",
+            "audio_path": "E:\\project\\qwen3-asr\\workspaces\\full-regression-sayonara-lara-02-20260715-234059\\diagnostics\\align-fallback\\asr-short-window\\segment_000098\\segment_000098-w06.wav",
+            "global_start_time": 1098.094,
+            "global_end_time": 1098.157,
+            "asr_status": "completed",
+            "asr_text": "はい。",
+            "asr_error": null,
+            "align_status": "completed",
+            "align_error": null,
+            "token_count": 1
+          }
+        ]
+      },
+      "transcript_evidence_state": "unknown_requires_audio_verification",
+      "observed_conditions": [
+        "transcript_correctness_unknown",
+        "low_coverage",
+        "asr_rewrite_rejected",
+        "neighbor_overlap_risk"
+      ],
+      "attempted_capabilities": [
+        "qwen_primary_align",
+        "asr_short_window_fallback"
+      ],
+      "skipped_capabilities": [
+        {
+          "capability": "mfa_local_fallback",
+          "skip_reason": "not connected to initial Align recovery executor"
+        },
+        {
+          "capability": "vad_coarse",
+          "skip_reason": "not executed in the immutable baseline and transcript is not yet verified"
+        },
+        {
+          "capability": "language_route_executor",
+          "skip_reason": "route_language currently persists state only"
+        }
+      ],
+      "final_root_cause": "qwen_timing_failure_then_short_window_content_guard_rejection",
+      "confidence": "HIGH"
+    },
+    {
+      "segment_id": "segment_000099",
+      "original_transcript": "不。",
+      "normalized_char_count": 1,
+      "route": "short_response",
+      "language": "Japanese",
+      "original_range_ms": [
+        1097557,
+        1105126
+      ],
+      "token_count": 1,
+      "coverage": 0.010569,
+      "error": "ASR short-window fallback changed transcript content: reference_chars=1 aligned_chars=0",
+      "neighbor_context": {
+        "previous": "segment_000098",
+        "next": "segment_000100"
+      },
+      "short_window": {
+        "attempted": true,
+        "window_count": 3,
+        "completed_window_alignments": 0,
+        "merged_asr_text": "あ。お。はい。",
+        "content_error": "ASR short-window fallback changed transcript content: reference_chars=1 aligned_chars=0",
+        "windows": [
+          {
+            "window_segment_id": "segment_000099-w01",
+            "audio_path": "E:\\project\\qwen3-asr\\workspaces\\full-regression-sayonara-lara-02-20260715-234059\\diagnostics\\align-fallback\\asr-short-window\\segment_000099\\segment_000099-w01.wav",
+            "global_start_time": 1097.557,
+            "global_end_time": 1100.557,
+            "asr_status": "completed",
+            "asr_text": "あ。",
+            "asr_error": null,
+            "align_status": "failed",
+            "align_error": "alignment token timing unreliable: covered 0.080s of 3.000s",
+            "token_count": 1
+          },
+          {
+            "window_segment_id": "segment_000099-w02",
+            "audio_path": "E:\\project\\qwen3-asr\\workspaces\\full-regression-sayonara-lara-02-20260715-234059\\diagnostics\\align-fallback\\asr-short-window\\segment_000099\\segment_000099-w02.wav",
+            "global_start_time": 1100.557,
+            "global_end_time": 1103.557,
+            "asr_status": "completed",
+            "asr_text": "お。",
+            "asr_error": null,
+            "align_status": "failed",
+            "align_error": "alignment token timing unreliable: covered 0.080s of 3.000s",
+            "token_count": 1
+          },
+          {
+            "window_segment_id": "segment_000099-w03",
+            "audio_path": "E:\\project\\qwen3-asr\\workspaces\\full-regression-sayonara-lara-02-20260715-234059\\diagnostics\\align-fallback\\asr-short-window\\segment_000099\\segment_000099-w03.wav",
+            "global_start_time": 1103.557,
+            "global_end_time": 1105.126,
+            "asr_status": "completed",
+            "asr_text": "はい。",
+            "asr_error": null,
+            "align_status": "failed",
+            "align_error": "alignment token timing unreliable: covered 0.000s of 1.569s",
+            "token_count": 1
+          }
+        ]
+      },
+      "transcript_evidence_state": "unknown_requires_audio_verification",
+      "observed_conditions": [
+        "transcript_correctness_unknown",
+        "low_coverage",
+        "asr_rewrite_rejected",
+        "neighbor_overlap_risk"
+      ],
+      "attempted_capabilities": [
+        "qwen_primary_align",
+        "asr_short_window_fallback"
+      ],
+      "skipped_capabilities": [
+        {
+          "capability": "mfa_local_fallback",
+          "skip_reason": "not connected to initial Align recovery executor"
+        },
+        {
+          "capability": "vad_coarse",
+          "skip_reason": "not executed in the immutable baseline and transcript is not yet verified"
+        },
+        {
+          "capability": "language_route_executor",
+          "skip_reason": "route_language currently persists state only"
+        }
+      ],
+      "final_root_cause": "qwen_timing_failure_then_short_window_content_guard_rejection",
+      "confidence": "HIGH"
+    },
+    {
+      "segment_id": "segment_000100",
+      "original_transcript": "うん。",
+      "normalized_char_count": 2,
+      "route": "short_response",
+      "language": "Japanese",
+      "original_range_ms": [
+        1104526,
+        1116019
+      ],
+      "token_count": 1,
+      "coverage": 0.0,
+      "error": "ASR short-window fallback changed transcript content: reference_chars=2 aligned_chars=0",
+      "neighbor_context": {
+        "previous": "segment_000099",
+        "next": "segment_000101"
+      },
+      "short_window": {
+        "attempted": true,
+        "window_count": 4,
+        "completed_window_alignments": 0,
+        "merged_asr_text": "はい。うん。はい。あ。",
+        "content_error": "ASR short-window fallback changed transcript content: reference_chars=2 aligned_chars=0",
+        "windows": [
+          {
+            "window_segment_id": "segment_000100-w01",
+            "audio_path": "E:\\project\\qwen3-asr\\workspaces\\full-regression-sayonara-lara-02-20260715-234059\\diagnostics\\align-fallback\\asr-short-window\\segment_000100\\segment_000100-w01.wav",
+            "global_start_time": 1104.526,
+            "global_end_time": 1107.526,
+            "asr_status": "completed",
+            "asr_text": "はい。",
+            "asr_error": null,
+            "align_status": "failed",
+            "align_error": "alignment token timing unreliable: covered 0.000s of 3.000s",
+            "token_count": 1
+          },
+          {
+            "window_segment_id": "segment_000100-w02",
+            "audio_path": "E:\\project\\qwen3-asr\\workspaces\\full-regression-sayonara-lara-02-20260715-234059\\diagnostics\\align-fallback\\asr-short-window\\segment_000100\\segment_000100-w02.wav",
+            "global_start_time": 1107.526,
+            "global_end_time": 1110.526,
+            "asr_status": "completed",
+            "asr_text": "うん。",
+            "asr_error": null,
+            "align_status": "failed",
+            "align_error": "alignment token timing unreliable: covered 0.080s of 3.000s",
+            "token_count": 1
+          },
+          {
+            "window_segment_id": "segment_000100-w03",
+            "audio_path": "E:\\project\\qwen3-asr\\workspaces\\full-regression-sayonara-lara-02-20260715-234059\\diagnostics\\align-fallback\\asr-short-window\\segment_000100\\segment_000100-w03.wav",
+            "global_start_time": 1110.526,
+            "global_end_time": 1113.526,
+            "asr_status": "completed",
+            "asr_text": "はい。",
+            "asr_error": null,
+            "align_status": "failed",
+            "align_error": "alignment token timing unreliable: covered 0.080s of 3.000s",
+            "token_count": 1
+          },
+          {
+            "window_segment_id": "segment_000100-w04",
+            "audio_path": "E:\\project\\qwen3-asr\\workspaces\\full-regression-sayonara-lara-02-20260715-234059\\diagnostics\\align-fallback\\asr-short-window\\segment_000100\\segment_000100-w04.wav",
+            "global_start_time": 1113.526,
+            "global_end_time": 1116.019,
+            "asr_status": "completed",
+            "asr_text": "あ。",
+            "asr_error": null,
+            "align_status": "failed",
+            "align_error": "alignment token timing unreliable: covered 0.080s of 2.493s",
+            "token_count": 1
+          }
+        ]
+      },
+      "transcript_evidence_state": "unknown_requires_audio_verification",
+      "observed_conditions": [
+        "transcript_correctness_unknown",
+        "zero_duration_token",
+        "dense_zero_tokens",
+        "low_coverage",
+        "asr_rewrite_rejected",
+        "neighbor_overlap_risk"
+      ],
+      "attempted_capabilities": [
+        "qwen_primary_align",
+        "asr_short_window_fallback"
+      ],
+      "skipped_capabilities": [
+        {
+          "capability": "mfa_local_fallback",
+          "skip_reason": "not connected to initial Align recovery executor"
+        },
+        {
+          "capability": "vad_coarse",
+          "skip_reason": "not executed in the immutable baseline and transcript is not yet verified"
+        },
+        {
+          "capability": "language_route_executor",
+          "skip_reason": "route_language currently persists state only"
+        }
+      ],
+      "final_root_cause": "qwen_timing_failure_then_short_window_content_guard_rejection",
+      "confidence": "HIGH"
+    },
+    {
+      "segment_id": "segment_000101",
+      "original_transcript": "うん、うん。",
+      "normalized_char_count": 4,
+      "route": "short_response",
+      "language": "Japanese",
+      "original_range_ms": [
+        1115419,
+        1128261
+      ],
+      "token_count": 2,
+      "coverage": 0.012459,
+      "error": "ASR short-window fallback changed transcript content: reference_chars=4 aligned_chars=4",
+      "neighbor_context": {
+        "previous": "segment_000100",
+        "next": "segment_000102"
+      },
+      "short_window": {
+        "attempted": true,
+        "window_count": 5,
+        "completed_window_alignments": 2,
+        "merged_asr_text": "うん。はい。は。はい。はい。",
+        "content_error": "ASR short-window fallback changed transcript content: reference_chars=4 aligned_chars=4",
+        "windows": [
+          {
+            "window_segment_id": "segment_000101-w01",
+            "audio_path": "E:\\project\\qwen3-asr\\workspaces\\full-regression-sayonara-lara-02-20260715-234059\\diagnostics\\align-fallback\\asr-short-window\\segment_000101\\segment_000101-w01.wav",
+            "global_start_time": 1115.419,
+            "global_end_time": 1118.419,
+            "asr_status": "completed",
+            "asr_text": "うん。",
+            "asr_error": null,
+            "align_status": "failed",
+            "align_error": "alignment token timing unreliable: covered 0.080s of 3.000s",
+            "token_count": 1
+          },
+          {
+            "window_segment_id": "segment_000101-w02",
+            "audio_path": "E:\\project\\qwen3-asr\\workspaces\\full-regression-sayonara-lara-02-20260715-234059\\diagnostics\\align-fallback\\asr-short-window\\segment_000101\\segment_000101-w02.wav",
+            "global_start_time": 1118.419,
+            "global_end_time": 1121.419,
+            "asr_status": "completed",
+            "asr_text": "はい。",
+            "asr_error": null,
+            "align_status": "completed",
+            "align_error": null,
+            "token_count": 1
+          },
+          {
+            "window_segment_id": "segment_000101-w03",
+            "audio_path": "E:\\project\\qwen3-asr\\workspaces\\full-regression-sayonara-lara-02-20260715-234059\\diagnostics\\align-fallback\\asr-short-window\\segment_000101\\segment_000101-w03.wav",
+            "global_start_time": 1121.419,
+            "global_end_time": 1124.419,
+            "asr_status": "completed",
+            "asr_text": "は。",
+            "asr_error": null,
+            "align_status": "failed",
+            "align_error": "alignment token timing unreliable: covered 0.080s of 3.000s",
+            "token_count": 1
+          },
+          {
+            "window_segment_id": "segment_000101-w04",
+            "audio_path": "E:\\project\\qwen3-asr\\workspaces\\full-regression-sayonara-lara-02-20260715-234059\\diagnostics\\align-fallback\\asr-short-window\\segment_000101\\segment_000101-w04.wav",
+            "global_start_time": 1124.419,
+            "global_end_time": 1127.419,
+            "asr_status": "completed",
+            "asr_text": "はい。",
+            "asr_error": null,
+            "align_status": "failed",
+            "align_error": "alignment token timing unreliable: covered 0.080s of 3.000s",
+            "token_count": 1
+          },
+          {
+            "window_segment_id": "segment_000101-w05",
+            "audio_path": "E:\\project\\qwen3-asr\\workspaces\\full-regression-sayonara-lara-02-20260715-234059\\diagnostics\\align-fallback\\asr-short-window\\segment_000101\\segment_000101-w05.wav",
+            "global_start_time": 1127.419,
+            "global_end_time": 1128.261,
+            "asr_status": "completed",
+            "asr_text": "はい。",
+            "asr_error": null,
+            "align_status": "completed",
+            "align_error": null,
+            "token_count": 1
+          }
+        ]
+      },
+      "transcript_evidence_state": "unknown_requires_audio_verification",
+      "observed_conditions": [
+        "transcript_correctness_unknown",
+        "zero_duration_token",
+        "dense_zero_tokens",
+        "low_coverage",
+        "asr_rewrite_rejected",
+        "neighbor_overlap_risk"
+      ],
+      "attempted_capabilities": [
+        "qwen_primary_align",
+        "asr_short_window_fallback"
+      ],
+      "skipped_capabilities": [
+        {
+          "capability": "mfa_local_fallback",
+          "skip_reason": "not connected to initial Align recovery executor"
+        },
+        {
+          "capability": "vad_coarse",
+          "skip_reason": "not executed in the immutable baseline and transcript is not yet verified"
+        },
+        {
+          "capability": "language_route_executor",
+          "skip_reason": "route_language currently persists state only"
+        }
+      ],
+      "final_root_cause": "qwen_timing_failure_then_short_window_content_guard_rejection",
+      "confidence": "HIGH"
+    },
+    {
+      "segment_id": "segment_000102",
+      "original_transcript": "うん。",
+      "normalized_char_count": 2,
+      "route": "short_response",
+      "language": "Japanese",
+      "original_range_ms": [
+        1127661,
+        1135484
+      ],
+      "token_count": 1,
+      "coverage": 0.0,
+      "error": "ASR short-window fallback changed transcript content: reference_chars=2 aligned_chars=2",
+      "neighbor_context": {
+        "previous": "segment_000101",
+        "next": "segment_000103"
+      },
+      "short_window": {
+        "attempted": true,
+        "window_count": 3,
+        "completed_window_alignments": 1,
+        "merged_asr_text": "はい。はい。うん。",
+        "content_error": "ASR short-window fallback changed transcript content: reference_chars=2 aligned_chars=2",
+        "windows": [
+          {
+            "window_segment_id": "segment_000102-w01",
+            "audio_path": "E:\\project\\qwen3-asr\\workspaces\\full-regression-sayonara-lara-02-20260715-234059\\diagnostics\\align-fallback\\asr-short-window\\segment_000102\\segment_000102-w01.wav",
+            "global_start_time": 1127.661,
+            "global_end_time": 1130.661,
+            "asr_status": "completed",
+            "asr_text": "はい。",
+            "asr_error": null,
+            "align_status": "failed",
+            "align_error": "alignment token timing unreliable: covered 0.080s of 3.000s",
+            "token_count": 1
+          },
+          {
+            "window_segment_id": "segment_000102-w02",
+            "audio_path": "E:\\project\\qwen3-asr\\workspaces\\full-regression-sayonara-lara-02-20260715-234059\\diagnostics\\align-fallback\\asr-short-window\\segment_000102\\segment_000102-w02.wav",
+            "global_start_time": 1130.661,
+            "global_end_time": 1133.661,
+            "asr_status": "completed",
+            "asr_text": "はい。",
+            "asr_error": null,
+            "align_status": "completed",
+            "align_error": null,
+            "token_count": 1
+          },
+          {
+            "window_segment_id": "segment_000102-w03",
+            "audio_path": "E:\\project\\qwen3-asr\\workspaces\\full-regression-sayonara-lara-02-20260715-234059\\diagnostics\\align-fallback\\asr-short-window\\segment_000102\\segment_000102-w03.wav",
+            "global_start_time": 1133.661,
+            "global_end_time": 1135.484,
+            "asr_status": "completed",
+            "asr_text": "うん。",
+            "asr_error": null,
+            "align_status": "failed",
+            "align_error": "alignment token timing unreliable: covered 0.080s of 1.823s",
+            "token_count": 1
+          }
+        ]
+      },
+      "transcript_evidence_state": "unknown_requires_audio_verification",
+      "observed_conditions": [
+        "transcript_correctness_unknown",
+        "zero_duration_token",
+        "dense_zero_tokens",
+        "low_coverage",
+        "asr_rewrite_rejected",
+        "neighbor_overlap_risk"
+      ],
+      "attempted_capabilities": [
+        "qwen_primary_align",
+        "asr_short_window_fallback"
+      ],
+      "skipped_capabilities": [
+        {
+          "capability": "mfa_local_fallback",
+          "skip_reason": "not connected to initial Align recovery executor"
+        },
+        {
+          "capability": "vad_coarse",
+          "skip_reason": "not executed in the immutable baseline and transcript is not yet verified"
+        },
+        {
+          "capability": "language_route_executor",
+          "skip_reason": "route_language currently persists state only"
+        }
+      ],
+      "final_root_cause": "qwen_timing_failure_then_short_window_content_guard_rejection",
+      "confidence": "HIGH"
+    },
+    {
+      "segment_id": "segment_000104",
+      "original_transcript": "おいしい。",
+      "normalized_char_count": 4,
+      "route": "short_response",
+      "language": "Japanese",
+      "original_range_ms": [
+        1147717,
+        1156915
+      ],
+      "token_count": 1,
+      "coverage": 0.06958,
+      "error": "ASR short-window fallback changed transcript content: reference_chars=4 aligned_chars=8",
+      "neighbor_context": {
+        "previous": "segment_000103",
+        "next": "segment_000105"
+      },
+      "short_window": {
+        "attempted": true,
+        "window_count": 4,
+        "completed_window_alignments": 3,
+        "merged_asr_text": "うん。うん。おいしい。はい。",
+        "content_error": "ASR short-window fallback changed transcript content: reference_chars=4 aligned_chars=8",
+        "windows": [
+          {
+            "window_segment_id": "segment_000104-w01",
+            "audio_path": "E:\\project\\qwen3-asr\\workspaces\\full-regression-sayonara-lara-02-20260715-234059\\diagnostics\\align-fallback\\asr-short-window\\segment_000104\\segment_000104-w01.wav",
+            "global_start_time": 1147.717,
+            "global_end_time": 1150.717,
+            "asr_status": "completed",
+            "asr_text": "うん。",
+            "asr_error": null,
+            "align_status": "failed",
+            "align_error": "alignment token timing unreliable: covered 0.080s of 3.000s",
+            "token_count": 1
+          },
+          {
+            "window_segment_id": "segment_000104-w02",
+            "audio_path": "E:\\project\\qwen3-asr\\workspaces\\full-regression-sayonara-lara-02-20260715-234059\\diagnostics\\align-fallback\\asr-short-window\\segment_000104\\segment_000104-w02.wav",
+            "global_start_time": 1150.717,
+            "global_end_time": 1153.717,
+            "asr_status": "completed",
+            "asr_text": "うん。",
+            "asr_error": null,
+            "align_status": "completed",
+            "align_error": null,
+            "token_count": 1
+          },
+          {
+            "window_segment_id": "segment_000104-w03",
+            "audio_path": "E:\\project\\qwen3-asr\\workspaces\\full-regression-sayonara-lara-02-20260715-234059\\diagnostics\\align-fallback\\asr-short-window\\segment_000104\\segment_000104-w03.wav",
+            "global_start_time": 1153.717,
+            "global_end_time": 1156.717,
+            "asr_status": "completed",
+            "asr_text": "おいしい。",
+            "asr_error": null,
+            "align_status": "completed",
+            "align_error": null,
+            "token_count": 1
+          },
+          {
+            "window_segment_id": "segment_000104-w04",
+            "audio_path": "E:\\project\\qwen3-asr\\workspaces\\full-regression-sayonara-lara-02-20260715-234059\\diagnostics\\align-fallback\\asr-short-window\\segment_000104\\segment_000104-w04.wav",
+            "global_start_time": 1156.717,
+            "global_end_time": 1156.915,
+            "asr_status": "completed",
+            "asr_text": "はい。",
+            "asr_error": null,
+            "align_status": "completed",
+            "align_error": null,
+            "token_count": 1
+          }
+        ]
+      },
+      "transcript_evidence_state": "unknown_requires_audio_verification",
+      "observed_conditions": [
+        "transcript_correctness_unknown",
+        "low_coverage",
+        "asr_rewrite_rejected",
+        "neighbor_overlap_risk"
+      ],
+      "attempted_capabilities": [
+        "qwen_primary_align",
+        "asr_short_window_fallback"
+      ],
+      "skipped_capabilities": [
+        {
+          "capability": "mfa_local_fallback",
+          "skip_reason": "not connected to initial Align recovery executor"
+        },
+        {
+          "capability": "vad_coarse",
+          "skip_reason": "not executed in the immutable baseline and transcript is not yet verified"
+        },
+        {
+          "capability": "language_route_executor",
+          "skip_reason": "route_language currently persists state only"
+        }
+      ],
+      "final_root_cause": "qwen_timing_failure_then_short_window_content_guard_rejection",
+      "confidence": "HIGH"
+    },
+    {
+      "segment_id": "segment_000110",
+      "original_transcript": "Searching where we are coming from.",
+      "normalized_char_count": 29,
+      "route": "standard",
+      "language": "Japanese",
+      "original_range_ms": [
+        1215251,
+        1224508
+      ],
+      "token_count": 6,
+      "coverage": 0.916064,
+      "error": "ASR short-window fallback changed transcript content: reference_chars=29 aligned_chars=2",
+      "neighbor_context": {
+        "previous": "segment_000109",
+        "next": "segment_000111"
+      },
+      "short_window": {
+        "attempted": true,
+        "window_count": 4,
+        "completed_window_alignments": 1,
+        "merged_asr_text": "夏。Where we are.雨が降る。はい。",
+        "content_error": "ASR short-window fallback changed transcript content: reference_chars=29 aligned_chars=2",
+        "windows": [
+          {
+            "window_segment_id": "segment_000110-w01",
+            "audio_path": "E:\\project\\qwen3-asr\\workspaces\\full-regression-sayonara-lara-02-20260715-234059\\diagnostics\\align-fallback\\asr-short-window\\segment_000110\\segment_000110-w01.wav",
+            "global_start_time": 1215.251,
+            "global_end_time": 1218.251,
+            "asr_status": "completed",
+            "asr_text": "夏。",
+            "asr_error": null,
+            "align_status": "failed",
+            "align_error": "alignment token timing unreliable: covered 0.080s of 3.000s",
+            "token_count": 1
+          },
+          {
+            "window_segment_id": "segment_000110-w02",
+            "audio_path": "E:\\project\\qwen3-asr\\workspaces\\full-regression-sayonara-lara-02-20260715-234059\\diagnostics\\align-fallback\\asr-short-window\\segment_000110\\segment_000110-w02.wav",
+            "global_start_time": 1218.251,
+            "global_end_time": 1221.251,
+            "asr_status": "completed",
+            "asr_text": "Where we are.",
+            "asr_error": null,
+            "align_status": "failed",
+            "align_error": "alignment token timing unreliable: covered 0.160s of 3.000s",
+            "token_count": 3
+          },
+          {
+            "window_segment_id": "segment_000110-w03",
+            "audio_path": "E:\\project\\qwen3-asr\\workspaces\\full-regression-sayonara-lara-02-20260715-234059\\diagnostics\\align-fallback\\asr-short-window\\segment_000110\\segment_000110-w03.wav",
+            "global_start_time": 1221.251,
+            "global_end_time": 1224.251,
+            "asr_status": "completed",
+            "asr_text": "雨が降る。",
+            "asr_error": null,
+            "align_status": "failed",
+            "align_error": "alignment token timing unreliable: covered 0.320s of 3.000s",
+            "token_count": 3
+          },
+          {
+            "window_segment_id": "segment_000110-w04",
+            "audio_path": "E:\\project\\qwen3-asr\\workspaces\\full-regression-sayonara-lara-02-20260715-234059\\diagnostics\\align-fallback\\asr-short-window\\segment_000110\\segment_000110-w04.wav",
+            "global_start_time": 1224.251,
+            "global_end_time": 1224.508,
+            "asr_status": "completed",
+            "asr_text": "はい。",
+            "asr_error": null,
+            "align_status": "completed",
+            "align_error": null,
+            "token_count": 1
+          }
+        ]
+      },
+      "transcript_evidence_state": "unknown_requires_audio_verification",
+      "observed_conditions": [
+        "transcript_correctness_unknown",
+        "asr_rewrite_rejected",
+        "language_mismatch",
+        "neighbor_overlap_risk"
+      ],
+      "attempted_capabilities": [
+        "qwen_primary_align",
+        "asr_short_window_fallback"
+      ],
+      "skipped_capabilities": [
+        {
+          "capability": "mfa_local_fallback",
+          "skip_reason": "not connected to initial Align recovery executor"
+        },
+        {
+          "capability": "vad_coarse",
+          "skip_reason": "not executed in the immutable baseline and transcript is not yet verified"
+        },
+        {
+          "capability": "language_route_executor",
+          "skip_reason": "route_language currently persists state only"
+        }
+      ],
+      "final_root_cause": "language_route_mismatch",
+      "confidence": "HIGH"
+    },
+    {
+      "segment_id": "segment_000127",
+      "original_transcript": "あれは。",
+      "normalized_char_count": 3,
+      "route": "short_response",
+      "language": "Japanese",
+      "original_range_ms": [
+        1409820,
+        1422984
+      ],
+      "token_count": 2,
+      "coverage": 0.024309,
+      "error": "ASR short-window fallback changed transcript content: reference_chars=3 aligned_chars=0",
+      "neighbor_context": {
+        "previous": "segment_000126",
+        "next": "segment_000128"
+      },
+      "short_window": {
+        "attempted": true,
+        "window_count": 5,
+        "completed_window_alignments": 0,
+        "merged_asr_text": "はい。はい。はい。お。あれは。",
+        "content_error": "ASR short-window fallback changed transcript content: reference_chars=3 aligned_chars=0",
+        "windows": [
+          {
+            "window_segment_id": "segment_000127-w01",
+            "audio_path": "E:\\project\\qwen3-asr\\workspaces\\full-regression-sayonara-lara-02-20260715-234059\\diagnostics\\align-fallback\\asr-short-window\\segment_000127\\segment_000127-w01.wav",
+            "global_start_time": 1409.82,
+            "global_end_time": 1412.82,
+            "asr_status": "completed",
+            "asr_text": "はい。",
+            "asr_error": null,
+            "align_status": "failed",
+            "align_error": "alignment token timing unreliable: covered 0.160s of 3.000s",
+            "token_count": 1
+          },
+          {
+            "window_segment_id": "segment_000127-w02",
+            "audio_path": "E:\\project\\qwen3-asr\\workspaces\\full-regression-sayonara-lara-02-20260715-234059\\diagnostics\\align-fallback\\asr-short-window\\segment_000127\\segment_000127-w02.wav",
+            "global_start_time": 1412.82,
+            "global_end_time": 1415.82,
+            "asr_status": "completed",
+            "asr_text": "はい。",
+            "asr_error": null,
+            "align_status": "failed",
+            "align_error": "alignment token timing unreliable: covered 0.080s of 3.000s",
+            "token_count": 1
+          },
+          {
+            "window_segment_id": "segment_000127-w03",
+            "audio_path": "E:\\project\\qwen3-asr\\workspaces\\full-regression-sayonara-lara-02-20260715-234059\\diagnostics\\align-fallback\\asr-short-window\\segment_000127\\segment_000127-w03.wav",
+            "global_start_time": 1415.82,
+            "global_end_time": 1418.82,
+            "asr_status": "completed",
+            "asr_text": "はい。",
+            "asr_error": null,
+            "align_status": "failed",
+            "align_error": "alignment token timing unreliable: covered 0.080s of 3.000s",
+            "token_count": 1
+          },
+          {
+            "window_segment_id": "segment_000127-w04",
+            "audio_path": "E:\\project\\qwen3-asr\\workspaces\\full-regression-sayonara-lara-02-20260715-234059\\diagnostics\\align-fallback\\asr-short-window\\segment_000127\\segment_000127-w04.wav",
+            "global_start_time": 1418.82,
+            "global_end_time": 1421.82,
+            "asr_status": "completed",
+            "asr_text": "お。",
+            "asr_error": null,
+            "align_status": "failed",
+            "align_error": "alignment token timing unreliable: covered 0.000s of 3.000s",
+            "token_count": 1
+          },
+          {
+            "window_segment_id": "segment_000127-w05",
+            "audio_path": "E:\\project\\qwen3-asr\\workspaces\\full-regression-sayonara-lara-02-20260715-234059\\diagnostics\\align-fallback\\asr-short-window\\segment_000127\\segment_000127-w05.wav",
+            "global_start_time": 1421.82,
+            "global_end_time": 1422.984,
+            "asr_status": "completed",
+            "asr_text": "あれは。",
+            "asr_error": null,
+            "align_status": "failed",
+            "align_error": "alignment token timing unreliable: zero-duration ratio 0.50 with covered 0.320s of 1.164s",
+            "token_count": 2
+          }
+        ]
+      },
+      "transcript_evidence_state": "unknown_requires_audio_verification",
+      "observed_conditions": [
+        "transcript_correctness_unknown",
+        "low_coverage",
+        "asr_rewrite_rejected",
+        "neighbor_overlap_risk"
+      ],
+      "attempted_capabilities": [
+        "qwen_primary_align",
+        "asr_short_window_fallback"
+      ],
+      "skipped_capabilities": [
+        {
+          "capability": "mfa_local_fallback",
+          "skip_reason": "not connected to initial Align recovery executor"
+        },
+        {
+          "capability": "vad_coarse",
+          "skip_reason": "not executed in the immutable baseline and transcript is not yet verified"
+        },
+        {
+          "capability": "language_route_executor",
+          "skip_reason": "route_language currently persists state only"
+        }
+      ],
+      "final_root_cause": "qwen_timing_failure_then_short_window_content_guard_rejection",
+      "confidence": "HIGH"
+    }
+  ]
+}
