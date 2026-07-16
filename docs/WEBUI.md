@@ -11,7 +11,8 @@ http://127.0.0.1:8765
 - `webapp.py`: compatibility wrapper.
 - `qwen_asr/web/server.py`: HTTP routes, job lifecycle, process stop behavior.
 - `qwen_asr/web/commands.py`: payload-to-CLI command construction.
-- `qwen_asr/web/workspace_api.py`: versioned envelopes, workspace/path boundaries, quality/export inventories.
+- `qwen_asr/web/workspace_api.py`: versioned envelopes, workspace/path boundaries, recovery/review actions, and quality/export inventories.
+- `qwen_asr/recovery_executor.py` and `qwen_asr/recovery_service.py`: shared real retry/undo execution plus transcript, language, VAD and coarse gates used by CLI and Web.
 - `qwen_asr/web/stage_service.py`: structured stage state and evidence.
 - `qwen_asr/web/stage_start_service.py`: non-secret saved settings plus project defaults to shared CLI payloads.
 - `qwen_asr/web/job_state.py`: redacted, restart-reconciled job persistence.
@@ -25,7 +26,7 @@ http://127.0.0.1:8765
 - `GET /`: returns the structured workbench; `GET /legacy` returns the compatibility configuration UI.
 - `GET /api/v1/contract`, `/job`, `/workspaces`, `/workspace`, `/workspace/stages`, `/workspace/align`, `/workspace/recovery`, `/workspace/review`, `/workspace/quality`, and `/workspace/exports`: versioned structured state.
 - `POST /api/v1/workspace/stage/start`: validates inputs/settings, rejects credential fields, and starts a shared CLI stage job.
-- `POST /api/v1/workspace/recovery/action`: records transcript/language/VAD/retry/coarse-fallback recovery actions.
+- `POST /api/v1/workspace/recovery/action`: executes `verify_transcript`, `localize_vad`, `route_language`, real `retry_align`, guarded `accept_completed_coarse`, or target-level `undo_recovery` and returns the resulting workspace state/evidence.
 - `POST /api/v1/workspace/review/edit` and `/review/undo`: revisioned draft editing with backup and audit.
 - `GET /api/v1/workspace/media`: workspace or manifest-linked media with HTTP Range support.
 - `GET /api/v1/workspace/quality-evidence`: inventory-scoped quality report preview.
@@ -52,8 +53,8 @@ The default browser UI is organized as a local workbench:
 - Top bar: workspace selection, persisted job state, stop, and explicit refresh.
 - Navigation: pipeline, failed-segment recovery, cue review, quality evidence, and exports.
 - Pipeline: status/count/duration/evidence plus safe per-stage continue buttons and domain-view jumps.
-- Recovery: all failed dialogues, short-response priority, audio/context/evidence, transcript/language/VAD/retry/coarse actions.
-- Review: 370-cue table, full-audio seeking, editable draft fields, dirty/revision state, undo, and read-only ASS references.
+- Recovery: all failed dialogues, short-response and root-cause filters, audio/context/evidence, transcript verification, real language-routed Qwen/MFA retry, VAD/coarse hard gates, before/after metrics, and auditable undo.
+- Review: cue table with exact/coarse/failed/issues filters, full-audio seeking, editable draft fields, dirty/revision state, undo, and read-only ASS references.
 - Quality/export: every WARN/FAIL has a recovery/cue/report target; exports retain `quality_gate_failed` while quality is FAIL.
 
 The legacy config rail/drawer remains at `/legacy` for input/segmentation, ASR/Align, LLM/translation/correction, and Normalize/Export settings.
@@ -62,6 +63,8 @@ The page stores non-sensitive settings under `koeaxis_webui_settings_v1`. Existi
 The drawer open/closed UI state is stored separately in `qwen3_asr_webui_ui_state_v1`.
 
 Credential fields are intentionally absent from the HTML and request payloads. Existing browser settings are sanitized on load so legacy credential-like fields are removed before the settings are written back. MiMo uses `MIMO_API_KEY`, DeepSeek official endpoints use `DEEPSEEK_API_KEY`, and other compatible providers use `LLM_API_KEY`.
+
+Recovery API semantics are intentionally strict: Qwen retry defaults to `original_transcript`; verified text requires a prior `verify_transcript` action and explicit opt-in. `mfa-local` requires a Japanese route. `accept_completed_coarse` requires verified text and a safe VAD selection; no-speech or ambiguous-region cases return a stable conflict error and leave the aligned manifest unchanged. A quality-gate process returning code 1 is represented as an honest stage failure when the report status is `FAIL`.
 
 ## Frontend Validation
 

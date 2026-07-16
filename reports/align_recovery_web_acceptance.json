@@ -1,0 +1,139 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-07-16T08:22:00Z",
+  "status": "PASS",
+  "scope": "isolated Web acceptance workspace only",
+  "production_baselines_modified": false,
+  "browser": {
+    "driver": "playwright-cli via npx --package @playwright/cli",
+    "url": "http://127.0.0.1:8765/",
+    "headed": true,
+    "workspace": "E:\\project\\qwen3-asr\\workspaces\\align-recovery-web-acceptance-20260716-160300",
+    "server_note": "The listener was restarted before acceptance because an older preloaded webapp process was serving stale HTML alongside the current JavaScript. No source change was needed."
+  },
+  "initial_state": {
+    "completed_exact": 92,
+    "completed_coarse": 0,
+    "failed_dialogue": 21,
+    "short_failed": 18,
+    "quality_status": "FAIL"
+  },
+  "checks": {
+    "page_and_workspace_load": {
+      "status": "PASS",
+      "workspace_selector_loaded": true,
+      "selected_acceptance_workspace": true,
+      "unexpected_initialization_errors": 0
+    },
+    "recovery_metrics_and_filters": {
+      "status": "PASS",
+      "metrics_visible": true,
+      "root_cause_filter": "short_response",
+      "filtered_item_count_after_coarse_acceptance": 17
+    },
+    "completed_coarse_acceptance": {
+      "status": "PASS",
+      "segment_id": "segment_000013",
+      "verified_text": "うん。",
+      "transcript_verified": true,
+      "vad_start_ms": 153407,
+      "vad_end_ms": 154344,
+      "vad_unique_mapping": true,
+      "selection_source": "vad_unique_region",
+      "confirmation_dialog_accepted": true,
+      "resulting_alignment_state": "completed_coarse",
+      "after": {
+        "completed_exact": 92,
+        "completed_coarse": 1,
+        "failed_dialogue": 20,
+        "short_failed": 17
+      },
+      "refresh_persisted_result": true,
+      "backup_path": "E:\\project\\qwen3-asr\\workspaces\\align-recovery-web-acceptance-20260716-160300\\reports\\recovery-backups\\segment_000013-20260716-161205-781320"
+    },
+    "vad_rejection": {
+      "status": "PASS",
+      "segment_id": "segment_000093",
+      "http_status": 409,
+      "error_code": "VAD_NO_SPEECH",
+      "message": "VAD found no speech in the failed segment",
+      "page_remained_usable": true,
+      "manifest_state_preserved": true
+    },
+    "exact_review_filter": {
+      "status": "PASS",
+      "filter": "exact",
+      "segment_id": "segment_000086",
+      "alignment_state": "completed_exact",
+      "matching_cue_count": 3,
+      "matching_originals": [
+        "何？",
+        "足が息が",
+        "苦しい。"
+      ]
+    },
+    "audio_range": {
+      "status": "PASS",
+      "segment_id": "segment_000013",
+      "http_status": 206,
+      "response": "Partial Content"
+    },
+    "quality_gate_from_web": {
+      "status": "PASS",
+      "stage": "quality-gate",
+      "job_status": "failed",
+      "returncode": 1,
+      "returncode_expected_for_quality_fail": true,
+      "elapsed_seconds": 1.1,
+      "summary": "聚合质量门 FAIL：6 FAIL，2 WARN",
+      "quality_status_after_refresh": "FAIL",
+      "quality_summary": {
+        "pass_count": 7,
+        "warn_count": 2,
+        "fail_count": 6
+      },
+      "alignment_health": {
+        "completed_exact": 92,
+        "completed_coarse": 1,
+        "failed": 20,
+        "timing_errors": 0,
+        "mean_coverage": 0.428
+      }
+    },
+    "browser_errors": {
+      "status": "PASS",
+      "unexpected_console_errors": 0,
+      "unexpected_failed_requests": 0,
+      "expected_console_errors": [
+        "HTTP 409 for the deliberate segment_000093 VAD_NO_SPEECH rejection"
+      ]
+    }
+  },
+  "artifacts": {
+    "aligned_manifest": {
+      "path": "E:\\project\\qwen3-asr\\workspaces\\align-recovery-web-acceptance-20260716-160300\\manifests\\aligned_segments.json",
+      "sha256": "8dd62ca167de98b736d430a22d7ef6d4084fde23b766765eac5f5526166a9c03"
+    },
+    "final_quality": {
+      "path": "E:\\project\\qwen3-asr\\workspaces\\align-recovery-web-acceptance-20260716-160300\\reports\\final_quality.json",
+      "sha256": "b4d840cced68d7b7f4052324ad1a9118f21c29a45ae426326e8f86fa8598393f"
+    },
+    "quality_screenshot": {
+      "path": "E:\\project\\qwen3-asr\\output\\playwright\\align-recovery-a7\\quality-fail-after-web-run.png",
+      "sha256": "2d622cb49cbcbac97836c5ec96ccd786d300be5e837859613f3a25f3edca3be0"
+    },
+    "recovery_screenshot": {
+      "path": "E:\\project\\qwen3-asr\\output\\playwright\\align-recovery-a7\\recovery-coarse-and-failed.png",
+      "sha256": "f662d3fa6ba6bf00dfdb3bb00596a04a67083c8258a3c3e920bf2411829aeeee"
+    },
+    "trace": {
+      "path": "E:\\project\\qwen3-asr\\output\\playwright\\align-recovery-a7\\trace\\trace-1784189476133.trace",
+      "sha256": "29fb40d4f47808024e4fa00de37bbff4319ecdd315c2e91c7402688860731f91"
+    },
+    "network_log": {
+      "path": "E:\\project\\qwen3-asr\\output\\playwright\\align-recovery-a7\\trace\\trace-1784189476133.network",
+      "sha256": "ef8ebb271f86c3f7cd6de449c6283b7191db27a8affce8b8dddc23ff9ca1a6fb"
+    }
+  },
+  "conclusion": "The recovery Web UI supports queue/root-cause filtering, explicit transcript verification, gated coarse acceptance, VAD rejection handling, exact review filtering, audio range delivery, refresh persistence, and an honest quality-gate FAIL without modifying the production Sayonara baseline workspace."
+}

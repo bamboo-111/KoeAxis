@@ -1,0 +1,148 @@
+{
+  "schema_version": 1,
+  "status": "READY",
+  "goal_name": "Align existing recovery capability audit and production integration",
+  "scope": "Goal A only: audit existing fixes, make production recovery paths executable, and close explainable residual failures without repeating rejected broad experiments",
+  "generated_for_commit": "59b78594ecc8dff5aae6a1fbd20ed93f674b1f0f",
+  "generated_for_branch": "codex/web-pipeline-workbench",
+  "estimated_hours": {
+    "expected_min": 3,
+    "expected_max": 6,
+    "decision_checkpoint": 8
+  },
+  "sample": {
+    "media": "D:/Users/下载/[Studio GreenTea&LoliHouse] Sayonara Lara - 02 [WebRip 1080p HEVC-10bit AAC ASSx2].mkv",
+    "source_workspace": "workspaces/full-regression-sayonara-lara-02-20260715-234059",
+    "diagnostic_workspace": "workspaces/post-repair-full-flow-sayonara-lara-02-20260716-002234",
+    "read_only_baseline": true
+  },
+  "baseline_metrics": {
+    "raw_align_input": 128,
+    "raw_completed": 104,
+    "raw_failed": 24,
+    "music_region_segments": 15,
+    "music_region_failed": 2,
+    "dialogue_segments": 113,
+    "completed_exact": 91,
+    "completed_coarse": 0,
+    "failed_dialogue": 22,
+    "short_failures_le_4_chars": 18,
+    "english_failures": 1,
+    "other_failures": 3,
+    "postrepair_exact_recovery": 0,
+    "review_cues": 370,
+    "quality_status": "FAIL",
+    "quality_pass": 7,
+    "quality_warn": 3,
+    "quality_fail": 4
+  },
+  "known_capabilities": [
+    {
+      "capability": "qwen_primary_align",
+      "implementation": "qwen_asr/commands/align.py and qwen_asr/align.py",
+      "production_reachable": true,
+      "known_gap": "22 non-music dialogue failures remain"
+    },
+    {
+      "capability": "asr_short_window_fallback",
+      "implementation": "qwen_asr/commands/align.py::_run_asr_short_window_align_fallback",
+      "production_reachable": true,
+      "default_enabled": false,
+      "guard": "normalized aligned tokens must exactly preserve the original transcript",
+      "observed_result": "attempted on all 24 failures in the diagnostic run; exact recovery 0/24"
+    },
+    {
+      "capability": "align_parameter_matrix",
+      "implementation": "align coverage, zero-token, dense-zero and local interpolation controls",
+      "production_reachable": true,
+      "prior_decision": "COMPLETED_REJECTED",
+      "observed_result": "nine same-input variants changed failure classification or zero-token counts but produced no ASS target improvement"
+    },
+    {
+      "capability": "mfa_full_backend",
+      "implementation": "tools/mfa_full_alignment.py",
+      "prior_decision": "COMPLETED_REJECTED",
+      "allowed_next_use": "none for broad rerun"
+    },
+    {
+      "capability": "mfa_local_fallback",
+      "implementation": "qwen_asr/mfa_candidates.py, mfa_runner.py, mfa_writeback.py",
+      "prior_decision": "KEEP_LOCAL_FALLBACK",
+      "known_gap": "not integrated as a unified first-Align failed-dialogue recovery executor"
+    },
+    {
+      "capability": "recovery_queue",
+      "implementation": "qwen_asr/recovery_service.py",
+      "production_reachable": true,
+      "supports": [
+        "reason classification",
+        "transcript verification state",
+        "language route state",
+        "production VAD localization",
+        "completed_coarse write with backup and audit"
+      ],
+      "known_gaps": [
+        "retry_align records retry_requested but does not run an align backend",
+        "route_language records state but does not dispatch a language-aware executor",
+        "completed_coarse acceptance does not yet require verified transcript evidence",
+        "completed_coarse bounds are checked inside the segment but need explicit neighbor and quality guards"
+      ]
+    },
+    {
+      "capability": "proofread_realign",
+      "implementation": "qwen_asr/proofread_realign.py",
+      "production_reachable": true,
+      "known_boundary": "post-edit text changes only; it is not a replacement for failed initial Align recovery"
+    }
+  ],
+  "prohibited_repeats": [
+    "do not rerun the nine broad Align parameter variants without a new falsifiable hypothesis",
+    "do not retry MFA full replacement",
+    "do not restore retired LLM split variants",
+    "do not move the entire MiMo or general LLM proofread stage before Align",
+    "do not optimize OP/ED lyrics as dialogue failures",
+    "do not use reference ASS text as ASR or Align input",
+    "do not mark every failure completed_coarse merely to reduce the failed count"
+  ],
+  "evidence": [
+    {
+      "path": "workspaces/full-regression-sayonara-lara-02-20260715-234059/manifests/transcript_segments.json",
+      "bytes": 58175,
+      "sha256": "5bf0bfec12a6c4b6ba500c9141fb6ed7aa56e3fe44f6802b19351b7327284a49"
+    },
+    {
+      "path": "workspaces/full-regression-sayonara-lara-02-20260715-234059/manifests/aligned_segments.json",
+      "bytes": 566667,
+      "sha256": "a936e2b4403c0ad3df22f083b92805806a145c76fbe3107a230fb42dff869cd9"
+    },
+    {
+      "path": "workspaces/full-regression-sayonara-lara-02-20260715-234059/manifests/split_segments.json",
+      "bytes": 56416,
+      "sha256": "21ec9715fd5b3f185ebffd415c935dce6caf1480bb54b634322021b345a3fc9a"
+    },
+    {
+      "path": "workspaces/full-regression-sayonara-lara-02-20260715-234059/reports/final_quality.json",
+      "bytes": 4967,
+      "sha256": "b704db71a97db092db4cdf9e3a7f883759ea0e86d7656d276765b4e063a2bc14"
+    },
+    {
+      "path": "workspaces/post-repair-full-flow-sayonara-lara-02-20260716-002234/reports/post_repair_effectiveness_excluding_oped.json",
+      "bytes": 3206,
+      "sha256": "1ca6a684a8893ed477c040771f778a85700889c624eafd6dc1bd201b250ad498"
+    },
+    {
+      "path": "reports/web_frontend_backend_final_acceptance.json",
+      "bytes": 2707,
+      "sha256": "020fb1c76e401d568049b33609a8f4646c1e0b7490b407bdc70cf6b1cdd55d19"
+    }
+  ],
+  "starting_test_baseline": {
+    "pytest": "604 passed",
+    "local_check": "PASS",
+    "ruff": "PASS",
+    "compileall": "PASS",
+    "node_check": "PASS",
+    "git_diff_check": "PASS"
+  },
+  "goal_complete": false
+}

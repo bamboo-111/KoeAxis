@@ -1,0 +1,248 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-07-16T08:35:00Z",
+  "status": "PASS",
+  "goal": "Align existing recovery capability audit and production integration",
+  "goal_a_complete": true,
+  "repository": {
+    "branch": "codex/web-pipeline-workbench",
+    "commit": "59b78594ecc8dff5aae6a1fbd20ed93f674b1f0f",
+    "python": "E:\\project\\qwen3-asr\\.venv312\\Scripts\\python.exe"
+  },
+  "scope_and_safety": {
+    "source_workspace": "E:\\project\\qwen3-asr\\workspaces\\full-regression-sayonara-lara-02-20260715-234059",
+    "diagnostic_workspace": "E:\\project\\qwen3-asr\\workspaces\\post-repair-full-flow-sayonara-lara-02-20260716-002234",
+    "production_recovery_workspace": "E:\\project\\qwen3-asr\\workspaces\\align-recovery-sayonara-lara-02-20260716-143833",
+    "web_acceptance_workspace": "E:\\project\\qwen3-asr\\workspaces\\align-recovery-web-acceptance-20260716-160300",
+    "fixed_evidence_hashes_matching": 6,
+    "fixed_evidence_hashes_total": 6,
+    "baseline_workspaces_modified": false,
+    "reference_ass_used_as_executor_input": false,
+    "whole_episode_retranscribed": false,
+    "broad_rejected_matrix_repeated": false,
+    "secrets_detected_in_diff": 0
+  },
+  "a0_baseline": {
+    "status": "PASS",
+    "raw_input": 128,
+    "raw_completed": 104,
+    "raw_failed": 24,
+    "dialogue": {
+      "completed_exact": 91,
+      "completed_coarse": 0,
+      "failed": 22,
+      "short_failed": 18
+    },
+    "report": "reports/align_recovery_a0_baseline.json"
+  },
+  "a1_capability_audit": {
+    "status": "PASS",
+    "report": "reports/align_recovery_capability_matrix.json",
+    "conclusion": "Existing Qwen, short-window, MFA local, proofread-realign, recovery queue, VAD and alignment-state capabilities were classified by real production reachability; the missing shared executor path was implemented."
+  },
+  "a2_failure_trace": {
+    "status": "PASS",
+    "dialogue_failed_traced": 22,
+    "short_response_traced": 18,
+    "short_window_attempted": 22,
+    "root_causes": {
+      "qwen_timing_failure_then_short_window_content_guard_rejection": 19,
+      "qwen_token_coverage_below_safety_threshold": 2,
+      "language_route_mismatch": 1
+    },
+    "report": "reports/align_recovery_failure_trace.json"
+  },
+  "a3_a4_production_integration": {
+    "status": "PASS",
+    "shared_executor": "qwen_asr/recovery_executor.py",
+    "cli": "python main.py recover-align",
+    "web_service": "qwen_asr/recovery_service.py",
+    "api": "POST /api/v1/workspace/recovery/action",
+    "implemented_guards": [
+      "Qwen retry defaults to original transcript",
+      "verified text requires prior verification and explicit opt-in",
+      "route_language affects backend dispatch",
+      "MFA local is Japanese-only",
+      "Qwen and MFA exact results share token timing/content validation",
+      "manifest/checkpoint/events are backed up before writeback",
+      "failed execution preserves original aligned state",
+      "workspace lock rejects conflicting recovery execution",
+      "KeyboardInterrupt releases the lock",
+      "coarse requires verified transcript and a unique or explicit VAD region",
+      "coarse stays inside the original segment and passes duration/neighbor-overlap guards",
+      "coarse preserves original failure, operator, VAD and backup evidence",
+      "undo restores only the target segment and preserves later recoveries"
+    ]
+  },
+  "a5_sayonara_real_recovery": {
+    "status": "PASS",
+    "before": {
+      "completed_exact": 91,
+      "completed_coarse": 0,
+      "failed": 22,
+      "short_failed": 18
+    },
+    "provisional_after": {
+      "completed_exact": 93,
+      "completed_coarse": 0,
+      "failed": 20,
+      "short_failed": 18
+    },
+    "formal_after": {
+      "completed_exact": 92,
+      "completed_coarse": 0,
+      "failed": 21,
+      "short_failed": 18
+    },
+    "retained_exact": {
+      "segment_id": "segment_000086",
+      "text": "何？足が息が苦しい。",
+      "backend": "mfa-local-recovery",
+      "content_score": 1.0,
+      "coverage": 0.453669,
+      "timing_validator_passed": true
+    },
+    "revoked_provisional_exact": {
+      "segment_id": "segment_000036",
+      "coverage": 0.164931,
+      "minimum_coverage": 0.2,
+      "action": "target-level undo_recovery",
+      "other_recoveries_preserved": true
+    },
+    "short_response_vad": {
+      "attempted": 18,
+      "unique_region": 9,
+      "multiple_regions_manual_selection_required": 5,
+      "no_speech": 4,
+      "coarse_written_without_verified_transcript": 0
+    },
+    "report": "reports/align_recovery_sayonara_result.json"
+  },
+  "a6_regression_and_downstream": {
+    "status": "PASS",
+    "dual_dataset": {
+      "konoato01": {
+        "before": "100 exact / 0 coarse / 18 failed",
+        "after": "100 exact / 0 coarse / 18 failed",
+        "critical_regressions": 0
+      },
+      "madougushi02": {
+        "before": "116 exact / 0 coarse / 11 failed",
+        "after": "116 exact / 0 coarse / 11 failed",
+        "critical_regressions": 0
+      },
+      "report": "reports/align_recovery_dual_dataset_regression.json"
+    },
+    "sayonara_downstream": {
+      "split_count_before": 370,
+      "split_count_after": 371,
+      "translate_batches": "47/47",
+      "translated_cues": "371/371",
+      "mimo_candidates": 124,
+      "mimo_completed": 124,
+      "mimo_applied": 9,
+      "mimo_unresolved": 0,
+      "proofread_realign_candidates": 4,
+      "proofread_realign_completed": 3,
+      "proofread_realign_fallback": 1,
+      "formal_quality_status": "FAIL",
+      "formal_quality_summary": {
+        "pass_count": 6,
+        "warn_count": 3,
+        "fail_count": 6
+      },
+      "timing_errors": 0,
+      "normalize_export_content": "PASS",
+      "srt_legality": "PASS",
+      "diagnostic_normalize_export_only": true,
+      "diagnostic_quality_gate_bypassed": true,
+      "diagnostic_output_count": 371
+    },
+    "ass_quality": {
+      "split": {
+        "mean": 0.813372,
+        "score_lt_020": 17,
+        "short_dialogue_missing": 17
+      },
+      "mimo": {
+        "mean": 0.813372,
+        "score_lt_020": 17,
+        "short_dialogue_missing": 17
+      },
+      "normalized": {
+        "mean": 0.818335,
+        "score_lt_020": 16,
+        "short_dialogue_missing": 17
+      },
+      "export": {
+        "mean": 0.818335,
+        "score_lt_020": 16,
+        "short_dialogue_missing": 17
+      },
+      "conclusion": "Normalized/export mean and one sub-0.20 case improved, but overall ASS quality remains FAIL."
+    },
+    "reports": [
+      "reports/align_recovery_downstream_recompute.json",
+      "workspaces/align-recovery-sayonara-lara-02-20260716-143833/reports/final_quality.json"
+    ]
+  },
+  "a7_web_acceptance": {
+    "status": "PASS",
+    "production_data_coarse": 0,
+    "acceptance_copy_coarse": 1,
+    "acceptance_copy_only": true,
+    "checked_flows": [
+      "short-response/root-cause filtering",
+      "segment_000013 transcript verification and guarded coarse acceptance",
+      "segment_000093 VAD_NO_SPEECH HTTP 409 rejection without page failure",
+      "segment_000086 exact review filtering",
+      "HTTP 206 audio Range delivery",
+      "workspace-backed refresh persistence",
+      "real Web quality-gate execution retaining FAIL"
+    ],
+    "unexpected_console_errors": 0,
+    "unexpected_failed_requests": 0,
+    "expected_failed_request": "segment_000093 VAD_NO_SPEECH HTTP 409",
+    "report": "reports/align_recovery_web_acceptance.json",
+    "artifacts": "output/playwright/align-recovery-a7/"
+  },
+  "verification": {
+    "compileall": "PASS",
+    "targeted_pytest": "30 passed in 2.41s",
+    "local_check": "616 passed in 11.66s; Ruff and git diff check passed",
+    "full_pytest": "616 passed in 10.88s",
+    "ruff": "PASS",
+    "node_check": "PASS",
+    "git_diff_check": "PASS with Windows line-ending notices only",
+    "api_contract_semantic_match": true,
+    "baseline_hashes": "6/6 MATCH",
+    "secret_scan_matches": 0
+  },
+  "remaining_quality_blocks": {
+    "formal_quality_status": "FAIL",
+    "failed_dialogue": 21,
+    "short_failed": 18,
+    "ass_quality_reports_failed": 4,
+    "stage_checkpoint_failed": [
+      "align",
+      "normalize",
+      "export"
+    ],
+    "completion_interpretation": "Goal A completes because every existing applicable capability is audited, executable and honestly validated; it does not claim the subtitle business quality gate passes."
+  },
+  "goal_b_candidates": [
+    {
+      "candidate": "audio-grounded short-response localization plus transcript trust confirmation",
+      "evidence": "18 short responses remain failed; VAD found 9 unique regions, 5 ambiguous multi-region cases and 4 no-speech cases, but unverified text cannot safely become coarse."
+    },
+    {
+      "candidate": "English and mixed-language failed-segment alignment routing",
+      "evidence": "One traced failure is a language-route mismatch and the current MFA local backend is intentionally Japanese-only."
+    },
+    {
+      "candidate": "new low-coverage/dense-zero alignment method for the residual 21 failures",
+      "evidence": "Existing Qwen retry, short-window content guard and applicable MFA local paths were executed; remaining candidates are rejected by measured coverage/timing/content gates rather than missing wiring."
+    }
+  ],
+  "final_decision": "ACCEPT GOAL A. Production recovery is real, shared, backed up, reversible and quality-gated; formal Sayonara quality remains FAIL and is explicitly deferred to bounded Goal B research rather than hidden by coarse relabeling or weakened thresholds."
+}

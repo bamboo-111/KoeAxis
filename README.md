@@ -183,6 +183,14 @@ python main.py align --workdir .\work --model Qwen/Qwen3-ForcedAligner-0.6B
 
 默认不会每个 segment 都做一次完整清理，而是按间隔清理并在阶段结束时做一次 full cleanup。
 
+Align 阶段结束后，可对单个 `failed` 对白调用共享生产恢复执行器，而不重跑整集：
+
+```bash
+python main.py recover-align --workdir .\work --segment-id segment_000086 --strategy auto --language-route Japanese
+```
+
+`recover-align` 与 Web 恢复队列调用同一个 executor。Qwen retry 默认继续使用原 transcript；只有先核验文本并显式传入 `--use-verified-text` 时才使用 `--verified-text`。`mfa-local` 仅接受日语路由。成功 exact 必须通过统一 token timing/content 守卫；失败不会覆盖原 manifest。所有写回均先备份 aligned manifest、checkpoint 和 events，并可通过恢复服务的 `undo_recovery` 做目标 segment 级撤销。
+
 注意：默认部署策略是 `15s silence-first segmentation`。15 秒是找不到合适静音时的切段上限，并不是每 15 秒机械硬切；切段仍优先选择静音位置。每段默认保留 300ms padding，相邻窗口可能覆盖同一小段音频，后续对齐桥接会只删除时间确实重叠且文字完全一致的边界重复，同时保留双方独有内容。长窗口会提高漏识、显存压力和字幕漂移风险，如需改回更长窗口应显式传入 `--max-segment-seconds`。
 
 ### 4. 导出字幕
@@ -294,7 +302,8 @@ http://127.0.0.1:8765
 - `/` 默认进入结构化字幕工作台；旧参数配置页保留在 `/legacy`
 - 查看阶段顺序、输入/输出计数、真实任务耗时、日志与产物，并从工作台直接继续可独立运行阶段
 - Align 使用 `completed_exact / completed_coarse / failed` 三态；OP/ED 使用 `SKIPPED_MUSIC_REGION`，不计入对白失败
-- 所有 failed 对白进入恢复队列，支持 transcript 核验、语言路由、局部 VAD、重试请求与 `completed_coarse` fallback
+- 所有 failed 对白进入恢复队列，支持根因筛选、transcript 核验、语言路由、局部 VAD、真实 Qwen/MFA 单段重试、受硬门保护的 `completed_coarse` 与目标级撤销
+- Qwen retry 默认使用原 transcript；verified text 必须先保存核验并显式启用。coarse 要求已核验文本、唯一或人工选定 VAD 区域、原段内正时长、邻接重叠与短应答范围守卫全部通过
 - 370 cue 级审校、整集音频定位、只读参考 ASS 对照、独立草稿保存、自动备份、审计与撤销
 - 质量面板可跳恢复项、审校 cue 或受控报告；导出面板支持 UTF-8 预览与 attachment 下载
 - `Stop` 终止当前任务，刷新后从服务端持久化任务状态恢复
@@ -412,6 +421,9 @@ Qwen3ForcedAlignerModel.from_pretrained(...).align(...)
 - `qwen_asr/segmenter.py`: 基于 VAD 的保守切片逻辑
 - `qwen_asr/asr.py`: Qwen3-ASR 推理适配层
 - `qwen_asr/align.py`: Qwen3-ForcedAligner 推理适配层
+- `qwen_asr/recovery_executor.py`: CLI/Web 共用的单段 Qwen/MFA 恢复执行、统一 exact 守卫、备份与目标级撤销
+- `qwen_asr/recovery_service.py`: 恢复队列、transcript 核验、语言路由、VAD/coarse 硬门和审计事件
+- `qwen_asr/commands/recover_align.py`: `recover-align` CLI 入口
 - `qwen_asr/subtitle.py`: SRT/VTT 导出
 - `qwen_asr/normalize.py`: 时间轴规范化后处理
 - `qwen_asr/optimizer_bridge.py`: optimizer 适配层
@@ -421,6 +433,7 @@ WebUI：
 - `qwen_asr/web/server.py`: HTTP 路由、任务生命周期、停止任务
 - `qwen_asr/web/commands.py`: Web payload 到 CLI 命令的构造
 - `qwen_asr/web/status.py`: 状态、进度、日志摘要
+- `qwen_asr/web/workspace_api.py`: 版本化工作区、恢复、审校、质量与导出 API
 - `qwen_asr/web/static_html.py`: HTML 模板加载
 - `qwen_asr/web/templates/index.html`: WebUI 页面模板
 

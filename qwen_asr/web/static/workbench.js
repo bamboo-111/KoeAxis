@@ -5,6 +5,7 @@
     detail: null,
     review: null,
     recoveryFilter: "all",
+    recoveryReasonFilter: "all",
     reviewFilter: "all",
     selectedRecoveryId: "",
     selectedCueId: "",
@@ -210,15 +211,20 @@
   }
   function filteredRecoveryItems() {
     const items = state.detail?.recovery?.items || [];
-    return state.recoveryFilter === "short"
+    const routed = state.recoveryFilter === "short"
       ? items.filter((item) => item.priority === "short_response")
       : items;
+    return state.recoveryReasonFilter === "all"
+      ? routed
+      : routed.filter((item) => (item.reason_codes || []).includes(state.recoveryReasonFilter));
   }
   function renderRecovery() {
     const recovery = state.detail?.recovery || { items: [] };
     $("#recoveryBadge").textContent = recovery.total || 0;
     $("#recoveryMetrics").innerHTML = [
-      metric(recovery.total || 0, "对白失败"),
+      metric(state.detail?.align?.dialogue_counts?.completed_exact ?? 0, "精确完成"),
+      metric(state.detail?.align?.dialogue_counts?.completed_coarse ?? 0, "粗略完成"),
+      metric(state.detail?.align?.dialogue_counts?.failed ?? recovery.total ?? 0, "对白失败"),
       metric(recovery.short_response_count || 0, "短应答"),
       metric(
         state.detail?.align?.excluded_music_region_count || 0,
@@ -261,7 +267,19 @@
     node.className = "detail-pane";
     const previous = item.context?.previous;
     const next = item.context?.next;
-    node.innerHTML = `<h2>${escapeHtml(item.text || "（空文本）")}</h2><audio controls preload="metadata" src="${escapeAttr(mediaUrl(item.audio_path))}" aria-label="${escapeAttr(item.segment_id)} 音频"></audio><dl class="detail-grid"><dt>片段</dt><dd>${escapeHtml(item.segment_id)}</dd><dt>状态</dt><dd>${chip(item.status)} ${chip(item.priority)}</dd><dt>时间</dt><dd>${formatTime(item.start_ms)}–${formatTime(item.end_ms)}</dd><dt>失败原因</dt><dd>${escapeHtml(item.error || item.reason_codes.join(", "))}</dd><dt>证据</dt><dd>tokens=${item.token_count} · coverage=${item.coverage ?? "—"}</dd><dt>参考字幕</dt><dd>${item.reference_sources.length ? item.reference_sources.map((source) => escapeHtml(source.name)).join(", ") : "无只读参考源"}</dd></dl><div class="context-strip"><div class="context-item"><small>上一片段</small><div>${escapeHtml(previous?.text || "—")}</div></div><div class="context-item"><small>下一片段</small><div>${escapeHtml(next?.text || "—")}</div></div></div><div class="action-form"><label>核验 transcript<textarea id="verifiedText">${escapeHtml(item.verified_text || item.original_transcript || item.text || "")}</textarea></label><label>语言路由<select id="languageRoute"><option value="Japanese">Japanese</option><option value="English">English</option><option value="Chinese">Chinese</option><option value="auto">auto</option></select></label><div class="action-row"><button class="button" data-action="verify_transcript">保存核验</button><button class="button" data-action="route_language">设置语言</button><button class="button" data-action="localize_vad">局部 VAD</button><button class="button" data-action="retry_align">请求重试</button><button class="button" data-action="accept_completed_coarse" ${item.vad_proposal ? "" : "disabled"}>接受粗略完成</button></div><div class="muted">${item.vad_proposal ? `VAD 建议：${formatTime(item.vad_proposal.start_ms)}–${formatTime(item.vad_proposal.end_ms)}` : "先运行局部 VAD，再决定是否接受 completed_coarse。"}</div></div>`;
+    const vadRegions = item.vad_proposal?.regions || [];
+    const vadSummary = item.vad_proposal
+      ? item.vad_proposal.unique_mapping
+        ? `VAD 唯一区域：${formatTime(item.vad_proposal.start_ms)}–${formatTime(item.vad_proposal.end_ms)} · ${item.vad_proposal.elapsed_ms ?? "—"}ms`
+        : `VAD 返回 ${vadRegions.length} 个区域，必须人工选择一个区域。`
+      : "先运行局部 VAD，再决定是否接受 completed_coarse。";
+    const regionSelect = vadRegions.length > 1
+      ? `<label>VAD 区域<select id="vadRegionIndex">${vadRegions.map((region) => `<option value="${region.index}">${region.index + 1}: ${formatTime(region.start_ms)}–${formatTime(region.end_ms)}</option>`).join("")}</select></label>`
+      : "";
+    const execution = item.execution
+      ? `${item.execution.status || "unknown"} · ${item.execution.strategy || "—"} · ${item.execution.elapsed_ms ?? "—"}ms · ${item.execution.error || "无错误"}`
+      : "尚未执行恢复 backend";
+    node.innerHTML = `<h2>${escapeHtml(item.text || "（空文本）")}</h2><audio controls preload="metadata" src="${escapeAttr(mediaUrl(item.audio_path))}" aria-label="${escapeAttr(item.segment_id)} 音频"></audio><dl class="detail-grid"><dt>片段</dt><dd>${escapeHtml(item.segment_id)}</dd><dt>状态</dt><dd>${chip(item.status)} ${chip(item.priority)}</dd><dt>时间</dt><dd>${formatTime(item.start_ms)}–${formatTime(item.end_ms)}</dd><dt>失败原因</dt><dd>${escapeHtml(item.error || item.reason_codes.join(", "))}</dd><dt>证据</dt><dd>tokens=${item.token_count} · coverage=${item.coverage ?? "—"}</dd><dt>执行结果</dt><dd>${escapeHtml(execution)}</dd><dt>参考字幕</dt><dd>${item.reference_sources.length ? item.reference_sources.map((source) => escapeHtml(source.name)).join(", ") : "无只读参考源"}</dd></dl><div class="context-strip"><div class="context-item"><small>上一片段</small><div>${escapeHtml(previous?.text || "—")}</div></div><div class="context-item"><small>下一片段</small><div>${escapeHtml(next?.text || "—")}</div></div></div><div class="action-form"><label>核验 transcript<textarea id="verifiedText">${escapeHtml(item.verified_text || item.original_transcript || item.text || "")}</textarea></label><label>语言路由<select id="languageRoute"><option value="Japanese">Japanese</option><option value="English">English</option><option value="Chinese">Chinese</option><option value="auto">auto</option></select></label><label>恢复策略<select id="recoveryStrategy"><option value="auto">auto</option><option value="qwen">qwen</option><option value="mfa-local">mfa-local（日语）</option></select></label><label><input id="useVerifiedText" type="checkbox" ${item.transcript_verified ? "" : "disabled"}> retry 使用已人工核验文本（默认仍用原 transcript）</label>${regionSelect}<div class="action-row"><button class="button" data-action="verify_transcript">保存核验</button><button class="button" data-action="route_language">设置语言</button><button class="button" data-action="localize_vad">局部 VAD</button><button class="button" data-action="retry_align">执行真实重试</button><button class="button" data-action="accept_completed_coarse" ${item.vad_proposal && item.transcript_verified ? "" : "disabled"}>接受粗略完成</button></div><div class="muted">${escapeHtml(vadSummary)}</div></div>`;
     $("#languageRoute").value = item.language_route || item.language || "auto";
     $$("[data-action]").forEach((button) =>
       button.addEventListener("click", () =>
@@ -276,7 +294,12 @@
     if (action === "route_language")
       payload.language = $("#languageRoute").value;
     if (action === "localize_vad") payload.backend = "pyannote_onnx_v3";
-    if (action === "retry_align") payload.strategy = "qwen";
+    if (action === "retry_align") {
+      payload.strategy = $("#recoveryStrategy").value;
+      payload.use_verified_text = $("#useVerifiedText").checked;
+    }
+    if (action === "accept_completed_coarse" && $("#vadRegionIndex"))
+      payload.region_index = Number($("#vadRegionIndex").value);
     if (
       action === "accept_completed_coarse" &&
       !confirm(
@@ -388,6 +411,9 @@
   }
   function filteredReviewCues() {
     const cues = state.review?.cues || [];
+    if (state.reviewFilter === "exact") {
+      return cues.filter((cue) => cue.alignment_state === "completed_exact");
+    }
     if (state.reviewFilter === "failed") {
       return cues.filter((cue) => cue.alignment_state === "failed");
     }
@@ -595,6 +621,11 @@
     });
     $("#recoveryFilter").addEventListener("change", (event) => {
       state.recoveryFilter = event.target.value;
+      state.selectedRecoveryId = "";
+      renderRecovery();
+    });
+    $("#recoveryReasonFilter").addEventListener("change", (event) => {
+      state.recoveryReasonFilter = event.target.value;
       state.selectedRecoveryId = "";
       renderRecovery();
     });
