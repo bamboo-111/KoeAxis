@@ -12,6 +12,8 @@ STAGE_ORDER: tuple[str, ...] = (
     "split",
     "translate",
     "mimo-proofread",
+    "proofread-realign",
+    "quality-gate",
     "normalize",
     "export",
 )
@@ -51,21 +53,21 @@ STAGE_DEFINITIONS: dict[str, StageDefinition] = {
         name="prepare",
         output_attrs=("audio_path", "segments_manifest"),
         force_delete_attrs=("audio_path", "segments_manifest"),
-        downstream_stages=("transcribe", "correct", "align", "split", "translate", "mimo-proofread", "normalize", "export"),
+        downstream_stages=("transcribe", "correct", "align", "split", "translate", "mimo-proofread", "proofread-realign", "quality-gate", "normalize", "export"),
     ),
     "transcribe": StageDefinition(
         name="transcribe",
         input_attrs=("segments_manifest",),
         output_attrs=("transcript_manifest", "transcript_text"),
         force_delete_attrs=("transcript_manifest", "raw_transcript_manifest", "corrected_manifest", "transcript_text"),
-        downstream_stages=("correct", "align", "split", "translate", "mimo-proofread", "normalize", "export"),
+        downstream_stages=("correct", "align", "split", "translate", "mimo-proofread", "proofread-realign", "quality-gate", "normalize", "export"),
     ),
     "correct": StageDefinition(
         name="correct",
         input_attrs=("transcript_manifest",),
         output_attrs=("corrected_manifest",),
         force_delete_attrs=("corrected_manifest",),
-        downstream_stages=("align", "split", "translate", "mimo-proofread", "normalize", "export"),
+        downstream_stages=("align", "split", "translate", "mimo-proofread", "proofread-realign", "quality-gate", "normalize", "export"),
         optional=True,
     ),
     "align": StageDefinition(
@@ -73,40 +75,55 @@ STAGE_DEFINITIONS: dict[str, StageDefinition] = {
         input_attrs=("transcript_manifest",),
         output_attrs=("aligned_manifest",),
         force_delete_attrs=("aligned_manifest",),
-        downstream_stages=("split", "translate", "mimo-proofread", "normalize", "export"),
+        downstream_stages=("split", "translate", "mimo-proofread", "proofread-realign", "quality-gate", "normalize", "export"),
     ),
     "split": StageDefinition(
         name="split",
         input_attrs=("aligned_manifest",),
         output_attrs=("split_manifest", "split_srt"),
         force_delete_attrs=("split_manifest", "split_srt"),
-        downstream_stages=("translate", "mimo-proofread", "normalize", "export"),
+        downstream_stages=("translate", "mimo-proofread", "proofread-realign", "quality-gate", "normalize", "export"),
     ),
     "translate": StageDefinition(
         name="translate",
         input_attrs=("split_manifest",),
         output_attrs=("translated_manifest", "translated_srt"),
         force_delete_attrs=("translated_manifest", "translated_srt"),
-        downstream_stages=("mimo-proofread", "normalize", "export"),
+        downstream_stages=("mimo-proofread", "proofread-realign", "quality-gate", "normalize", "export"),
     ),
     "mimo-proofread": StageDefinition(
         name="mimo-proofread",
         input_attrs=("translated_manifest", "segments_manifest"),
         output_attrs=("mimo_proofread_manifest", "mimo_proofread_report", "mimo_proofread_srt"),
         force_delete_attrs=("mimo_proofread_manifest", "mimo_proofread_report", "mimo_proofread_srt"),
-        downstream_stages=(),
+        downstream_stages=("proofread-realign", "quality-gate", "normalize", "export"),
+        optional=True,
+    ),
+    "proofread-realign": StageDefinition(
+        name="proofread-realign",
+        input_attrs=("mimo_proofread_manifest",),
+        output_attrs=("mimo_proofread_manifest",),
+        downstream_stages=("quality-gate", "normalize", "export"),
+        optional=True,
+    ),
+    "quality-gate": StageDefinition(
+        name="quality-gate",
+        any_input_groups=(("transcript_manifest", "split_manifest", "translated_manifest", "mimo_proofread_manifest"),),
+        output_attrs=("final_quality_report",),
+        force_delete_attrs=("final_quality_report",),
+        downstream_stages=("normalize", "export"),
         optional=True,
     ),
     "normalize": StageDefinition(
         name="normalize",
-        any_input_groups=(("translated_manifest", "split_manifest", "transcript_manifest"),),
+        any_input_groups=(("mimo_proofread_manifest", "translated_manifest", "split_manifest", "transcript_manifest"),),
         output_attrs=("normalized_manifest", "normalized_srt"),
         force_delete_attrs=("normalized_manifest", "normalized_srt"),
         downstream_stages=("export",),
     ),
     "export": StageDefinition(
         name="export",
-        any_input_groups=(("normalized_manifest", "translated_manifest", "split_manifest", "aligned_manifest", "transcript_manifest"),),
+        any_input_groups=(("normalized_manifest", "mimo_proofread_manifest", "translated_manifest", "split_manifest", "aligned_manifest", "transcript_manifest"),),
         output_attrs=("subtitles_srt", "subtitles_vtt"),
         force_delete_attrs=("subtitles_srt", "subtitles_vtt"),
     ),
@@ -144,6 +161,8 @@ def stage_names_for_run(
         stages.append("translate")
     if with_mimo_proofread:
         stages.append("mimo-proofread")
+        stages.append("proofread-realign")
+    stages.append("quality-gate")
     if with_normalize:
         stages.append("normalize")
     stages.append("export")

@@ -10,6 +10,8 @@ def resolve_llm_api_key(explicit_key: str | None, base_url: str | None) -> str:
     normalized_url = (base_url or "").lower()
     if "xiaomimimo.com" in normalized_url:
         return os.environ.get("MIMO_API_KEY", "").strip()
+    if "deepseek.com" in normalized_url:
+        return os.environ.get("DEEPSEEK_API_KEY", "").strip()
     if "qhaigc.net" in normalized_url:
         return os.environ.get("GEMINI_API_KEY", "").strip() or os.environ.get("QUANHEX_API_KEY", "").strip()
     return os.environ.get("LLM_API_KEY", "").strip()

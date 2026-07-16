@@ -1,21 +1,19 @@
 ﻿from __future__ import annotations
 
 import argparse
-import base64
-import json
 import os
-import re
 import time
-import wave
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 
 from openai import OpenAI
 
-from qwen_asr.glossary import read_xlsx_glossary
-from qwen_asr.storage import ensure_directory, read_json, write_json_atomic
+from qwen_asr.defaults import DEFAULT_LLM_EXTRA_BODY_JSON
+from qwen_asr import mimo_audio as _mimo_audio
+from qwen_asr import mimo_inputs as _mimo_inputs
+from qwen_asr.storage import ensure_directory
 
 
 @dataclass(frozen=True)
@@ -45,7 +43,7 @@ class SegmentTask:
 class SegmentResult:
     segment_id: str
     report_item: dict[str, Any]
-    updates: dict[str, str]
+    updates: dict[str, dict[str, str]]
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -54,8 +52,7 @@ def main(argv: list[str] | None = None) -> int:
     output_dir = Path(args.output_dir).resolve() if args.output_dir else workdir / "experiments" / "mimo-proofread"
     ensure_directory(output_dir)
 
-    segments = read_json(workdir / "manifests" / "segments.json", default=[])
-    translated = read_json(workdir / "manifests" / "translated_segments.json", default={})
+    segments, translated = _load_pipeline_inputs(workdir)
     if not isinstance(segments, list) or not segments:
         raise RuntimeError("segments.json is missing or empty")
     if not isinstance(translated, dict) or not translated:
@@ -99,11 +96,7 @@ def main(argv: list[str] | None = None) -> int:
 
     branch = _load_existing_branch(manifest_path, translated)
     report = _load_existing_report(report_path)
-    completed_segments = {
-        str(item.get("segment_id"))
-        for item in report
-        if isinstance(item, dict) and item.get("status") == "completed"
-    }
+    completed_segments = _completed_segment_ids(report)
     segment_limit = args.segment_limit if args.segment_limit and args.segment_limit > 0 else None
     selected_segments = segments[:segment_limit]
 
@@ -162,20 +155,32 @@ def main(argv: list[str] | None = None) -> int:
                 for task in tasks
             }
             for future in as_completed(future_to_task):
-                task = future_to_task[future]
                 result = future.result()
                 report.append(result.report_item)
                 if result.report_item.get("status") == "completed":
                     completed_segments.add(result.segment_id)
-                    for subtitle_id, suggested in result.updates.items():
-                        if subtitle_id in branch and isinstance(branch[subtitle_id], dict):
-                            branch[subtitle_id]["translated_subtitle"] = suggested
+                    _apply_branch_updates(branch, result.updates, source="mimo-segment-audio")
                 _write_outputs(manifest_path, report_path, srt_path, branch, report)
 
     print(f"manifest={manifest_path}")
     print(f"report={report_path}")
     print(f"srt={srt_path}")
     return 0
+
+
+def _load_pipeline_inputs(workdir: Path) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+    return _mimo_inputs.load_pipeline_inputs(workdir)
+
+
+def _validate_translated_manifest_complete_for_split(
+    translated: dict[str, Any],
+    split: dict[str, Any],
+) -> None:
+    _mimo_inputs.validate_translated_manifest_complete_for_split(translated, split)
+
+
+def _manifest_key_sort(value: str) -> tuple[int, int | str]:
+    return _mimo_inputs.manifest_key_sort(value)
 
 
 def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
@@ -190,7 +195,7 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--max-tokens", type=int, default=8192)
     parser.add_argument("--temperature", type=float, default=0.0)
     parser.add_argument("--disable-thinking", action=argparse.BooleanOptionalAction, default=True)
-    parser.add_argument("--llm-extra-body-json", default="")
+    parser.add_argument("--llm-extra-body-json", default=DEFAULT_LLM_EXTRA_BODY_JSON)
     parser.add_argument("--compact-output", action=argparse.BooleanOptionalAction, default=False)
     parser.add_argument("--segment-limit", type=int, default=0)
     parser.add_argument("--workers", type=int, default=1)
@@ -217,7 +222,18 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     )
     parser.add_argument("--stage1-confidence-threshold", type=float, default=0.75)
     parser.add_argument("--stage1-apply-threshold", type=float, default=0.8)
-    parser.add_argument("--stage2-apply-threshold", type=float, default=0.75)
+    parser.add_argument("--stage2-apply-threshold", type=float, default=0.9)
+    parser.add_argument(
+        "--audio-review-scope",
+        choices=["suspects", "all"],
+        default="suspects",
+        help="Review only text-stage suspects or every subtitle with nearby audio.",
+    )
+    parser.add_argument(
+        "--diagnostic-all",
+        action="store_true",
+        help="Allow --audio-review-scope all for explicit diagnostic experiments only.",
+    )
     parser.add_argument("--max-glossary-entries", type=int, default=80)
     parser.add_argument("--max-retries", type=int, default=5)
     parser.add_argument("--retry-base-delay", type=float, default=8.0)
@@ -227,6 +243,8 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     args = parser.parse_args(argv)
     if not args.api_key:
         parser.error("MiMo audio proofread requires --api-key or MIMO_API_KEY")
+    if args.audio_review_scope == "all" and not args.diagnostic_all:
+        parser.error("--audio-review-scope all is diagnostic-only; pass --diagnostic-all explicitly")
     return args
 
 
@@ -248,18 +266,22 @@ def _process_segment_task(
         flush=True,
     )
     try:
-        raw_content, usage = _call_mimo_with_retries(
-            client=client,
-            config=config,
-            segment=task.segment,
-            audio_path=task.audio_path,
-            subtitle_entries=task.subtitle_entries,
-            glossary_entries=task.glossary_entries,
+        raw_content, usage, suggestions = _request_suggestions_with_parse_retries(
+            lambda: _call_mimo_with_retries(
+                client=client,
+                config=config,
+                segment=task.segment,
+                audio_path=task.audio_path,
+                subtitle_entries=task.subtitle_entries,
+                glossary_entries=task.glossary_entries,
+                max_retries=max_retries,
+                base_delay=base_delay,
+                max_delay=max_delay,
+            ),
             max_retries=max_retries,
             base_delay=base_delay,
             max_delay=max_delay,
         )
-        suggestions = _parse_suggestions(raw_content)
     except Exception as exc:  # pylint: disable=broad-exception-caught
         print(f"[{task.index}/{task.total}] {segment_id} failed: {exc}", flush=True)
         return SegmentResult(
@@ -274,14 +296,14 @@ def _process_segment_task(
             updates={},
         )
 
-    updates: dict[str, str] = {}
+    updates: dict[str, dict[str, str]] = {}
     for item in suggestions:
         subtitle_id = str(item.get("id", "")).strip()
         suggested = str(item.get("suggested_translation", "")).strip()
         if subtitle_id and subtitle_id in task.subtitle_entries and suggested:
             current = str(task.subtitle_entries[subtitle_id].get("translated_subtitle", "")).strip()
             if suggested != current:
-                updates[subtitle_id] = suggested
+                updates[subtitle_id] = {"translated_subtitle": suggested}
 
     print(
         f"[{task.index}/{task.total}] {segment_id} "
@@ -327,79 +349,47 @@ def _run_two_stage_nearby(
     branch = _load_existing_branch(manifest_path, translated)
     stage1_report = _load_existing_report(stage1_report_path)
     stage2_report = _load_existing_report(stage2_report_path)
+    started = time.monotonic()
 
     segment_limit = args.segment_limit if args.segment_limit and args.segment_limit > 0 else None
     selected_segments = segments[:segment_limit]
 
-    completed_stage1 = {
-        str(item.get("segment_id"))
-        for item in stage1_report
-        if isinstance(item, dict) and item.get("status") == "completed"
-    }
-    stage1_tasks: list[SegmentTask] = []
-    for index, segment in enumerate(selected_segments, start=1):
-        segment_id = str(segment.get("segment_id", f"segment_{index:06d}"))
-        if args.resume and segment_id in completed_stage1:
-            print(f"[stage1 {index}/{len(selected_segments)}] {segment_id} skipped existing checkpoint", flush=True)
-            continue
-        covered = _subtitle_entries_for_segment(translated, segment)
-        if not covered:
-            stage1_report = _replace_report_item(
-                stage1_report,
-                segment_id,
-                {
-                    "segment_id": segment_id,
-                    "status": "skipped",
-                    "error": "no translated subtitle entries in segment window",
-                },
-            )
-            _write_two_stage_outputs(
-                manifest_path,
-                report_path,
-                stage1_report_path,
-                stage2_report_path,
-                srt_path,
-                branch,
-                stage1_report,
-                stage2_report,
-            )
-            continue
-        stage1_tasks.append(
-            SegmentTask(
-                index=index,
-                total=len(selected_segments),
-                segment=segment,
-                subtitle_entries=covered,
-                glossary_entries=_filter_glossary(glossary, covered, args.max_glossary_entries),
-                audio_path=Path(str(segment.get("audio_path", ""))),
-            )
+    if _translated_manifest_has_suspect_metadata(translated):
+        stage1_report = _build_manifest_suspect_report(
+            translated,
+            confidence_threshold=args.stage1_confidence_threshold,
         )
-
-    if stage1_tasks:
-        with ThreadPoolExecutor(max_workers=max(1, args.workers)) as executor:
-            future_to_task = {
-                executor.submit(
-                    _process_stage1_text_task,
-                    task=task,
-                    client=client,
-                    config=config,
-                    max_retries=args.max_retries,
-                    base_delay=args.retry_base_delay,
-                    max_delay=args.retry_max_delay,
-                    keep_raw=args.keep_raw,
-                    suspect_confidence_threshold=args.stage1_confidence_threshold,
-                    apply_confidence_threshold=args.stage1_apply_threshold,
-                ): task
-                for task in stage1_tasks
-            }
-            for future in as_completed(future_to_task):
-                task = future_to_task[future]
-                result = future.result()
-                stage1_report = _replace_report_item(stage1_report, result.segment_id, result.report_item)
-                if result.report_item.get("status") == "completed":
-                    for subtitle_id, suggested in result.updates.items():
-                        if subtitle_id in branch and isinstance(branch[subtitle_id], dict):
-                            branch[subtitle_id]["translated_subtitle"] = suggested
+        _write_two_stage_outputs(
+            manifest_path,
+            report_path,
+            stage1_report_path,
+            stage2_report_path,
+            srt_path,
+            branch,
+            stage1_report,
+            stage2_report,
+            started=started,
+            translated=translated,
+        )
+    else:
+        completed_stage1 = _completed_segment_ids(stage1_report)
+        stage1_tasks: list[SegmentTask] = []
+        for index, segment in enumerate(selected_segments, start=1):
+            segment_id = str(segment.get("segment_id", f"segment_{index:06d}"))
+            if args.resume and segment_id in completed_stage1:
+                print(f"[stage1 {index}/{len(selected_segments)}] {segment_id} skipped existing checkpoint", flush=True)
+                continue
+            covered = _subtitle_entries_for_segment(translated, segment)
+            if not covered:
+                stage1_report = _replace_report_item(
+                    stage1_report,
+                    segment_id,
+                    {
+                        "segment_id": segment_id,
+                        "status": "skipped",
+                        "error": "no translated subtitle entries in segment window",
+                    },
+                )
                 _write_two_stage_outputs(
                     manifest_path,
                     report_path,
@@ -409,20 +399,67 @@ def _run_two_stage_nearby(
                     branch,
                     stage1_report,
                     stage2_report,
+                    started=started,
+                    translated=translated,
                 )
+                continue
+            stage1_tasks.append(
+                SegmentTask(
+                    index=index,
+                    total=len(selected_segments),
+                    segment=segment,
+                    subtitle_entries=covered,
+                    glossary_entries=_filter_glossary(glossary, covered, args.max_glossary_entries),
+                    audio_path=Path(str(segment.get("audio_path", ""))),
+                )
+            )
+
+        if stage1_tasks:
+            with ThreadPoolExecutor(max_workers=max(1, args.workers)) as executor:
+                future_to_task = {
+                    executor.submit(
+                        _process_stage1_text_task,
+                        task=task,
+                        client=client,
+                        config=config,
+                        max_retries=args.max_retries,
+                        base_delay=args.retry_base_delay,
+                        max_delay=args.retry_max_delay,
+                        keep_raw=args.keep_raw,
+                        suspect_confidence_threshold=args.stage1_confidence_threshold,
+                        apply_confidence_threshold=args.stage1_apply_threshold,
+                    ): task
+                    for task in stage1_tasks
+                }
+                for future in as_completed(future_to_task):
+                    result = future.result()
+                    stage1_report = _replace_report_item(stage1_report, result.segment_id, result.report_item)
+                    _write_two_stage_outputs(
+                        manifest_path,
+                        report_path,
+                        stage1_report_path,
+                        stage2_report_path,
+                        srt_path,
+                        branch,
+                        stage1_report,
+                        stage2_report,
+                        started=started,
+                        translated=translated,
+                    )
 
     suspect_ids = _collect_stage1_suspects(stage1_report)
-    completed_stage2 = {
-        str(item.get("id"))
-        for item in stage2_report
-        if isinstance(item, dict) and item.get("status") == "completed"
-    }
-    pending_review_ids = [
-        subtitle_id for subtitle_id in suspect_ids
-        if not (args.resume and subtitle_id in completed_stage2)
-    ]
+    review_ids = (
+        sorted(
+            (str(key) for key, value in translated.items() if str(key).isdigit() and isinstance(value, dict)),
+            key=int,
+        )
+        if args.audio_review_scope == "all"
+        else suspect_ids
+    )
+    pending_review_ids = _pending_review_ids(review_ids, stage2_report, resume=args.resume)
     print(
-        f"stage2 nearby audio review: suspect_ids={len(suspect_ids)} pending={len(pending_review_ids)}",
+        f"stage2 nearby audio review: scope={args.audio_review_scope} "
+        f"targets={len(review_ids)} suspects={len(suspect_ids)} pending={len(pending_review_ids)}",
         flush=True,
     )
 
@@ -465,9 +502,7 @@ def _run_two_stage_nearby(
                     stage2_report = _replace_report_item(stage2_report, report_id, result.report_item, key="id")
                     if result.report_item.get("status") != "completed":
                         continue
-                    for update_id, suggested in result.updates.items():
-                        if update_id in branch and isinstance(branch[update_id], dict):
-                            branch[update_id]["translated_subtitle"] = suggested
+                    _apply_branch_updates(branch, result.updates, source="mimo-nearby-audio")
                 print(f"stage2 batch completed ids={','.join(target_ids)}", flush=True)
                 _write_two_stage_outputs(
                     manifest_path,
@@ -478,6 +513,8 @@ def _run_two_stage_nearby(
                     branch,
                     stage1_report,
                     stage2_report,
+                    started=started,
+                    translated=translated,
                 )
 
     _write_two_stage_outputs(
@@ -489,6 +526,8 @@ def _run_two_stage_nearby(
         branch,
         stage1_report,
         stage2_report,
+        started=started,
+        translated=translated,
     )
     print(f"manifest={manifest_path}")
     print(f"report={report_path}")
@@ -518,17 +557,21 @@ def _process_stage1_text_task(
         flush=True,
     )
     try:
-        raw_content, usage = _call_mimo_text_stage1_with_retries(
-            client=client,
-            config=config,
-            segment=task.segment,
-            subtitle_entries=task.subtitle_entries,
-            glossary_entries=task.glossary_entries,
+        raw_content, usage, suggestions = _request_suggestions_with_parse_retries(
+            lambda: _call_mimo_text_stage1_with_retries(
+                client=client,
+                config=config,
+                segment=task.segment,
+                subtitle_entries=task.subtitle_entries,
+                glossary_entries=task.glossary_entries,
+                max_retries=max_retries,
+                base_delay=base_delay,
+                max_delay=max_delay,
+            ),
             max_retries=max_retries,
             base_delay=base_delay,
             max_delay=max_delay,
         )
-        suggestions = _parse_suggestions(raw_content)
     except Exception as exc:  # pylint: disable=broad-exception-caught
         print(f"[stage1 {task.index}/{task.total}] {segment_id} failed: {exc}", flush=True)
         raw_value = locals().get("raw_content", "")
@@ -545,7 +588,6 @@ def _process_stage1_text_task(
             updates={},
         )
 
-    updates: dict[str, str] = {}
     suspect_ids: set[str] = set()
     normalized_suggestions: list[dict[str, Any]] = []
     for item in suggestions:
@@ -565,20 +607,10 @@ def _process_stage1_text_task(
             or confidence < suspect_confidence_threshold
         ):
             suspect_ids.add(subtitle_id)
-        suggested = str(normalized.get("suggested_translation", "")).strip()
-        current = str(task.subtitle_entries[subtitle_id].get("translated_subtitle", "")).strip()
-        if (
-            suggested
-            and suggested != current
-            and not asr_suspect
-            and not needs_audio_review
-            and confidence >= apply_confidence_threshold
-        ):
-            updates[subtitle_id] = suggested
 
     print(
         f"[stage1 {task.index}/{task.total}] {segment_id} "
-        f"suggestions={len(normalized_suggestions)} suspects={len(suspect_ids)} applied={len(updates)}",
+        f"suggestions={len(normalized_suggestions)} suspects={len(suspect_ids)} applied=0",
         flush=True,
     )
     return SegmentResult(
@@ -588,7 +620,8 @@ def _process_stage1_text_task(
             "status": "completed",
             "subtitle_ids": list(task.subtitle_entries.keys()),
             "suggestion_count": len(normalized_suggestions),
-            "applied_count": len(updates),
+            "applied_count": 0,
+            "stage1_text_updates_disabled": True,
             "suspect_ids": sorted(suspect_ids, key=int),
             "suspect_count": len(suspect_ids),
             "glossary_count": len(task.glossary_entries),
@@ -597,7 +630,7 @@ def _process_stage1_text_task(
             "suggestions": normalized_suggestions,
             "raw_content": raw_content if keep_raw else "",
         },
-        updates=updates,
+        updates={},
     )
 
 
@@ -667,7 +700,9 @@ def _process_stage2_nearby_audio_batch_task(
             for subtitle_id in target_ids
             if subtitle_id in translated and isinstance(translated[subtitle_id], dict)
         }
-        audio_path = Path(str(segment.get("audio_path", "")))
+        segment_audio_path = Path(str(segment.get("audio_path", "")))
+        source_audio_path = Path(str(segment.get("source_audio_path", "")))
+        audio_path = source_audio_path if source_audio_path.exists() else segment_audio_path
         if not audio_path.exists():
             raise FileNotFoundError(f"audio not found: {audio_path}")
         clip_path, clip_meta = _write_nearby_audio_clip(
@@ -679,22 +714,54 @@ def _process_stage2_nearby_audio_batch_task(
             padding_s=padding_s,
         )
         relevant_glossary = _filter_glossary(glossary, entries, max_glossary_entries)
-        raw_content, usage = _call_mimo_nearby_audio_with_retries(
-            client=client,
-            config=config,
-            segment=segment,
-            target_ids=target_ids,
-            target_entries=target_entries,
-            nearby_entries=entries,
-            glossary_entries=relevant_glossary,
-            clip_path=clip_path,
-            clip_meta=clip_meta,
+        raw_content, usage, suggestions = _request_suggestions_with_parse_retries(
+            lambda: _call_mimo_nearby_audio_with_retries(
+                client=client,
+                config=config,
+                segment=segment,
+                target_ids=target_ids,
+                target_entries=target_entries,
+                nearby_entries=entries,
+                glossary_entries=relevant_glossary,
+                clip_path=clip_path,
+                clip_meta=clip_meta,
+                max_retries=max_retries,
+                base_delay=base_delay,
+                max_delay=max_delay,
+            ),
             max_retries=max_retries,
             base_delay=base_delay,
             max_delay=max_delay,
         )
-        suggestions = _parse_suggestions(raw_content)
     except Exception as exc:  # pylint: disable=broad-exception-caught
+        if len(target_ids) > 1:
+            print(
+                f"[stage2] subtitles {','.join(target_ids)} failed as batch; retrying individually: {exc}",
+                flush=True,
+            )
+            fallback_results: list[SegmentResult] = []
+            for subtitle_id in target_ids:
+                for result in _process_stage2_nearby_audio_batch_task(
+                    target_ids=[subtitle_id],
+                    client=client,
+                    config=config,
+                    segments=segments,
+                    translated=translated,
+                    glossary=glossary,
+                    clips_dir=clips_dir,
+                    context_subtitles=context_subtitles,
+                    padding_s=padding_s,
+                    max_glossary_entries=max_glossary_entries,
+                    max_retries=max_retries,
+                    base_delay=base_delay,
+                    max_delay=max_delay,
+                    keep_raw=keep_raw,
+                    apply_confidence_threshold=apply_confidence_threshold,
+                ):
+                    result.report_item["fallback_from_batch"] = list(target_ids)
+                    result.report_item["batch_error"] = str(exc)
+                    fallback_results.append(result)
+            return fallback_results
         print(f"[stage2] subtitles {','.join(target_ids)} failed: {exc}", flush=True)
         return [
             SegmentResult(
@@ -721,17 +788,26 @@ def _process_stage2_nearby_audio_batch_task(
 
     results: list[SegmentResult] = []
     for subtitle_id in target_ids:
-        updates: dict[str, str] = {}
+        updates: dict[str, dict[str, Any]] = {}
+        applied_evidence: dict[str, dict[str, Any]] = {}
+        rejections: list[dict[str, Any]] = []
         normalized_suggestions = suggestions_by_id.get(subtitle_id, [])
         for normalized in normalized_suggestions:
             reviewed_id = str(normalized.get("id", "")).strip()
             if reviewed_id != subtitle_id or reviewed_id not in translated:
                 continue
-            confidence = _coerce_confidence(normalized.get("confidence"), default=1.0)
-            suggested = str(normalized.get("suggested_translation", "")).strip()
-            current = str(translated[reviewed_id].get("translated_subtitle", "")).strip()
-            if suggested and suggested != current and confidence >= apply_confidence_threshold:
-                updates[reviewed_id] = suggested
+            application = _evaluate_stage2_suggestion(
+                subtitle_id=subtitle_id,
+                normalized=normalized,
+                current_item=translated[reviewed_id],
+                apply_confidence_threshold=apply_confidence_threshold,
+            )
+            if application.rejection is not None:
+                rejections.append(application.rejection)
+                continue
+            if application.updates:
+                applied_evidence[reviewed_id] = application.evidence
+                updates[reviewed_id] = application.updates
         results.append(
             SegmentResult(
                 segment_id=subtitle_id,
@@ -744,10 +820,13 @@ def _process_stage2_nearby_audio_batch_task(
                     "segment_id": str(segment.get("segment_id", "")),
                     "suggestion_count": len(normalized_suggestions),
                     "applied_count": len(updates),
+                    "rejected_count": len(rejections),
                     "glossary_count": len(relevant_glossary),
                     "usage": _usage_to_dict(usage),
                     "elapsed_ms": int((time.monotonic() - started) * 1000),
                     "suggestions": normalized_suggestions,
+                    "rejections": rejections,
+                    "applied_evidence": applied_evidence,
                     "raw_content": raw_content if keep_raw else "",
                 },
                 updates=updates,
@@ -762,32 +841,53 @@ def _process_stage2_nearby_audio_batch_task(
 
 
 def _load_existing_branch(path: Path, translated: dict[str, Any]) -> dict[str, Any]:
-    existing = read_json(path, default=None)
-    if isinstance(existing, dict) and existing:
-        return {key: dict(value) if isinstance(value, dict) else value for key, value in existing.items()}
-    return {key: dict(value) if isinstance(value, dict) else value for key, value in translated.items()}
+    from qwen_asr.mimo_checkpoints import load_existing_branch
+
+    return load_existing_branch(path, translated)
+
+
+def _apply_branch_updates(
+    branch: dict[str, Any],
+    updates: dict[str, dict[str, Any]],
+    *,
+    source: str,
+) -> int:
+    from qwen_asr.mimo_guards import apply_branch_updates
+
+    return apply_branch_updates(branch, updates, source=source)
 
 
 def _load_existing_report(path: Path) -> list[dict[str, Any]]:
-    existing = read_json(path, default=[])
-    if isinstance(existing, list):
-        return [item for item in existing if isinstance(item, dict)]
-    return []
+    from qwen_asr.mimo_checkpoints import load_existing_report
+
+    return load_existing_report(path)
+
+
+def _completed_segment_ids(report: list[dict[str, Any]], *, key: str = "segment_id") -> set[str]:
+    from qwen_asr.mimo_checkpoints import completed_segment_ids
+
+    return completed_segment_ids(report, key=key)
+
+
+def _pending_review_ids(
+    review_ids: list[str],
+    stage2_report: list[dict[str, Any]],
+    *,
+    resume: bool,
+) -> list[str]:
+    from qwen_asr.mimo_checkpoints import pending_review_ids
+
+    return pending_review_ids(review_ids, stage2_report, resume=resume)
 
 
 def _parse_extra_body(value: str) -> dict[str, Any] | None:
-    if not value.strip():
-        return None
-    parsed = json.loads(value)
-    if not isinstance(parsed, dict):
-        raise ValueError("--llm-extra-body-json must be a JSON object")
-    return parsed
+    return _mimo_inputs.parse_extra_body(value)
 
 
 def _maybe_disable_thinking_text(text: str, config: MiMoConfig) -> str:
-    if not config.disable_thinking:
-        return text
-    return "/no_think\n" + text
+    from qwen_asr.mimo_requests import maybe_disable_thinking_text
+
+    return maybe_disable_thinking_text(text, config)
 
 
 def _chat_completion_create(
@@ -796,21 +896,9 @@ def _chat_completion_create(
     config: MiMoConfig,
     messages: list[dict[str, Any]],
 ) -> Any:
-    kwargs: dict[str, Any] = {
-        "model": config.model,
-        "messages": messages,
-        "temperature": config.temperature,
-        "max_tokens": config.max_tokens,
-    }
-    if config.extra_body is not None:
-        kwargs["extra_body"] = config.extra_body
-    try:
-        return client.chat.completions.create(**kwargs)
-    except Exception:
-        if "extra_body" not in kwargs:
-            raise
-        kwargs.pop("extra_body", None)
-        return client.chat.completions.create(**kwargs)
+    from qwen_asr.mimo_requests import chat_completion_create
+
+    return chat_completion_create(client=client, config=config, messages=messages)
 
 
 def _write_outputs(
@@ -820,9 +908,9 @@ def _write_outputs(
     branch: dict[str, Any],
     report: list[dict[str, Any]],
 ) -> None:
-    write_json_atomic(manifest_path, branch)
-    write_json_atomic(report_path, report)
-    srt_path.write_text(_to_srt(branch), encoding="utf-8")
+    from qwen_asr.mimo_outputs import write_outputs
+
+    write_outputs(manifest_path, report_path, srt_path, branch, report)
 
 
 def _write_two_stage_outputs(
@@ -834,24 +922,29 @@ def _write_two_stage_outputs(
     branch: dict[str, Any],
     stage1_report: list[dict[str, Any]],
     stage2_report: list[dict[str, Any]],
+    started: float | None = None,
+    translated: dict[str, Any] | None = None,
 ) -> None:
-    write_json_atomic(manifest_path, branch)
-    write_json_atomic(stage1_report_path, stage1_report)
-    write_json_atomic(stage2_report_path, stage2_report)
-    write_json_atomic(
+    from qwen_asr.mimo_outputs import write_two_stage_outputs
+
+    write_two_stage_outputs(
+        manifest_path,
         report_path,
-        {
-            "mode": "two-stage-nearby",
-            "stage1_report": str(stage1_report_path),
-            "stage2_report": str(stage2_report_path),
-            "stage1_completed": sum(1 for item in stage1_report if item.get("status") == "completed"),
-            "stage1_failed": sum(1 for item in stage1_report if item.get("status") == "failed"),
-            "stage1_suspect_count": len(_collect_stage1_suspects(stage1_report)),
-            "stage2_completed": sum(1 for item in stage2_report if item.get("status") == "completed"),
-            "stage2_failed": sum(1 for item in stage2_report if item.get("status") == "failed"),
-        },
+        stage1_report_path,
+        stage2_report_path,
+        srt_path,
+        branch,
+        stage1_report,
+        stage2_report,
+        started=started,
+        translated=translated,
     )
-    srt_path.write_text(_to_srt(branch), encoding="utf-8")
+
+
+def _stage2_reviewed_candidate_count(completed_audio: list[dict[str, Any]]) -> int:
+    from qwen_asr.mimo_outputs import stage2_reviewed_candidate_count
+
+    return stage2_reviewed_candidate_count(completed_audio)
 
 
 def _replace_report_item(
@@ -861,55 +954,58 @@ def _replace_report_item(
     *,
     key: str = "segment_id",
 ) -> list[dict[str, Any]]:
-    return [
-        existing for existing in report
-        if str(existing.get(key, "")) != item_id
-    ] + [item]
+    from qwen_asr.mimo_outputs import replace_report_item
+
+    return replace_report_item(report, item_id, item, key=key)
 
 
 def _collect_stage1_suspects(stage1_report: list[dict[str, Any]]) -> list[str]:
-    suspect_ids: set[str] = set()
-    for item in stage1_report:
-        if not isinstance(item, dict) or item.get("status") != "completed":
-            continue
-        for subtitle_id in item.get("suspect_ids", []):
-            subtitle_id_text = str(subtitle_id).strip()
-            if subtitle_id_text:
-                suspect_ids.add(subtitle_id_text)
-    return sorted(suspect_ids, key=int)
+    from qwen_asr.mimo_candidates import collect_stage1_suspects
+
+    return collect_stage1_suspects(stage1_report)
+
+
+def _translated_manifest_has_suspect_metadata(translated: dict[str, Any]) -> bool:
+    from qwen_asr.mimo_candidates import translated_manifest_has_suspect_metadata
+
+    return translated_manifest_has_suspect_metadata(translated)
+
+
+def _suspect_types_need_audio_review(suspect_types: Any) -> bool:
+    from qwen_asr.mimo_candidates import suspect_types_need_audio_review
+
+    return suspect_types_need_audio_review(suspect_types)
+
+
+def _build_manifest_suspect_report(
+    translated: dict[str, Any],
+    *,
+    confidence_threshold: float,
+) -> list[dict[str, Any]]:
+    from qwen_asr.mimo_candidates import build_manifest_suspect_report
+
+    return build_manifest_suspect_report(translated, confidence_threshold=confidence_threshold)
+
+
+def _translated_duration_ms(translated: dict[str, Any]) -> int:
+    from qwen_asr.mimo_candidates import translated_duration_ms
+
+    return translated_duration_ms(translated)
 
 
 def _normalize_base_url(base_url: str) -> str:
-    return base_url.rstrip("/") + ("" if base_url.rstrip("/").endswith("/v1") else "/v1")
+    return _mimo_inputs.normalize_base_url(base_url)
 
 
 def _load_glossary(path: Path | None) -> list[dict[str, str]]:
-    if path is None:
-        return []
-    return [
-        {
-            "group": entry.group,
-            "source": entry.source,
-            "target": entry.target,
-            "note": entry.note,
-        }
-        for entry in read_xlsx_glossary(path)
-    ]
+    return _mimo_audio.load_glossary(path)
 
 
 def _subtitle_entries_for_segment(
     translated: dict[str, Any],
     segment: dict[str, Any],
 ) -> dict[str, Any]:
-    start_ms = int(round(float(segment.get("global_start_time", 0.0)) * 1000))
-    end_ms = int(round(float(segment.get("global_end_time", 0.0)) * 1000))
-    return {
-        str(key): value
-        for key, value in translated.items()
-        if isinstance(value, dict)
-        and int(value.get("end_time", 0)) > start_ms
-        and int(value.get("start_time", 0)) < end_ms
-    }
+    return _mimo_audio.subtitle_entries_for_segment(translated, segment)
 
 
 def _filter_glossary(
@@ -917,22 +1013,7 @@ def _filter_glossary(
     subtitle_entries: dict[str, Any],
     limit: int,
 ) -> list[dict[str, str]]:
-    if not glossary or limit <= 0:
-        return []
-    haystack = "\n".join(
-        f"{item.get('original_subtitle', '')}\n{item.get('translated_subtitle', '')}"
-        for item in subtitle_entries.values()
-        if isinstance(item, dict)
-    )
-    exact_matches = [
-        entry for entry in glossary
-        if entry["source"] and entry["source"] in haystack
-    ]
-    general = [
-        entry for entry in glossary
-        if entry not in exact_matches and entry.get("group") in {"names", "show_terms", "通用日语"}
-    ]
-    return (exact_matches + general)[:limit]
+    return _mimo_audio.filter_glossary(glossary, subtitle_entries, limit)
 
 
 def _segment_for_subtitle_id(
@@ -940,16 +1021,7 @@ def _segment_for_subtitle_id(
     segments: list[dict[str, Any]],
     translated: dict[str, Any],
 ) -> dict[str, Any]:
-    item = translated.get(subtitle_id)
-    if not isinstance(item, dict):
-        raise KeyError(f"subtitle id not found: {subtitle_id}")
-    start_ms = int(item.get("start_time", 0))
-    for segment in segments:
-        segment_start = int(round(float(segment.get("global_start_time", 0.0)) * 1000))
-        segment_end = int(round(float(segment.get("global_end_time", 0.0)) * 1000))
-        if segment_start <= start_ms < segment_end:
-            return segment
-    raise RuntimeError(f"No audio segment covers subtitle id {subtitle_id}")
+    return _mimo_audio.segment_for_subtitle_id(subtitle_id, segments, translated)
 
 
 def _build_nearby_audio_batches(
@@ -961,47 +1033,14 @@ def _build_nearby_audio_batches(
     batch_size: int,
     max_gap_s: float,
 ) -> list[list[str]]:
-    candidates: list[tuple[str, str, int, int]] = []
-    for subtitle_id in subtitle_ids:
-        item = translated.get(subtitle_id)
-        if not isinstance(item, dict):
-            continue
-        try:
-            segment = _segment_for_subtitle_id(subtitle_id, segments, translated)
-        except RuntimeError:
-            continue
-        entries = _nearby_entries_for_subtitle_id(subtitle_id, translated, context_subtitles)
-        start_ms = min(int(entry.get("start_time", 0)) for entry in entries.values())
-        end_ms = max(int(entry.get("end_time", 0)) for entry in entries.values())
-        candidates.append((subtitle_id, str(segment.get("segment_id", "")), start_ms, end_ms))
-
-    candidates.sort(key=lambda row: (row[1], row[2], int(row[0])))
-    batches: list[list[str]] = []
-    current: list[str] = []
-    current_segment_id = ""
-    current_end_ms = 0
-    max_gap_ms = int(round(max_gap_s * 1000))
-
-    for subtitle_id, segment_id, start_ms, end_ms in candidates:
-        can_join = (
-            current
-            and segment_id == current_segment_id
-            and len(current) < batch_size
-            and start_ms - current_end_ms <= max_gap_ms
-        )
-        if not can_join:
-            if current:
-                batches.append(current)
-            current = [subtitle_id]
-            current_segment_id = segment_id
-            current_end_ms = end_ms
-            continue
-        current.append(subtitle_id)
-        current_end_ms = max(current_end_ms, end_ms)
-
-    if current:
-        batches.append(current)
-    return batches
+    return _mimo_audio.build_nearby_audio_batches(
+        subtitle_ids=subtitle_ids,
+        segments=segments,
+        translated=translated,
+        context_subtitles=context_subtitles,
+        batch_size=batch_size,
+        max_gap_s=max_gap_s,
+    )
 
 
 def _nearby_entries_for_subtitle_id(
@@ -1009,18 +1048,7 @@ def _nearby_entries_for_subtitle_id(
     translated: dict[str, Any],
     context_subtitles: int,
 ) -> dict[str, Any]:
-    if not subtitle_id.isdigit():
-        raise ValueError(f"subtitle id must be numeric: {subtitle_id}")
-    center = int(subtitle_id)
-    start = max(1, center - context_subtitles)
-    end = center + context_subtitles
-    entries: dict[str, Any] = {}
-    for index in range(start, end + 1):
-        key = str(index)
-        item = translated.get(key)
-        if isinstance(item, dict):
-            entries[key] = item
-    return entries
+    return _mimo_audio.nearby_entries_for_subtitle_id(subtitle_id, translated, context_subtitles)
 
 
 def _nearby_entries_for_subtitle_ids(
@@ -1028,18 +1056,7 @@ def _nearby_entries_for_subtitle_ids(
     translated: dict[str, Any],
     context_subtitles: int,
 ) -> dict[str, Any]:
-    numeric_ids = [int(subtitle_id) for subtitle_id in subtitle_ids if subtitle_id.isdigit()]
-    if not numeric_ids:
-        return {}
-    start = max(1, min(numeric_ids) - context_subtitles)
-    end = max(numeric_ids) + context_subtitles
-    entries: dict[str, Any] = {}
-    for index in range(start, end + 1):
-        key = str(index)
-        item = translated.get(key)
-        if isinstance(item, dict):
-            entries[key] = item
-    return entries
+    return _mimo_audio.nearby_entries_for_subtitle_ids(subtitle_ids, translated, context_subtitles)
 
 
 def _write_nearby_audio_clip(
@@ -1051,92 +1068,229 @@ def _write_nearby_audio_clip(
     clips_dir: Path,
     padding_s: float,
 ) -> tuple[Path, dict[str, float]]:
-    if not entries:
-        raise ValueError(f"No nearby entries for subtitle id {subtitle_id}")
-    segment_global_start_ms = int(round(float(segment.get("global_start_time", 0.0)) * 1000))
-    min_start_ms = min(int(item.get("start_time", 0)) for item in entries.values())
-    max_end_ms = max(int(item.get("end_time", 0)) for item in entries.values())
-    local_start_s = max(0.0, (min_start_ms - segment_global_start_ms) / 1000.0 - padding_s)
-    local_end_s = max(local_start_s + 0.2, (max_end_ms - segment_global_start_ms) / 1000.0 + padding_s)
-
-    clip_path = clips_dir / f"subtitle_{subtitle_id}_nearby.wav"
-    with wave.open(str(audio_path), "rb") as source:
-        frame_rate = source.getframerate()
-        total_frames = source.getnframes()
-        start_frame = max(0, min(total_frames, int(round(local_start_s * frame_rate))))
-        end_frame = max(start_frame + 1, min(total_frames, int(round(local_end_s * frame_rate))))
-        source.setpos(start_frame)
-        frames = source.readframes(end_frame - start_frame)
-        params = source.getparams()
-
-    with wave.open(str(clip_path), "wb") as target:
-        target.setparams(params)
-        target.writeframes(frames)
-
-    duration_s = (end_frame - start_frame) / max(frame_rate, 1)
-    return clip_path, {
-        "start_s": start_frame / max(frame_rate, 1),
-        "end_s": end_frame / max(frame_rate, 1),
-        "duration_s": duration_s,
-    }
-
-
-def _normalize_qa_item(item: dict[str, Any]) -> dict[str, Any]:
-    normalized = {
-        "id": item.get("id", item.get("i", "")),
-        "error_type": item.get("error_type", item.get("t", "")),
-        "original": item.get("original", item.get("o", "")),
-        "translation": item.get("translation", item.get("tr", "")),
-        "suggested_translation": item.get("suggested_translation", item.get("s", "")),
-        "asr_suspect": item.get("asr_suspect", item.get("a", False)),
-        "suspected_original": item.get("suspected_original", item.get("so", "")),
-        "needs_audio_review": item.get("needs_audio_review", item.get("n", False)),
-        "reason": item.get("reason", item.get("r", "")),
-        "confidence": item.get("confidence", item.get("c", 0.0)),
-    }
-    normalized["id"] = str(normalized.get("id", "")).strip()
-    error_type = str(normalized.get("error_type", "")).strip()
-    allowed = {"translation_error", "term_error", "asr_suspect", "needs_context", "style_only"}
-    normalized["error_type"] = error_type if error_type in allowed else ""
-    normalized["asr_suspect"] = _coerce_bool(normalized.get("asr_suspect"))
-    normalized["needs_audio_review"] = _coerce_bool(normalized.get("needs_audio_review"))
-    normalized["confidence"] = _coerce_confidence(normalized.get("confidence"), default=0.0)
-    for key in ("original", "translation", "suggested_translation", "suspected_original", "reason"):
-        normalized[key] = str(normalized.get(key, "")).strip()
-    return normalized
-
-
-def _compact_schema_prompt(config: MiMoConfig) -> str:
-    if not config.compact_output:
-        return (
-            "Schema: {id, error_type, original, translation, suggested_translation, "
-            "asr_suspect, suspected_original, needs_audio_review, reason, confidence}.\n"
-            "Field rules: error_type must be one of translation_error, term_error, asr_suspect, needs_context, style_only; "
-            "asr_suspect and needs_audio_review must be booleans; confidence must be 0.0 to 1.0.\n"
-        )
-    return (
-        "Use compact JSON keys to save tokens: "
-        "{i:id,t:error_type,o:original,tr:translation,s:suggested_translation,a:asr_suspect,"
-        "so:suspected_original,n:needs_audio_review,r:reason,c:confidence}.\n"
-        "Return booleans for a and n. Use t values: translation_error, term_error, asr_suspect, needs_context, style_only. "
-        "Keep r short, max 18 Chinese characters or 12 English words.\n"
+    return _mimo_audio.write_nearby_audio_clip(
+        subtitle_id=subtitle_id,
+        segment=segment,
+        entries=entries,
+        audio_path=audio_path,
+        clips_dir=clips_dir,
+        padding_s=padding_s,
     )
 
 
+def _normalize_qa_item(item: dict[str, Any]) -> dict[str, Any]:
+    from qwen_asr.mimo_guards import normalize_qa_item
+
+    return normalize_qa_item(item)
+
+
+def _clean_placeholder_value(value: str) -> str:
+    from qwen_asr.mimo_guards import clean_placeholder_value
+
+    return clean_placeholder_value(value)
+
+
+def _safe_suggestion_value(value: str, current: str, *, field: str) -> str:
+    from qwen_asr.mimo_guards import safe_suggestion_value
+
+    return safe_suggestion_value(value, current, field=field)
+
+
+def _ass_acceptance_guard(
+    item: dict[str, Any],
+    *,
+    current_original: str,
+    suggested_original: str,
+    min_improvement: float = 0.05,
+) -> dict[str, Any]:
+    from qwen_asr.mimo_guards import ass_acceptance_guard
+
+    return ass_acceptance_guard(
+        item,
+        current_original=current_original,
+        suggested_original=suggested_original,
+        min_improvement=min_improvement,
+    )
+
+
+def _ass_fragment_replacement_guard(
+    *,
+    ass_text: str,
+    current_original: str,
+    suggested_original: str,
+    current_score: float,
+    suggested_score: float,
+    normalize: Callable[[str], str],
+    min_reference_units: int = 12,
+    min_current_units: int = 6,
+    max_suggested_reference_ratio: float = 0.75,
+    min_current_score: float = 0.20,
+    high_suggested_score: float = 0.75,
+    min_overlap_ratio: float = 0.50,
+) -> dict[str, Any]:
+    from qwen_asr.mimo_guards import ass_fragment_replacement_guard
+
+    return ass_fragment_replacement_guard(
+        ass_text=ass_text,
+        current_original=current_original,
+        suggested_original=suggested_original,
+        current_score=current_score,
+        suggested_score=suggested_score,
+        normalize=normalize,
+        min_reference_units=min_reference_units,
+        min_current_units=min_current_units,
+        max_suggested_reference_ratio=max_suggested_reference_ratio,
+        min_current_score=min_current_score,
+        high_suggested_score=high_suggested_score,
+        min_overlap_ratio=min_overlap_ratio,
+    )
+
+
+def _original_content_deletion_guard(
+    *,
+    current_original: str,
+    suggested_original: str,
+    ass_guard: dict[str, Any],
+    min_current_units: int = 4,
+    min_dropped_units: int = 3,
+) -> dict[str, Any]:
+    from qwen_asr.mimo_guards import original_content_deletion_guard
+
+    return original_content_deletion_guard(
+        current_original=current_original,
+        suggested_original=suggested_original,
+        ass_guard=ass_guard,
+        min_current_units=min_current_units,
+        min_dropped_units=min_dropped_units,
+    )
+
+
+def _original_high_risk_replacement_guard(
+    *,
+    current_original: str,
+    suggested_original: str,
+    ass_guard: dict[str, Any],
+    max_short_units: int = 3,
+    min_expanded_units: int = 12,
+) -> dict[str, Any]:
+    from qwen_asr.mimo_guards import original_high_risk_replacement_guard
+
+    return original_high_risk_replacement_guard(
+        current_original=current_original,
+        suggested_original=suggested_original,
+        ass_guard=ass_guard,
+        max_short_units=max_short_units,
+        min_expanded_units=min_expanded_units,
+    )
+
+
+def _is_protected_short_response_signal(signal: str) -> bool:
+    from qwen_asr.mimo_guards import is_protected_short_response_signal
+
+    return is_protected_short_response_signal(signal)
+
+
+def _original_no_ass_substantial_rewrite_guard(
+    *,
+    current_original: str,
+    suggested_original: str,
+    ass_guard: dict[str, Any],
+) -> dict[str, Any]:
+    from qwen_asr.mimo_guards import original_no_ass_substantial_rewrite_guard
+
+    return original_no_ass_substantial_rewrite_guard(
+        current_original=current_original,
+        suggested_original=suggested_original,
+        ass_guard=ass_guard,
+    )
+
+
+def _evaluate_stage2_suggestion(
+    *,
+    subtitle_id: str,
+    normalized: dict[str, Any],
+    current_item: dict[str, Any],
+    apply_confidence_threshold: float,
+):
+    from qwen_asr.mimo_application import evaluate_stage2_suggestion
+
+    return evaluate_stage2_suggestion(
+        subtitle_id=subtitle_id,
+        normalized=normalized,
+        current_item=current_item,
+        apply_confidence_threshold=apply_confidence_threshold,
+    )
+
+
+def _translation_shortening_guard(
+    *,
+    current_translation: str,
+    suggested_translation: str,
+    min_current_units: int = 8,
+    max_ratio: float = 0.34,
+) -> dict[str, Any]:
+    from qwen_asr.mimo_guards import translation_shortening_guard
+
+    return translation_shortening_guard(
+        current_translation=current_translation,
+        suggested_translation=suggested_translation,
+        min_current_units=min_current_units,
+        max_ratio=max_ratio,
+    )
+
+
+def _japanese_signal(text: str) -> str:
+    from qwen_asr.mimo_guards import japanese_signal
+
+    return japanese_signal(text)
+
+
+def _cjk_signal_len(text: str) -> int:
+    from qwen_asr.mimo_guards import cjk_signal_len
+
+    return cjk_signal_len(text)
+
+
+def _longest_common_substring_len(left: str, right: str) -> int:
+    from qwen_asr.mimo_guards import longest_common_substring_len
+
+    return longest_common_substring_len(left, right)
+
+
+def _extract_guard_ass_text(item: dict[str, Any]) -> str:
+    from qwen_asr.mimo_guards import extract_guard_ass_text
+
+    return extract_guard_ass_text(item)
+
+
+def _contains_japanese(text: str) -> bool:
+    from qwen_asr.mimo_guards import contains_japanese
+
+    return contains_japanese(text)
+
+
+def _contains_cjk(text: str) -> bool:
+    from qwen_asr.mimo_guards import contains_cjk
+
+    return contains_cjk(text)
+
+
+def _compact_schema_prompt(config: MiMoConfig) -> str:
+    from qwen_asr.mimo_requests import compact_schema_prompt
+
+    return compact_schema_prompt(config)
+
+
 def _coerce_bool(value: Any) -> bool:
-    if isinstance(value, bool):
-        return value
-    if isinstance(value, (int, float)):
-        return bool(value)
-    return str(value).strip().lower() in {"true", "yes", "1"}
+    from qwen_asr.mimo_candidates import coerce_bool
+
+    return coerce_bool(value)
 
 
 def _coerce_confidence(value: Any, *, default: float) -> float:
-    try:
-        number = float(value)
-    except (TypeError, ValueError):
-        return default
-    return max(0.0, min(1.0, number))
+    from qwen_asr.mimo_candidates import coerce_confidence
+
+    return coerce_confidence(value, default=default)
 
 
 def _call_mimo(
@@ -1148,39 +1302,16 @@ def _call_mimo(
     subtitle_entries: dict[str, Any],
     glossary_entries: list[dict[str, str]],
 ) -> tuple[str, Any]:
-    audio_data = base64.b64encode(audio_path.read_bytes()).decode("ascii")
-    prompt = (
-        "You are proofreading Chinese subtitles for one Japanese audio segment.\n"
-        "Use the audio as the source of truth, then compare Japanese original text, "
-        "Chinese translation, and glossary.\n"
-        "Return ONLY a JSON array. Include only subtitle IDs that need correction.\n"
-        "If no correction is needed, return []. Keep IDs and timestamps unchanged.\n"
-        "Object schema: {id, original, translation, suggested_translation, reason, confidence}. Keep reason short.\n"
-        "Do not add markdown or prose outside JSON.\n"
-        f"Segment JSON: {json.dumps(segment, ensure_ascii=True)}\n"
-        f"Glossary JSON: {json.dumps(glossary_entries, ensure_ascii=True)}\n"
-        f"Subtitle entries JSON: {json.dumps(subtitle_entries, ensure_ascii=True)}"
-    )
-    response = _chat_completion_create(
+    from qwen_asr.mimo_requests import call_mimo
+
+    return call_mimo(
         client=client,
         config=config,
-        messages=[
-            {
-                "role": "user",
-                "content": [
-                    {"type": "text", "text": _maybe_disable_thinking_text(prompt, config)},
-                    {
-                        "type": "input_audio",
-                        "input_audio": {
-                            "data": audio_data,
-                            "format": audio_path.suffix.lstrip(".") or "wav",
-                        },
-                    },
-                ],
-            }
-        ],
+        segment=segment,
+        audio_path=audio_path,
+        subtitle_entries=subtitle_entries,
+        glossary_entries=glossary_entries,
     )
-    return response.choices[0].message.content or "", response.usage
 
 
 def _call_mimo_text_stage1(
@@ -1191,31 +1322,15 @@ def _call_mimo_text_stage1(
     subtitle_entries: dict[str, Any],
     glossary_entries: list[dict[str, str]],
 ) -> tuple[str, Any]:
-    prompt = (
-        "You are stage 1 of a two-stage subtitle QA pipeline.\n"
-        "You do NOT have audio.\n"
-        "Inputs: Japanese ASR subtitle text, Chinese translation, subtitle timing and neighboring context, and glossary.\n"
-        "Task 1: correct Chinese translation errors that are strongly supported by the provided text and context.\n"
-        "Task 2: flag Japanese ASR text as suspicious only when there is concrete textual evidence: "
-        "the Japanese is grammatically broken or semantically impossible; the Chinese translation cannot reasonably "
-        "follow from the Japanese text; a proper noun, number, date, venue, player name, work title, or technical term "
-        "looks likely misrecognized; or neighboring subtitles strongly imply a different phrase.\n"
-        "Do not guess a corrected Japanese phrase unless context strongly supports it.\n"
-        "If audio is required to decide, set needs_audio_review to true and leave suggested_translation empty unless "
-        "the Chinese fix is already safe.\n"
-        "Return ONLY a valid JSON array. Include an object if either translation correction is needed OR audio review is needed.\n"
-        "Do not include markdown or prose.\n"
-        f"{_compact_schema_prompt(config)}"
-        f"Segment JSON: {json.dumps(segment, ensure_ascii=True)}\n"
-        f"Glossary JSON: {json.dumps(glossary_entries, ensure_ascii=True)}\n"
-        f"Subtitle entries JSON: {json.dumps(subtitle_entries, ensure_ascii=True)}"
-    )
-    response = _chat_completion_create(
+    from qwen_asr.mimo_requests import call_mimo_text_stage1
+
+    return call_mimo_text_stage1(
         client=client,
         config=config,
-        messages=[{"role": "user", "content": _maybe_disable_thinking_text(prompt, config)}],
+        segment=segment,
+        subtitle_entries=subtitle_entries,
+        glossary_entries=glossary_entries,
     )
-    return response.choices[0].message.content or "", response.usage
 
 
 def _call_mimo_nearby_audio(
@@ -1230,49 +1345,19 @@ def _call_mimo_nearby_audio(
     clip_path: Path,
     clip_meta: dict[str, float],
 ) -> tuple[str, Any]:
-    audio_data = base64.b64encode(clip_path.read_bytes()).decode("ascii")
-    prompt = (
-        "You are stage 2 of a two-stage subtitle QA pipeline.\n"
-        "You HAVE a short nearby audio clip. The target subtitle IDs were flagged as suspicious by text-only QA.\n"
-        "Use the audio as the source of truth.\n"
-        "Tasks, in order:\n"
-        "1. Listen specifically for each target ID's Japanese wording. Multiple target IDs may be present in one clip.\n"
-        "2. Decide independently for each target ID whether original_subtitle is correct, incomplete, or a mishearing.\n"
-        "3. Pay special attention to proper nouns: player names, place names, venue or stadium names, work titles, "
-        "band or member names, dates, and numbers.\n"
-        "4. Use nearby subtitle text only as context. Do not rewrite non-target IDs.\n"
-        "5. If the target phrase is unclear in this short clip, set needs_audio_review to true and explain that a wider clip is needed.\n"
-        "Return ONLY a valid JSON array. Include only target IDs that need correction or remain unresolved. "
-        "Use one JSON object per subtitle ID.\n"
-        "Do not include markdown or prose.\n"
-        f"{_compact_schema_prompt(config)}"
-        f"Target IDs JSON: {json.dumps(target_ids, ensure_ascii=True)}\n"
-        f"Clip local start/end seconds JSON: {json.dumps(clip_meta, ensure_ascii=True)}\n"
-        f"Segment JSON: {json.dumps(segment, ensure_ascii=True)}\n"
-        f"Glossary JSON: {json.dumps(glossary_entries, ensure_ascii=True)}\n"
-        f"Target entries JSON: {json.dumps(target_entries, ensure_ascii=True)}\n"
-        f"Nearby entries JSON: {json.dumps(nearby_entries, ensure_ascii=True)}"
-    )
-    response = _chat_completion_create(
+    from qwen_asr.mimo_requests import call_mimo_nearby_audio
+
+    return call_mimo_nearby_audio(
         client=client,
         config=config,
-        messages=[
-            {
-                "role": "user",
-                "content": [
-                    {"type": "text", "text": _maybe_disable_thinking_text(prompt, config)},
-                    {
-                        "type": "input_audio",
-                        "input_audio": {
-                            "data": audio_data,
-                            "format": clip_path.suffix.lstrip(".") or "wav",
-                        },
-                    },
-                ],
-            }
-        ],
+        segment=segment,
+        target_ids=target_ids,
+        target_entries=target_entries,
+        nearby_entries=nearby_entries,
+        glossary_entries=glossary_entries,
+        clip_path=clip_path,
+        clip_meta=clip_meta,
     )
-    return response.choices[0].message.content or "", response.usage
 
 
 def _call_mimo_with_retries(
@@ -1287,30 +1372,19 @@ def _call_mimo_with_retries(
     base_delay: float,
     max_delay: float,
 ) -> tuple[str, Any]:
-    attempt = 0
-    delay = max(0.0, base_delay)
-    while True:
-        attempt += 1
-        try:
-            return _call_mimo(
-                client=client,
-                config=config,
-                segment=segment,
-                audio_path=audio_path,
-                subtitle_entries=subtitle_entries,
-                glossary_entries=glossary_entries,
-            )
-        except Exception as exc:  # pylint: disable=broad-exception-caught
-            if attempt > max(1, max_retries) or not _is_transient_error(exc):
-                raise
-            wait_seconds = min(max_delay, delay or 1.0)
-            print(
-                f"  transient MiMo error on attempt {attempt}/{max_retries}: "
-                f"{exc}; retrying in {wait_seconds:.1f}s",
-                flush=True,
-            )
-            time.sleep(wait_seconds)
-            delay = min(max_delay, max(wait_seconds * 2.0, 1.0))
+    from qwen_asr.mimo_requests import call_mimo_with_retries
+
+    return call_mimo_with_retries(
+        client=client,
+        config=config,
+        segment=segment,
+        audio_path=audio_path,
+        subtitle_entries=subtitle_entries,
+        glossary_entries=glossary_entries,
+        max_retries=max_retries,
+        base_delay=base_delay,
+        max_delay=max_delay,
+    )
 
 
 def _call_mimo_text_stage1_with_retries(
@@ -1324,29 +1398,18 @@ def _call_mimo_text_stage1_with_retries(
     base_delay: float,
     max_delay: float,
 ) -> tuple[str, Any]:
-    attempt = 0
-    delay = max(0.0, base_delay)
-    while True:
-        attempt += 1
-        try:
-            return _call_mimo_text_stage1(
-                client=client,
-                config=config,
-                segment=segment,
-                subtitle_entries=subtitle_entries,
-                glossary_entries=glossary_entries,
-            )
-        except Exception as exc:  # pylint: disable=broad-exception-caught
-            if attempt > max(1, max_retries) or not _is_transient_error(exc):
-                raise
-            wait_seconds = min(max_delay, delay or 1.0)
-            print(
-                f"  transient MiMo stage1 error on attempt {attempt}/{max_retries}: "
-                f"{exc}; retrying in {wait_seconds:.1f}s",
-                flush=True,
-            )
-            time.sleep(wait_seconds)
-            delay = min(max_delay, max(wait_seconds * 2.0, 1.0))
+    from qwen_asr.mimo_requests import call_mimo_text_stage1_with_retries
+
+    return call_mimo_text_stage1_with_retries(
+        client=client,
+        config=config,
+        segment=segment,
+        subtitle_entries=subtitle_entries,
+        glossary_entries=glossary_entries,
+        max_retries=max_retries,
+        base_delay=base_delay,
+        max_delay=max_delay,
+    )
 
 
 def _call_mimo_nearby_audio_with_retries(
@@ -1364,110 +1427,69 @@ def _call_mimo_nearby_audio_with_retries(
     base_delay: float,
     max_delay: float,
 ) -> tuple[str, Any]:
-    attempt = 0
-    delay = max(0.0, base_delay)
-    while True:
-        attempt += 1
-        try:
-            return _call_mimo_nearby_audio(
-                client=client,
-                config=config,
-                segment=segment,
-                target_ids=target_ids,
-                target_entries=target_entries,
-                nearby_entries=nearby_entries,
-                glossary_entries=glossary_entries,
-                clip_path=clip_path,
-                clip_meta=clip_meta,
-            )
-        except Exception as exc:  # pylint: disable=broad-exception-caught
-            if attempt > max(1, max_retries) or not _is_transient_error(exc):
-                raise
-            wait_seconds = min(max_delay, delay or 1.0)
-            print(
-                f"  transient MiMo stage2 error on attempt {attempt}/{max_retries}: "
-                f"{exc}; retrying in {wait_seconds:.1f}s",
-                flush=True,
-            )
-            time.sleep(wait_seconds)
-            delay = min(max_delay, max(wait_seconds * 2.0, 1.0))
+    from qwen_asr.mimo_requests import call_mimo_nearby_audio_with_retries
+
+    return call_mimo_nearby_audio_with_retries(
+        client=client,
+        config=config,
+        segment=segment,
+        target_ids=target_ids,
+        target_entries=target_entries,
+        nearby_entries=nearby_entries,
+        glossary_entries=glossary_entries,
+        clip_path=clip_path,
+        clip_meta=clip_meta,
+        max_retries=max_retries,
+        base_delay=base_delay,
+        max_delay=max_delay,
+    )
 
 
 def _is_transient_error(exc: Exception) -> bool:
-    text = str(exc).lower()
-    transient_markers = (
-        "503",
-        "502",
-        "504",
-        "429",
-        "rate limit",
-        "timeout",
-        "timed out",
-        "upstream",
-        "服务异常",
-        "稍后重试",
-        "server_error",
+    from qwen_asr.mimo_requests import is_transient_error
+
+    return is_transient_error(exc)
+
+
+def _request_suggestions_with_parse_retries(
+    request: Callable[[], tuple[str, Any]],
+    *,
+    max_retries: int,
+    base_delay: float,
+    max_delay: float,
+) -> tuple[str, Any, list[dict[str, Any]]]:
+    from qwen_asr.mimo_requests import request_suggestions_with_parse_retries
+
+    return request_suggestions_with_parse_retries(
+        request,
+        max_retries=max_retries,
+        base_delay=base_delay,
+        max_delay=max_delay,
     )
-    return any(marker in text for marker in transient_markers)
 
 
 def _parse_suggestions(content: str) -> list[dict[str, Any]]:
-    text = content.strip()
-    fenced = re.search(r"```(?:json)?\s*([\s\S]*?)\s*```", text)
-    if fenced:
-        text = fenced.group(1).strip()
-    if not text.startswith("["):
-        start = text.find("[")
-        end = text.rfind("]")
-        if start >= 0 and end > start:
-            text = text[start : end + 1]
-    try:
-        parsed = json.loads(text)
-    except json.JSONDecodeError:
-        object_matches = re.findall(r"\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}", text)
-        if object_matches:
-            parsed = [json.loads(match) for match in object_matches]
-        else:
-            raise
-    if not isinstance(parsed, list):
-        if isinstance(parsed, dict):
-            parsed = [parsed]
-        else:
-            raise ValueError("MiMo response is not a JSON array")
-    return [item for item in parsed if isinstance(item, dict)]
+    from qwen_asr.mimo_requests import parse_suggestions
+
+    return parse_suggestions(content)
 
 
 def _usage_to_dict(usage: Any) -> dict[str, Any]:
-    if usage is None:
-        return {}
-    if hasattr(usage, "model_dump"):
-        return usage.model_dump()
-    if hasattr(usage, "dict"):
-        return usage.dict()
-    return {"repr": repr(usage)}
+    from qwen_asr.mimo_requests import usage_to_dict
+
+    return usage_to_dict(usage)
 
 
 def _to_srt(items: dict[str, Any]) -> str:
-    lines: list[str] = []
-    index = 1
-    for _, item in sorted(items.items(), key=lambda pair: int(pair[0]) if str(pair[0]).isdigit() else str(pair[0])):
-        if not isinstance(item, dict):
-            continue
-        start = int(item.get("start_time", 0))
-        end = int(item.get("end_time", start + 1))
-        original = str(item.get("original_subtitle", "")).strip()
-        translated = str(item.get("translated_subtitle", "")).strip()
-        text = original if not translated else f"{original}\n{translated}"
-        lines.extend([str(index), f"{_srt_time(start)} --> {_srt_time(end)}", text, ""])
-        index += 1
-    return "\n".join(lines).strip() + "\n"
+    from qwen_asr.mimo_outputs import to_srt
+
+    return to_srt(items)
 
 
 def _srt_time(ms: int) -> str:
-    hours, rem = divmod(max(0, ms), 3_600_000)
-    minutes, rem = divmod(rem, 60_000)
-    seconds, millis = divmod(rem, 1_000)
-    return f"{hours:02d}:{minutes:02d}:{seconds:02d},{millis:03d}"
+    from qwen_asr.mimo_outputs import srt_time
+
+    return srt_time(ms)
 
 
 if __name__ == "__main__":

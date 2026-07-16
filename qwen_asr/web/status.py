@@ -34,6 +34,8 @@ def get_status(workdir_value: str) -> dict:
             "aligned": work_paths.aligned_manifest.exists(),
             "split": work_paths.split_manifest.exists(),
             "translated": work_paths.translated_manifest.exists(),
+            "proofread_realign": (work_paths.workdir / "reports" / "proofread_realign.json").exists(),
+            "final_quality": work_paths.final_quality_report.exists(),
             "normalized": work_paths.normalized_manifest.exists(),
             "srt": work_paths.subtitles_srt.exists(),
             "vtt": work_paths.subtitles_vtt.exists(),
@@ -50,13 +52,23 @@ def get_status(workdir_value: str) -> dict:
         "aligned": work_paths.aligned_manifest,
         "split": work_paths.split_manifest,
         "translated": work_paths.translated_manifest,
+        "proofread_realign": work_paths.workdir / "reports" / "proofread_realign.json",
+        "final_quality": work_paths.final_quality_report,
         "normalized": work_paths.normalized_manifest,
     }
     for key, path in counts.items():
         if not path.exists():
             continue
         payload = read_json(path, default=[] if key in {"segments", "transcript", "corrected", "aligned"} else {})
-        status["counts"][key] = len(payload) if isinstance(payload, list) else len(payload.keys())
+        if key == "final_quality" and isinstance(payload, dict):
+            summary = payload.get("summary", {}) if isinstance(payload.get("summary"), dict) else {}
+            status["counts"][key] = (
+                int(summary.get("pass_count", 0) or 0)
+                + int(summary.get("warn_count", 0) or 0)
+                + int(summary.get("fail_count", 0) or 0)
+            )
+        else:
+            status["counts"][key] = len(payload) if isinstance(payload, list) else len(payload.keys())
 
     for log_name in (
         "prepare",
@@ -66,6 +78,8 @@ def get_status(workdir_value: str) -> dict:
         "normalize",
         "split",
         "translate",
+        "proofread-realign",
+        "quality-gate",
         "export",
         "mimo-proofread",
         "run",
@@ -102,7 +116,9 @@ def build_progress(job: dict) -> dict:
         "current": "",
     }
     saved_progress = read_progress(work_paths)
-    if saved_progress and saved_progress.get("stage"):
+    if saved_progress and saved_progress.get("stage") and (
+        stage in {"run", "batch-run"} or saved_progress.get("stage") == stage
+    ):
         progress.update(
             {
                 "stage": saved_progress.get("stage", stage),
@@ -197,6 +213,47 @@ def build_progress(job: dict) -> dict:
         progress["current"] = _find_last_matching(recent_lines, ["Normalized ", "normalized_segments.json already exists"])
         return progress
 
+    if stage == "quality-gate":
+        report = read_json(work_paths.final_quality_report, default={})
+        if isinstance(report, dict) and report:
+            summary = report.get("summary", {}) if isinstance(report.get("summary"), dict) else {}
+            progress["summary"] = (
+                f"quality-gate {report.get('status', 'UNKNOWN')}: "
+                f"{summary.get('fail_count', 0)} FAIL, {summary.get('warn_count', 0)} WARN"
+            )
+            progress["completed"] = summary.get("pass_count", 0)
+            progress["total"] = (
+                int(summary.get("pass_count", 0) or 0)
+                + int(summary.get("warn_count", 0) or 0)
+                + int(summary.get("fail_count", 0) or 0)
+            )
+        else:
+            progress["summary"] = "quality-gate running"
+        progress["current"] = _find_last_matching(recent_lines, ["聚合质量门", "quality-gate", "Command failed"])
+        return progress
+
+    if stage == "proofread-realign":
+        report = read_json(work_paths.workdir / "reports" / "proofread_realign.json", default={})
+        if isinstance(report, dict) and report:
+            status = str(report.get("status", "UNKNOWN"))
+            completed = int(report.get("completed_count", 0) or 0)
+            failed = int(report.get("failed_count", 0) or 0)
+            fallback = int(report.get("fallback_count", 0) or 0)
+            total = int(report.get("candidate_count", completed + failed + fallback) or 0)
+            progress["completed"] = completed
+            progress["total"] = total
+            progress["summary"] = (
+                f"proofread-realign {status}: "
+                f"{completed} completed, {failed} failed, {fallback} fallback"
+            )
+        else:
+            pending = _pending_realign_count(work_paths.mimo_proofread_manifest)
+            progress["completed"] = 0
+            progress["total"] = pending
+            progress["summary"] = f"proofread-realign running: {pending} pending"
+        progress["current"] = _find_last_matching(recent_lines, ["proofread-realign", "重对齐", "Command failed"])
+        return progress
+
     if stage == "export":
         source = "normalized" if work_paths.normalized_manifest.exists() else "translated" if work_paths.translated_manifest.exists() else "split" if work_paths.split_manifest.exists() else "aligned" if work_paths.aligned_manifest.exists() else "transcript"
         progress["summary"] = f"export source: {source}"
@@ -234,6 +291,8 @@ def build_progress(job: dict) -> dict:
                 "normalized_segments.json already exists",
                 "split_segments.json already exists",
                 "translated_segments.json already exists",
+                "proofread-realign",
+                "重对齐",
                 "Command failed",
             ],
         )
@@ -301,6 +360,20 @@ def _count_changed_corrections(path: Path) -> int:
         return 0
     return sum(1 for item in payload if item.get("changed"))
 
+def _pending_realign_count(path: Path) -> int:
+    if not path.exists():
+        return 0
+    payload = read_json(path, default={})
+    if not isinstance(payload, dict):
+        return 0
+    return sum(
+        1
+        for item in payload.values()
+        if isinstance(item, dict)
+        and bool(item.get("needs_realign"))
+        and str(item.get("realign_status", "")).strip() != "completed"
+    )
+
 def _count_aligned_tokens(path: Path) -> int:
     if not path.exists():
         return 0
@@ -329,6 +402,8 @@ def _summarize_run(work_paths: WorkPaths) -> str:
         steps.append("split")
     if work_paths.translated_manifest.exists():
         steps.append("translate")
+    if work_paths.final_quality_report.exists():
+        steps.append("quality-gate")
     if work_paths.normalized_manifest.exists():
         steps.append("normalize")
     if work_paths.subtitles_srt.exists() or work_paths.subtitles_vtt.exists():

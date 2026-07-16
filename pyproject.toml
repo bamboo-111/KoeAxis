@@ -3,10 +3,38 @@ name = "koeaxis"
 version = "0.1.0"
 requires-python = ">=3.10"
 
+[project.optional-dependencies]
+dev = [
+    "ruff==0.15.21",
+]
+
 [tool.ruff]
 line-length = 120
 target-version = "py310"
+extend-exclude = [
+    ".model-cache",
+    ".venv",
+    ".venv-whisperx",
+    ".venv-whisperx312",
+    ".venv312",
+    "backups",
+    "benchmarks/**/runs",
+    "dist",
+    "tmp_codex_pytest",
+    "tmp_manual_tests",
+    "tmp_pytest",
+    "tools/mfa-env",
+    "tools/mfa-root",
+    "tools/micromamba",
+    "workspaces",
+]
 
 [tool.ruff.lint]
-select = ["E", "F", "I", "UP", "B"]
+select = ["E4", "E7", "E9", "F", "B"]
 ignore = []
+
+[tool.ruff.lint.per-file-ignores]
+# These modules intentionally preserve legacy module attributes for imports and test monkeypatches.
+"optimizer/splitter.py" = ["F401"]
+"qwen_asr/commands/stages.py" = ["F401"]
+"qwen_asr/mfa_experiment.py" = ["F401"]

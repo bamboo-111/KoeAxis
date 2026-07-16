@@ -1,0 +1,76 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-07-16T12:21:39+08:00",
+  "status": "PASS",
+  "business_quality_status": "FAIL",
+  "implementation": {
+    "api_version": "v1",
+    "default_route": "/",
+    "legacy_route": "/legacy",
+    "alignment_states": ["completed_exact", "completed_coarse", "failed"],
+    "music_region_state": "SKIPPED_MUSIC_REGION",
+    "review_draft": "drafts/web-review.json",
+    "review_audit": "reports/web_review_history.jsonl",
+    "secrets": "environment-only"
+  },
+  "real_data": {
+    "raw_align_input": 128,
+    "raw_align_completed": 104,
+    "raw_align_failed": 24,
+    "dialogue_segments": 113,
+    "completed_exact": 91,
+    "completed_coarse": 0,
+    "failed_dialogue": 22,
+    "short_responses": 18,
+    "skipped_music_segments": 15,
+    "skipped_music_cues": 36,
+    "review_cues": 370,
+    "non_positive_duration": 0,
+    "overlap": 0,
+    "post_repair_exact_recovery": "0/24",
+    "quality": {"pass": 7, "warn": 3, "fail": 4, "status": "FAIL"},
+    "export_inventory": 5,
+    "delivery_state": "quality_gate_failed"
+  },
+  "tests": {
+    "web_pytest": {"passed": 48, "seconds": 0.66},
+    "pytest": {"passed": 604, "seconds": 10.97},
+    "local_check": {"passed": 604, "seconds": 10.51, "status": "PASS"},
+    "ruff": "PASS",
+    "compileall": "PASS",
+    "node_check": "PASS",
+    "git_diff_check": "PASS"
+  },
+  "browser": {
+    "viewports": ["1440x900", "1280x720", "390x844"],
+    "console_errors": 0,
+    "console_warnings": 0,
+    "failed_requests": 0,
+    "media_status": 206,
+    "mobile_body_width": 375,
+    "desktop_1280_body_width": 1265,
+    "review_cue_count": 370,
+    "cached_review_switch_ms": 33.7,
+    "polling_preserved_dom": true,
+    "polling_preserved_scroll_top": 900,
+    "subtitle_preview": {"status": 200, "content_type": "text/plain; charset=utf-8", "japanese": true, "chinese": true},
+    "subtitle_download": {"status": 200, "attachment": true, "bytes": 34034},
+    "quality_evidence": {"status": 200, "content_type": "application/json", "cue_target": "353", "player_seconds": 1351.199},
+    "contrast": {"button": 13.56, "fail": 7.58, "muted": 6.61, "focus": 7.72}
+  },
+  "safety": {
+    "preserved_workspaces_read_only_in_browser": true,
+    "credential_fields_in_html": false,
+    "credential_fields_in_local_storage": false,
+    "credential_fields_in_start_payload": false,
+    "credential_rejection_before_process": true,
+    "stage_commit_push": false,
+    "historical_artifacts_deleted": false
+  },
+  "artifacts": [
+    "reports/web_frontend_backend_final_acceptance.md",
+    "reports/web_frontend_backend_final_acceptance.json",
+    "reports/web_api_contract_v1.json",
+    "reports/web_playwright_screenshot_index.md"
+  ]
+}

@@ -1,11 +1,15 @@
 from __future__ import annotations
 
-from contextlib import contextmanager
-import gc
 import logging
-import os
+from dataclasses import dataclass
 from typing import Any
 
+from qwen_asr.model_runtime import (
+    cleanup_torch as _cleanup_torch,
+    normalize_device_map as _normalize_device_map,
+    offline_model_loading as _offline_model_loading,
+    sanitize_raw_output as _sanitize_raw_output,
+)
 from qwen_asr.models import AlignedSegment, AlignedToken, TranscriptSegment
 from qwen_asr.vendor_qwen import get_qwen3_forced_aligner_class
 
@@ -21,6 +25,18 @@ LOCAL_COLLAPSE_MAX_CPS = 35.0
 LOCAL_COLLAPSE_MAX_TOKENS = 12
 
 
+@dataclass(frozen=True, slots=True)
+class AlignTimingValidationConfig:
+    min_coverage_ratio: float = MIN_COVERAGE_RATIO
+    bad_zero_run: int = BAD_ZERO_RUN
+    min_dense_coverage_ratio: float = MIN_DENSE_COVERAGE_RATIO
+    dense_zero_ratio: float = DENSE_ZERO_RATIO
+    local_collapse_min_chars: int = LOCAL_COLLAPSE_MIN_CHARS
+    local_collapse_max_duration: float = LOCAL_COLLAPSE_MAX_DURATION
+    local_collapse_max_cps: float = LOCAL_COLLAPSE_MAX_CPS
+    local_collapse_max_tokens: int = LOCAL_COLLAPSE_MAX_TOKENS
+
+
 class QwenForcedAligner:
     def __init__(
         self,
@@ -29,16 +45,20 @@ class QwenForcedAligner:
         device: str = "cuda",
         attn_implementation: str | None = None,
         keep_raw_model_output: bool = False,
+        keep_failed_tokens: bool = False,
         model_cache_dir: str | None = None,
         local_files_only: bool = True,
+        timing_validation_config: AlignTimingValidationConfig | None = None,
     ) -> None:
         self.model_name = model_name
         self.dtype = dtype
         self.device = device
         self.attn_implementation = attn_implementation
         self.keep_raw_model_output = keep_raw_model_output
+        self.keep_failed_tokens = keep_failed_tokens
         self.model_cache_dir = model_cache_dir
         self.local_files_only = local_files_only
+        self.timing_validation_config = timing_validation_config or AlignTimingValidationConfig()
         self._model: Any = None
 
     def load(self) -> None:
@@ -58,9 +78,7 @@ class QwenForcedAligner:
         try:
             Qwen3ForcedAligner = get_qwen3_forced_aligner_class()
         except ImportError as exc:  # pragma: no cover
-            raise RuntimeError(
-                "qwen-asr package is required for alignment. Install dependencies first."
-            ) from exc
+            raise RuntimeError("qwen-asr package is required for alignment. Install dependencies first.") from exc
 
         kwargs: dict[str, Any] = {
             "dtype": torch_dtype,
@@ -81,6 +99,7 @@ class QwenForcedAligner:
 
         LOGGER.info("Aligning %s", transcript_segment.segment_id)
         raw_output = None
+        tokens: list[AlignedToken] = []
         try:
             raw_output = self._model.align(
                 audio=transcript_segment.audio_path,
@@ -92,6 +111,7 @@ class QwenForcedAligner:
                 tokens,
                 transcript_segment.global_start_time,
                 transcript_segment.global_end_time,
+                config=self.timing_validation_config,
             )
             if timing_error:
                 raise RuntimeError(timing_error)
@@ -115,7 +135,7 @@ class QwenForcedAligner:
                 global_end_time=transcript_segment.global_end_time,
                 text=transcript_segment.text,
                 language=transcript_segment.language,
-                tokens=[],
+                tokens=tokens if self.keep_failed_tokens else [],
                 raw_model_output=_sanitize_raw_output(raw_output) if self.keep_raw_model_output else None,
                 status="failed",
                 error=str(exc),
@@ -138,9 +158,9 @@ def _extract_tokens(raw_output: Any, global_offset: float) -> list[AlignedToken]
     if isinstance(raw_output, dict):
         token_rows = raw_output.get("tokens") or raw_output.get("words") or raw_output.get("timestamps")
     elif hasattr(raw_output, "items"):
-        token_rows = getattr(raw_output, "items")
+        token_rows = raw_output.items
     elif hasattr(raw_output, "tokens"):
-        token_rows = getattr(raw_output, "tokens")
+        token_rows = raw_output.tokens
     if token_rows is None:
         return []
 
@@ -168,7 +188,10 @@ def validate_aligned_token_timing(
     tokens: list[AlignedToken],
     global_start_time: float,
     global_end_time: float,
+    *,
+    config: AlignTimingValidationConfig | None = None,
 ) -> str | None:
+    config = config or AlignTimingValidationConfig()
     if not tokens:
         return "alignment returned no tokens"
 
@@ -194,41 +217,38 @@ def validate_aligned_token_timing(
 
     segment_duration = max(0.0, global_end_time - global_start_time)
     covered_duration = max(0.0, (positive_end or global_start_time) - (positive_start or global_start_time))
-    if segment_duration > 0 and covered_duration / segment_duration < MIN_COVERAGE_RATIO:
-        return (
-            "alignment token timing unreliable: "
-            f"covered {covered_duration:.3f}s of {segment_duration:.3f}s"
-        )
+    if segment_duration > 0 and covered_duration / segment_duration < config.min_coverage_ratio:
+        return f"alignment token timing unreliable: covered {covered_duration:.3f}s of {segment_duration:.3f}s"
 
     zero_ratio = zero_count / max(len(tokens), 1)
-    if max_zero_run > BAD_ZERO_RUN:
+    if max_zero_run > config.bad_zero_run:
         return f"alignment token timing unreliable: zero-duration run {max_zero_run}"
     if (
         segment_duration > 0
-        and zero_ratio >= DENSE_ZERO_RATIO
-        and covered_duration / segment_duration < MIN_DENSE_COVERAGE_RATIO
+        and zero_ratio >= config.dense_zero_ratio
+        and covered_duration / segment_duration < config.min_dense_coverage_ratio
     ):
         return (
             "alignment token timing unreliable: "
             f"zero-duration ratio {zero_ratio:.2f} with covered {covered_duration:.3f}s of {segment_duration:.3f}s"
         )
-    collapse_error = _validate_local_token_density(tokens)
+    collapse_error = _validate_local_token_density(tokens, config=config)
     if collapse_error:
         return collapse_error
     return None
 
 
-def _validate_local_token_density(tokens: list[AlignedToken]) -> str | None:
-    normalized_tokens = [
-        token
-        for token in tokens
-        if token.text.strip() and token.end_time >= token.start_time
-    ]
+def _validate_local_token_density(
+    tokens: list[AlignedToken],
+    *,
+    config: AlignTimingValidationConfig,
+) -> str | None:
+    normalized_tokens = [token for token in tokens if token.text.strip() and token.end_time >= token.start_time]
     for start_index, first in enumerate(normalized_tokens):
         chars = 0
         window_start = first.start_time
         window_end = first.end_time
-        for token in normalized_tokens[start_index : start_index + LOCAL_COLLAPSE_MAX_TOKENS]:
+        for token in normalized_tokens[start_index : start_index + config.local_collapse_max_tokens]:
             chars += len(token.text.strip())
             window_end = max(window_end, token.end_time)
             duration = window_end - window_start
@@ -236,64 +256,11 @@ def _validate_local_token_density(tokens: list[AlignedToken]) -> str | None:
                 continue
             cps = chars / duration
             if (
-                chars >= LOCAL_COLLAPSE_MIN_CHARS
-                and duration <= LOCAL_COLLAPSE_MAX_DURATION
-                and cps >= LOCAL_COLLAPSE_MAX_CPS
+                chars >= config.local_collapse_min_chars
+                and duration <= config.local_collapse_max_duration
+                and cps >= config.local_collapse_max_cps
             ):
                 return (
-                    "alignment token timing unreliable: "
-                    f"local density {chars} chars in {duration:.3f}s ({cps:.1f} cps)"
+                    f"alignment token timing unreliable: local density {chars} chars in {duration:.3f}s ({cps:.1f} cps)"
                 )
     return None
-
-
-def _sanitize_raw_output(raw_output: Any) -> Any:
-    if raw_output is None:
-        return None
-    if isinstance(raw_output, (str, int, float, bool)):
-        return raw_output
-    if isinstance(raw_output, dict):
-        return {str(key): _sanitize_raw_output(value) for key, value in raw_output.items()}
-    if isinstance(raw_output, (list, tuple)):
-        return [_sanitize_raw_output(item) for item in raw_output]
-    if hasattr(raw_output, "__dict__"):
-        return {str(key): _sanitize_raw_output(value) for key, value in vars(raw_output).items()}
-    return str(raw_output)
-
-
-def _cleanup_torch(full: bool = False) -> None:
-    try:
-        import torch
-    except ImportError:  # pragma: no cover
-        return
-    gc.collect()
-    if torch.cuda.is_available():
-        if full:
-            torch.cuda.synchronize()
-        torch.cuda.empty_cache()
-
-
-def _normalize_device_map(device: str) -> str:
-    if device == "cuda":
-        return "cuda:0"
-    return device
-
-
-@contextmanager
-def _offline_model_loading(enabled: bool):
-    if not enabled:
-        yield
-        return
-
-    keys = ("HF_HUB_OFFLINE", "TRANSFORMERS_OFFLINE", "HF_DATASETS_OFFLINE")
-    previous = {key: os.environ.get(key) for key in keys}
-    try:
-        for key in keys:
-            os.environ[key] = "1"
-        yield
-    finally:
-        for key, value in previous.items():
-            if value is None:
-                os.environ.pop(key, None)
-            else:
-                os.environ[key] = value

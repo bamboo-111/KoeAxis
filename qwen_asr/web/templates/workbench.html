@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>KoeAxis 字幕工作台</title>
+  <link rel="stylesheet" href="/static/workbench.css">
+</head>
+<body>
+  <a class="skip-link" href="#mainContent">跳到主要内容</a>
+  <div class="app-shell">
+    <aside class="sidebar" aria-label="工作台导航">
+      <div class="brand"><span class="brand-mark" aria-hidden="true">K</span><div><strong>KoeAxis</strong><small>字幕工作台</small></div></div>
+      <nav class="nav-list">
+        <button class="nav-item active" data-view="pipeline" aria-label="流水线" aria-current="page"><span aria-hidden="true">▦</span><span class="nav-label">流水线</span></button>
+        <button class="nav-item" data-view="recovery" aria-label="恢复队列"><span aria-hidden="true">↺</span><span class="nav-label">恢复队列</span><span id="recoveryBadge" class="badge">0</span></button>
+        <button class="nav-item" data-view="review" aria-label="字幕审校"><span aria-hidden="true">≡</span><span class="nav-label">字幕审校</span></button>
+        <button class="nav-item" data-view="quality" aria-label="质量证据"><span aria-hidden="true">✓</span><span class="nav-label">质量证据</span></button>
+        <button class="nav-item" data-view="exports" aria-label="导出"><span aria-hidden="true">⇩</span><span class="nav-label">导出</span></button>
+      </nav>
+      <div class="sidebar-footer"><a href="/legacy">运行设置与兼容页面</a><span>API v1 · 本地模式</span></div>
+    </aside>
+    <div class="workspace-shell">
+      <header class="topbar">
+        <label class="project-picker">项目<select id="workspaceSelect" aria-label="选择工作区"></select></label>
+        <div class="topbar-actions"><span id="jobState" class="status-chip neutral">未运行</span><button id="stopJobButton" class="button danger" disabled>停止任务</button><button id="refreshButton" class="button">刷新</button></div>
+      </header>
+      <main id="mainContent" tabindex="-1">
+        <div id="notice" class="notice" role="status" aria-live="polite"></div>
+        <section class="view active" data-view-panel="pipeline" aria-labelledby="pipelineTitle">
+          <div class="view-header"><div><h1 id="pipelineTitle">流水线</h1><p id="projectSummary">选择一个工作区查看状态。</p></div><div id="pipelineMetrics" class="metrics" aria-label="流水线摘要"></div></div>
+          <div class="toolbar"><span>可直接继续可运行阶段；非敏感参数复用兼容页保存设置，业务规则仍由 CLI 提供。</span><a class="button" href="/legacy">调整运行设置</a></div>
+          <div class="table-wrap"><table><thead><tr><th>阶段</th><th>状态</th><th>输入</th><th>输出</th><th>耗时</th><th>证据</th><th>操作</th></tr></thead><tbody id="stageRows"></tbody></table></div>
+        </section>
+        <section class="view" data-view-panel="recovery" aria-labelledby="recoveryTitle" hidden>
+          <div class="view-header"><div><h1 id="recoveryTitle">失败片段恢复</h1><p>所有 failed 对白进入队列；音乐区域不计入对白失败。</p></div><div id="recoveryMetrics" class="metrics"></div></div>
+          <div class="split-pane">
+            <div class="list-pane"><div class="toolbar"><label>筛选 <select id="recoveryFilter"><option value="all">全部失败</option><option value="short">短应答优先</option></select></label></div><div id="recoveryList" class="recovery-list" role="listbox" aria-label="恢复任务"></div></div>
+            <div id="recoveryDetail" class="detail-pane empty-state">选择一个失败片段查看音频、上下文和恢复动作。</div>
+          </div>
+        </section>
+        <section class="view" data-view-panel="review" aria-labelledby="reviewTitle" hidden>
+          <div class="view-header"><div><h1 id="reviewTitle">字幕审校</h1><p>cue、音频、Align 状态、编辑草稿与参考字幕只读对照联动。</p></div><div id="reviewMetrics" class="metrics"></div></div>
+          <div class="toolbar"><label>筛选 <select id="reviewFilter"><option value="all">全部 cue</option><option value="failed">Align 失败</option><option value="coarse">粗略完成</option><option value="issues">疑点/待处理</option></select></label><span id="reviewSource" class="path-text"></span><div class="action-row"><span id="reviewDraftState" class="status-chip neutral">正式源</span><button id="undoReviewButton" class="button" disabled>撤销上次编辑</button></div></div>
+          <div class="review-layout">
+            <div class="review-cues table-wrap"><table><thead><tr><th>时间</th><th>原文 / 翻译</th><th>状态</th></tr></thead><tbody id="reviewCueRows"></tbody></table></div>
+            <div id="reviewDetail" class="review-detail empty-state">选择一条 cue 查看对照。</div>
+            <audio id="reviewPlayer" controls preload="metadata" aria-label="工作区音频播放器"></audio>
+          </div>
+        </section>
+        <section class="view" data-view-panel="quality" aria-labelledby="qualityTitle" hidden>
+          <div class="view-header"><div><h1 id="qualityTitle">质量证据</h1><p>导出成功不会覆盖质量门 FAIL。</p></div><span id="qualityState" class="status-chip neutral">UNKNOWN</span></div>
+          <div id="qualitySummary" class="metrics"></div><div id="qualityChecks" class="evidence-list"></div>
+        </section>
+        <section class="view" data-view-panel="exports" aria-labelledby="exportsTitle" hidden>
+          <div class="view-header"><div><h1 id="exportsTitle">导出产物</h1><p>区分正式可交付与质量门失败产物。</p></div></div>
+          <div class="table-wrap"><table><thead><tr><th>文件</th><th>格式</th><th>大小</th><th>质量</th><th>生成时间</th><th>操作</th></tr></thead><tbody id="exportRows"></tbody></table></div>
+        </section>
+      </main>
+    </div>
+  </div>
+  <script src="/static/workbench.js" defer></script>
+</body>
+</html>

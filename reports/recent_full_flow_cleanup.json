@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "cleanup_id": "recent-full-flow-cleanup-20260716-165733",
+  "status": "PASS",
+  "purpose": "Retire one-off diagnostic scripts while preserving full-flow evidence for Web frontend/backend work.",
+  "backup_root": "backups/recent-full-flow-cleanup-20260716-165733",
+  "deleted_files": [
+    {
+      "path": "workspaces/full-regression-sayonara-lara-02-20260715-234059/scripts/extract_reference_tracks.py",
+      "bytes": 1395,
+      "sha256": "e530634db212c692fa574d2eaac332bc9766ae27cbe6be26a734d4d7c5000bcb"
+    },
+    {
+      "path": "workspaces/full-regression-sayonara-lara-02-20260715-234059/scripts/build_full_regression_report.py",
+      "bytes": 17596,
+      "sha256": "49d2af95159796f92859b0ea2ac3799f3a7deeba1715a6967c919dd0aad1a89a"
+    },
+    {
+      "path": "workspaces/full-regression-sayonara-lara-02-20260715-234059/scripts/__pycache__/extract_reference_tracks.cpython-312.pyc",
+      "bytes": 2431,
+      "sha256": "82a97e2fd76215b84e0f0a4ced216840267b25f2f4dfc91637221605f80cc718"
+    },
+    {
+      "path": "workspaces/post-repair-full-flow-sayonara-lara-02-20260716-002234/scripts/run_downstream_diagnostic.py",
+      "bytes": 3099,
+      "sha256": "476bb68a270da31add83993672ca00b57c8c7715c09774ae8afe734b073e036d"
+    }
+  ],
+  "preserved_evidence_roots": [
+    "workspaces/full-regression-sayonara-lara-02-20260715-234059",
+    "workspaces/post-repair-full-flow-sayonara-lara-02-20260716-002234"
+  ],
+  "preserved_key_reports": [
+    "workspaces/post-repair-full-flow-sayonara-lara-02-20260716-002234/reports/post_repair_effectiveness.md",
+    "workspaces/post-repair-full-flow-sayonara-lara-02-20260716-002234/reports/post_repair_effectiveness_excluding_oped.md",
+    "workspaces/post-repair-full-flow-sayonara-lara-02-20260716-002234/reports/final_quality_after_downstream.json"
+  ],
+  "production_code_changed": false,
+  "web_code_changed": false,
+  "historical_outputs_changed": false,
+  "media_models_or_environments_changed": false,
+  "git_stage_commit_or_push": false,
+  "verification": {
+    "deleted_files_absent": 4,
+    "preserved_key_files_present": 7,
+    "backup_hash_pairs_matching": 6,
+    "json_utf8_and_document_markers": "PASS",
+    "web_tests": "45 passed in 0.17s",
+    "git_diff_check": "PASS_WITH_EXISTING_LINE_ENDING_WARNINGS"
+  }
+}

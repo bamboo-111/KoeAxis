@@ -1,0 +1,116 @@
+{
+  "schema_version": 1,
+  "audit_id": "web-w0-20260716-104206",
+  "status": "PASS",
+  "scope": "Web 前后端整理 W0 基线盘点与行为冻结",
+  "baseline": {
+    "server": "http.server.ThreadingHTTPServer",
+    "template_path": "qwen_asr/web/templates/index.html",
+    "template_bytes": 81362,
+    "legacy_get_routes": [
+      "/",
+      "/favicon.ico",
+      "/api/status",
+      "/api/job",
+      "/api/suggest-workdir",
+      "/api/workspaces"
+    ],
+    "legacy_post_routes": [
+      "/api/start",
+      "/api/stop",
+      "/api/pick-media",
+      "/api/pick-media-list",
+      "/api/pick-batch-manifest",
+      "/api/pick-glossary-xlsx",
+      "/api/pick-output-directory",
+      "/api/pick-model-cache-dir",
+      "/api/pick-export-file",
+      "/api/delete-workspace",
+      "/api/delete-workspaces",
+      "/api/glossary-normalize"
+    ],
+    "status_sources": [
+      "manifest existence and counts",
+      "ArtifactState stage_statuses",
+      "progress.json",
+      "stage log tails"
+    ],
+    "known_gaps": [
+      "legacy API has no versioned response or error envelope",
+      "legacy align status is completed/failed only",
+      "legacy page has no failed-dialogue recovery queue",
+      "legacy page has no cue/audio/reference review workbench",
+      "legacy page has no structured quality evidence navigation",
+      "legacy page has no controlled export preview/download API",
+      "single 81 KB template couples layout, state and behavior"
+    ]
+  },
+  "feature_inventory": {
+    "usable": [
+      "single and batch command construction",
+      "job start/stop and progress polling",
+      "workspace selection and deletion protection",
+      "file and directory pickers",
+      "stage artifact counts and log tails",
+      "glossary normalization"
+    ],
+    "partial_or_placeholder": [
+      "quality is summarized but lacks evidence drill-down",
+      "exports can be configured but lack structured artifact review",
+      "workspace list excludes valid evidence workspaces without numeric prefixes",
+      "refresh restores artifact state but active jobs remain process-memory scoped"
+    ],
+    "missing": [
+      "Align three-state presentation",
+      "OP/ED music-region exclusion",
+      "all-failed-dialogue recovery queue",
+      "short-response priority filter",
+      "cue/player/reference synchronized review",
+      "recovery action audit trail"
+    ],
+    "retired_or_rejected": [
+      "production LLM split modes",
+      "full-MFA primary alignment",
+      "automatic quality-gate bypass"
+    ]
+  },
+  "contract_evidence": "reports/web_api_contract_v1.json",
+  "test_baseline": {
+    "command": ".venv312/Scripts/python.exe -m pytest tests/test_webui.py tests/test_pipeline_runner.py tests/test_artifact_state.py tests/test_align_quality.py tests/test_export_paths.py -q",
+    "result": "84 passed in 2.89s"
+  },
+  "first_implementation_verification": {
+    "tests": "51 passed in 0.20s",
+    "ruff": "PASS",
+    "compileall": "PASS",
+    "git_diff_check": "PASS_WITH_EXISTING_LINE_ENDING_WARNING"
+  },
+  "real_workspace_evidence": {
+    "workdir": "workspaces/post-repair-full-flow-sayonara-lara-02-20260716-002234",
+    "align_raw": {
+      "segments": 128,
+      "completed_exact": 104,
+      "completed_coarse": 0,
+      "failed": 24
+    },
+    "main_dialogue": {
+      "segments": 113,
+      "completed_exact": 91,
+      "completed_coarse": 0,
+      "failed": 22
+    },
+    "excluded_music_segments": 15,
+    "excluded_music_cues": 36,
+    "recovery_queue": 22,
+    "short_responses": 18,
+    "normalized_cues": 370,
+    "exact_postrepair_recovery": 0,
+    "quality_status": "FAIL"
+  },
+  "safety": {
+    "historical_workspaces_modified": false,
+    "user_changes_reverted": false,
+    "stage_commit_push": false,
+    "backup_root": "backups/web-w0-w1-api-20260716-104206"
+  }
+}

@@ -4,67 +4,53 @@ import argparse
 import ast
 import json
 import logging
-import math
 import re
 from collections import Counter, defaultdict
 from dataclasses import dataclass
 from pathlib import Path
-from statistics import median
 from typing import Iterable
 
 from qwen_asr.commands import cmd_align, cmd_prepare, cmd_split, cmd_transcribe
-from qwen_asr.defaults import DEFAULT_ALIGN_MODEL, DEFAULT_ASR_MODEL
 from qwen_asr.glossary import (
     GlossaryEntry,
     write_canonical_glossary_xlsx,
     write_normalized_glossary_xlsx,
 )
+from qwen_asr import history_glossary_ass as _ass
+from qwen_asr import history_glossary_matching as _matching
+from qwen_asr import history_glossary_rules as _rules
 from qwen_asr.models import AlignedSegment, AlignedToken, AudioSegment, WorkPaths
-from qwen_asr.optimizer_bridge import DEFAULT_OPTIMIZER_ROOT, load_specific_asr_data
+from qwen_asr.optimizer_bridge import load_specific_asr_data
 from qwen_asr.storage import append_jsonl, ensure_directory, read_json, write_json_atomic
 from optimizer.llm_client import call_llm
 
 LOGGER = logging.getLogger(__name__)
 
 EPISODE_PATTERN = re.compile(r"#\s*(\d+)", re.IGNORECASE)
-ASS_DIALOGUE_PATTERN = re.compile(
-    r"^Dialogue:\s*(?P<layer>[^,]*),(?P<start>[^,]*),(?P<end>[^,]*),(?P<style>[^,]*),"
-    r"(?P<name>[^,]*),(?P<margin_l>[^,]*),(?P<margin_r>[^,]*),(?P<margin_v>[^,]*),"
-    r"(?P<effect>[^,]*),(?P<text>.*)$"
-)
-JP_TERMS = ("ラジ", "コエログ", "Zepp", "Girls Band Cry", "トゲ")
-CN_TERMS = ("广播", "声log", "声日志", "巡演", "乐队", "栏目")
-JP_CURATION_HINTS = (
-    "トゲ",
-    "コエログ",
-    "ラジ",
-    "Zepp",
-    "Girls",
-    "Band",
-    "川崎",
-    "監督",
-    "学院",
-    "先生",
-    "理名",
-    "夕莉",
-    "朱李",
-    "凪都",
-)
-CN_CURATION_HINTS = (
-    "广播",
-    "声log",
-    "声日志",
-    "巡演",
-    "川崎",
-    "导演",
-    "学院",
-    "老师",
-    "理名",
-    "夕莉",
-    "朱李",
-    "凪都",
-    "无刺有刺",
-)
+ASS_DIALOGUE_PATTERN = _ass.ASS_DIALOGUE_PATTERN
+JP_TERMS = _rules.JP_TERMS
+CN_TERMS = _rules.CN_TERMS
+JP_CURATION_HINTS = _rules.JP_CURATION_HINTS
+CN_CURATION_HINTS = _rules.CN_CURATION_HINTS
+_normalize_glossary_text = _rules.normalize_glossary_text
+_looks_like_glossary_candidate = _rules.looks_like_glossary_candidate
+_guess_glossary_group = _rules.guess_glossary_group
+_has_cjk = _rules.has_cjk
+_has_kana = _rules.has_kana
+_contains_ascii_word = _rules.contains_ascii_word
+_is_glossary_like_pair = _rules.is_glossary_like_pair
+_is_curated_priority = _rules.is_curated_priority
+_is_llm_glossary_entry_allowed = _rules.is_llm_glossary_entry_allowed
+_looks_like_sentence_text = _rules.looks_like_sentence_text
+_looks_like_contextual_role_phrase = _rules.looks_like_contextual_role_phrase
+_score_to_level = _rules.score_to_level
+_clean_ass_text = _ass.clean_ass_text
+_escape_ass_text = _ass.escape_ass_text
+_ass_time_to_ms = _ass.ass_time_to_ms
+_ms_to_ass_time = _ass.ms_to_ass_time
+_interval_overlap_score = _matching.interval_overlap_score
+_boundary_score = _matching.boundary_score
+_overlap_ms = _matching.overlap_ms
 
 
 @dataclass(frozen=True)
@@ -228,40 +214,7 @@ def discover_history_pairs(history_dir: Path, episode_filter: str | None = None)
 
 
 def parse_ass_dialogues(path: Path) -> list[AssDialogue]:
-    raw = path.read_bytes()
-    for encoding in ("utf-8-sig", "utf-8", "gb18030", "gbk"):
-        try:
-            text = raw.decode(encoding)
-            break
-        except UnicodeDecodeError:
-            continue
-    else:
-        text = raw.decode("utf-8", errors="replace")
-
-    dialogues: list[AssDialogue] = []
-    seen: set[tuple[int, int, str]] = set()
-    for line in text.splitlines():
-        match = ASS_DIALOGUE_PATTERN.match(line.strip())
-        if not match:
-            continue
-        subtitle_text = _clean_ass_text(match.group("text"))
-        if not subtitle_text:
-            continue
-        start_ms = _ass_time_to_ms(match.group("start"))
-        end_ms = _ass_time_to_ms(match.group("end"))
-        key = (start_ms, end_ms, subtitle_text)
-        if key in seen:
-            continue
-        seen.add(key)
-        dialogues.append(
-            AssDialogue(
-                start_ms=start_ms,
-                end_ms=end_ms,
-                style=match.group("style").strip(),
-                text=subtitle_text,
-            )
-        )
-    return dialogues
+    return _ass.parse_ass_dialogues(path, AssDialogue)
 
 
 def match_dialogues_to_asr(
@@ -473,47 +426,7 @@ def extract_glossary_entries_with_llm(
 
 
 def export_review_ass(path: Path, matches: Iterable[MatchResult]) -> None:
-    ensure_directory(path.parent)
-    body = [
-        "[Script Info]",
-        "ScriptType: v4.00+",
-        "WrapStyle: 0",
-        "ScaledBorderAndShadow: yes",
-        "PlayResX: 1280",
-        "PlayResY: 720",
-        "",
-        "[V4+ Styles]",
-        "Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding",
-        "Style: Match,Arial,36,&H00FFFFFF,&H000000FF,&H00000000,&H64000000,-1,0,0,0,100,100,0,0,1,2,1,2,40,40,26,1",
-        "Style: ReviewLow,Arial,36,&H0000E5FF,&H000000FF,&H00000000,&H64000000,-1,0,0,0,100,100,0,0,1,2,1,2,40,40,26,1",
-        "Style: ReviewNote,Arial,22,&H00A0A0A0,&H000000FF,&H00000000,&H64000000,0,0,0,0,100,100,0,0,1,1,0,8,40,40,40,1",
-        "",
-        "[Events]",
-        "Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text",
-    ]
-    for item in sorted(matches, key=lambda row: (int(row.episode_id), row.ass_start_ms, row.ass_end_ms)):
-        if item.level == "high":
-            continue
-        style = "ReviewLow" if item.level == "low" else "Match"
-        text = f"[#{item.episode_id}] {item.ass_text}\\N{item.source_text or '(no source match)'}"
-        note = f"score={item.score:.2f} level={item.level} reason={' / '.join(item.reasons[:4])}"
-        body.append(
-            "Dialogue: 0,{start},{end},{style},,0,0,0,,{text}".format(
-                start=_ms_to_ass_time(item.ass_start_ms),
-                end=_ms_to_ass_time(item.ass_end_ms),
-                style=style,
-                text=_escape_ass_text(text),
-            )
-        )
-        note_end = min(item.ass_end_ms + 800, item.ass_end_ms + max(400, item.ass_end_ms - item.ass_start_ms))
-        body.append(
-            "Dialogue: 0,{start},{end},ReviewNote,,0,0,0,,{text}".format(
-                start=_ms_to_ass_time(item.ass_start_ms),
-                end=_ms_to_ass_time(note_end),
-                text=_escape_ass_text(note),
-            )
-        )
-    path.write_text("\n".join(body) + "\n", encoding="utf-8")
+    _ass.export_review_ass(path, matches, ensure_directory=ensure_directory)
 
 
 def _run_episode_pipeline(pair: HistoryEpisodePair, args: argparse.Namespace, work_paths: WorkPaths) -> None:
@@ -604,7 +517,7 @@ def _run_episode_pipeline(pair: HistoryEpisodePair, args: argparse.Namespace, wo
         max_word_count_cjk=args.max_word_count_cjk,
         max_word_count_english=args.max_word_count_english,
         prompt_limit_ratio=args.prompt_limit_ratio,
-        split_mode=getattr(args, "split_mode", "token-boundary"),
+        split_mode=getattr(args, "split_mode", "rule"),
         llm_model=None,
         llm_base_url=None,
         llm_api_key=None,
@@ -695,7 +608,7 @@ def _best_split_match(
 
     best: MatchResult | None = None
     max_window = min(4, len(positions))
-    for start_offset, position in enumerate(positions):
+    for start_offset, _position in enumerate(positions):
         for window_size in range(1, max_window + 1):
             window_positions = positions[start_offset : start_offset + window_size]
             if len(window_positions) < window_size:
@@ -782,33 +695,15 @@ def _score_candidate(
     matched_segment_count: int,
     covered_duration: int,
 ) -> MatchResult:
-    time_overlap_score = _interval_overlap_score(dialogue.start_ms, dialogue.end_ms, source_start_ms, source_end_ms)
-    boundary_score = _boundary_score(dialogue.start_ms, dialogue.end_ms, source_start_ms, source_end_ms)
-    length_ratio_score = _length_ratio_score(dialogue.text, source_text)
-    merge_penalty = min(0.4, max(0, matched_segment_count - 1) * 0.08)
-    token_coverage_score = min(1.0, covered_duration / max(1, dialogue.end_ms - dialogue.start_ms))
-    score = max(
-        0.0,
-        min(
-            1.0,
-            (time_overlap_score * 0.45)
-            + (boundary_score * 0.20)
-            + (length_ratio_score * 0.15)
-            + (token_coverage_score * 0.20)
-            - merge_penalty,
-        ),
+    scoring = _matching.score_candidate_payload(
+        dialogue=dialogue,
+        source_text=source_text,
+        source_start_ms=source_start_ms,
+        source_end_ms=source_end_ms,
+        matched_segment_count=matched_segment_count,
+        covered_duration=covered_duration,
+        normalize_text=_normalize_glossary_text,
     )
-    reasons: list[str] = []
-    if time_overlap_score < 0.45:
-        reasons.append("time weak")
-    if matched_segment_count >= 3:
-        reasons.append(f"merged {matched_segment_count} splits")
-    if token_coverage_score < 0.55:
-        reasons.append("sparse tokens")
-    if length_ratio_score < 0.45:
-        reasons.append("length drift")
-    if not source_text:
-        reasons.append("empty source")
     return MatchResult(
         episode_id=episode_id,
         media_path=str(media_path),
@@ -821,14 +716,14 @@ def _score_candidate(
         source_start_ms=source_start_ms,
         source_end_ms=source_end_ms,
         matched_segment_count=matched_segment_count,
-        score=round(score, 4),
+        score=scoring["score"],
         level="low",
-        time_overlap_score=round(time_overlap_score, 4),
-        boundary_score=round(boundary_score, 4),
-        length_ratio_score=round(length_ratio_score, 4),
-        merge_penalty=round(merge_penalty, 4),
-        token_coverage_score=round(token_coverage_score, 4),
-        reasons=reasons or ["ok"],
+        time_overlap_score=scoring["time_overlap_score"],
+        boundary_score=scoring["boundary_score"],
+        length_ratio_score=scoring["length_ratio_score"],
+        merge_penalty=scoring["merge_penalty"],
+        token_coverage_score=scoring["token_coverage_score"],
+        reasons=scoring["reasons"],
     )
 
 
@@ -839,167 +734,8 @@ def _extract_episode_id(name: str) -> str | None:
     return str(int(match.group(1)))
 
 
-def _clean_ass_text(text: str) -> str:
-    cleaned = re.sub(r"\{[^}]*\}", "", text)
-    cleaned = cleaned.replace("\\N", "\n").replace("\\n", "\n").replace("\\h", " ")
-    cleaned = re.sub(r"\s+", " ", cleaned).strip()
-    return cleaned
-
-
-def _escape_ass_text(text: str) -> str:
-    escaped = text.replace("{", "\\{").replace("}", "\\}")
-    return escaped.replace("\n", "\\N")
-
-
-def _ass_time_to_ms(value: str) -> int:
-    hours, minutes, seconds_cs = value.strip().split(":")
-    seconds, centiseconds = seconds_cs.split(".")
-    total = (int(hours) * 3600 + int(minutes) * 60 + int(seconds)) * 1000
-    return total + int(centiseconds) * 10
-
-
-def _ms_to_ass_time(value: int) -> str:
-    total = max(0, int(value))
-    centiseconds = (total % 1000) // 10
-    total_seconds = total // 1000
-    seconds = total_seconds % 60
-    total_minutes = total_seconds // 60
-    minutes = total_minutes % 60
-    hours = total_minutes // 60
-    return f"{hours}:{minutes:02d}:{seconds:02d}.{centiseconds:02d}"
-
-
-def _interval_overlap_score(start_a: int, end_a: int, start_b: int, end_b: int) -> float:
-    overlap = _overlap_ms(start_a, end_a, start_b, end_b)
-    union = max(end_a, end_b) - min(start_a, start_b)
-    if union <= 0:
-        return 0.0
-    return max(0.0, min(1.0, overlap / union))
-
-
-def _boundary_score(start_a: int, end_a: int, start_b: int, end_b: int) -> float:
-    duration = max(800, end_a - start_a)
-    boundary_delta = abs(start_a - start_b) + abs(end_a - end_b)
-    normalized = boundary_delta / (duration * 1.6)
-    return max(0.0, min(1.0, 1.0 - normalized))
-
-
 def _length_ratio_score(chinese_text: str, source_text: str) -> float:
-    left = len(_normalize_glossary_text(chinese_text))
-    right = len(_normalize_glossary_text(source_text))
-    if left == 0 or right == 0:
-        return 0.0
-    shorter = min(left, right)
-    longer = max(left, right)
-    return shorter / longer
-
-
-def _overlap_ms(start_a: int, end_a: int, start_b: int, end_b: int) -> int:
-    return max(0, min(end_a, end_b) - max(start_a, start_b))
-
-
-def _normalize_glossary_text(text: str) -> str:
-    return re.sub(r"\s+", "", text).strip(" \t\r\n。！？!?，,、;；：:\"'“”‘’")
-
-
-def _looks_like_glossary_candidate(source: str, target: str, item: MatchResult) -> bool:
-    if not source or not target:
-        return False
-    if len(source) > 18 or len(target) > 18:
-        return False
-    if "\n" in source or "\n" in target:
-        return False
-    if item.matched_segment_count > 2:
-        return False
-    if item.length_ratio_score < 0.55:
-        return False
-    if item.time_overlap_score < 0.7:
-        return False
-    if item.token_coverage_score < 0.7:
-        return False
-    if _contains_ascii_word(source) and len(source) < 3:
-        return False
-    if source.lower() == target.lower():
-        return False
-    if re.fullmatch(r"[A-Za-z0-9 .!?'_-]+", target):
-        return False
-    if re.fullmatch(r"[A-Za-z0-9 .!?'_-]+", source) and len(source) <= 6:
-        return False
-    if any(mark in source for mark in ("。", "？", "！", "…")) and len(source) > 12:
-        return False
-    if any(mark in target for mark in ("。", "？", "！", "…")) and len(target) > 12:
-        return False
-    if not (_has_cjk(source) or _has_kana(source) or _contains_ascii_word(source)):
-        return False
-    if not (_has_cjk(target) or _contains_ascii_word(target)):
-        return False
-    return True
-
-
-def _guess_glossary_group(source: str, target: str) -> str:
-    if any(token in source for token in JP_TERMS) or any(token in target for token in CN_TERMS):
-        return "show_terms"
-    if any(keyword in source for keyword in ("監督", "学院", "先生", "Zepp", "コエログ", "トゲラジ")):
-        return "show_terms"
-    if any(keyword in target for keyword in ("导演", "学院", "老师")):
-        return "show_terms"
-    if 1 < len(source) <= 6 and 1 < len(target) <= 6:
-        return "names"
-    return "fixed_phrases"
-
-
-def _has_cjk(text: str) -> bool:
-    return any("\u4e00" <= char <= "\u9fff" for char in text)
-
-
-def _has_kana(text: str) -> bool:
-    return any(("\u3040" <= char <= "\u30ff") for char in text)
-
-
-def _contains_ascii_word(text: str) -> bool:
-    return bool(re.search(r"[A-Za-z]{2,}", text))
-
-
-def _is_glossary_like_pair(source: str, target: str) -> bool:
-    keyword_hit = any(
-        keyword in source or keyword in target
-        for keyword in (
-            "トゲ",
-            "コエログ",
-            "Zepp",
-            "Girls",
-            "Band",
-            "学院",
-            "广播",
-            "声log",
-            "声日志",
-            "巡演",
-            "导演",
-            "老师",
-        )
-    )
-    if keyword_hit:
-        return True
-
-    source_len = len(source)
-    target_len = len(target)
-    if source_len <= 6 and target_len <= 6 and (_has_kana(source) or _has_cjk(source)):
-        return True
-    if source_len <= 10 and target_len <= 10 and (_has_kana(source) or _contains_ascii_word(source)) and _has_cjk(target):
-        return True
-    return False
-
-
-def _is_curated_priority(source: str, target: str, items: list[MatchResult]) -> bool:
-    if any(hint in source for hint in JP_CURATION_HINTS):
-        return True
-    if any(hint in target for hint in CN_CURATION_HINTS):
-        return True
-    if len(source) <= 6 and len(target) <= 8 and (_has_kana(source) or _has_cjk(source)) and _has_cjk(target):
-        return True
-    if any(item.score >= 0.9 for item in items) and len(source) <= 12 and len(target) <= 12:
-        return True
-    return False
+    return _matching.length_ratio_score(chinese_text, source_text, normalize_text=_normalize_glossary_text)
 
 
 def _build_glossary_extraction_prompt(candidates: list[dict[str, object]]) -> str:
@@ -1030,76 +766,6 @@ def _parse_history_llm_extra_body(value: str | None) -> dict | None:
     if not isinstance(parsed, dict):
         raise ValueError("llm_extra_body_json must be a JSON object.")
     return parsed
-
-
-def _is_llm_glossary_entry_allowed(entry: GlossaryEntry) -> bool:
-    source = entry.source
-    target = entry.target
-    if len(source) > 20 or len(target) > 20:
-        return False
-    if _looks_like_sentence_text(source) or _looks_like_sentence_text(target):
-        return False
-    if _looks_like_contextual_role_phrase(source, target):
-        return False
-    if entry.group == "names" and (len(source) > 8 or len(target) > 8):
-        return False
-    if entry.group == "fixed_phrases" and len(target) > 12:
-        return False
-    if entry.group == "show_terms" and len(target) > 16:
-        return False
-    return True
-
-
-def _looks_like_sentence_text(text: str) -> bool:
-    sentence_markers = (
-        "我们",
-        "你们",
-        "你",
-        "我",
-        "大家",
-        "因为",
-        "所以",
-        "如果",
-        "但是",
-        "然后",
-        "的话",
-        "了",
-        "呢",
-        "吗",
-        "吧",
-        "就是",
-        "不是",
-        "真的",
-        "感觉",
-        "觉得",
-        "想",
-        "要",
-        "会",
-    )
-    if len(text) >= 14:
-        return True
-    if any(marker in text for marker in sentence_markers) and len(text) >= 8:
-        return True
-    if any(mark in text for mark in ("。", "！", "？", "，", ",")):
-        return True
-    return False
-
-
-def _looks_like_contextual_role_phrase(source: str, target: str) -> bool:
-    role_markers = ("导演", "老师", "同学", "嘉宾", "主持", "监督", "担当", "桑", "さん", "君", "ちゃん")
-    if any(marker in target for marker in role_markers) and len(target) >= 4:
-        return True
-    if any(marker in source for marker in role_markers) and len(source) >= 4:
-        return True
-    return False
-
-
-def _score_to_level(score: float, min_match_score: float) -> str:
-    if score >= min_match_score:
-        return "high"
-    if score >= max(0.5, min_match_score - 0.18):
-        return "medium"
-    return "low"
 
 
 __all__ = [

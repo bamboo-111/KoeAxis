@@ -1,14 +1,17 @@
 from __future__ import annotations
 
 import ctypes
-import gc
 import json
 import logging
-import os
-from contextlib import contextmanager
 from dataclasses import dataclass
 from typing import Any
 
+from qwen_asr.model_runtime import (
+    cleanup_torch as _cleanup_torch,
+    normalize_device_map as _normalize_device_map,
+    offline_model_loading as _offline_model_loading,
+    sanitize_raw_output as _sanitize_raw_output,
+)
 from qwen_asr.models import AudioSegment, TranscriptSegment
 from qwen_asr.vendor_qwen import get_qwen3_asr_model_class
 
@@ -245,7 +248,7 @@ def _extract_transcript(raw_output: Any, fallback_language: str | None) -> tuple
         language = raw_output.get("language") or fallback_language
         return str(text), language
     if hasattr(raw_output, "text"):
-        return str(getattr(raw_output, "text")), getattr(raw_output, "language", fallback_language)
+        return str(raw_output.text), getattr(raw_output, "language", fallback_language)
     return str(raw_output), fallback_language
 
 
@@ -281,58 +284,6 @@ def _build_transcript_segment(
         raw_model_output=_sanitize_raw_output(raw_output) if keep_raw_model_output else None,
         status="completed",
     )
-
-
-def _sanitize_raw_output(raw_output: Any) -> Any:
-    if raw_output is None:
-        return None
-    if isinstance(raw_output, (str, int, float, bool)):
-        return raw_output
-    if isinstance(raw_output, dict):
-        return {str(key): _sanitize_raw_output(value) for key, value in raw_output.items()}
-    if isinstance(raw_output, (list, tuple)):
-        return [_sanitize_raw_output(item) for item in raw_output]
-    if hasattr(raw_output, "__dict__"):
-        return {str(key): _sanitize_raw_output(value) for key, value in vars(raw_output).items()}
-    return str(raw_output)
-
-
-def _cleanup_torch(full: bool = False) -> None:
-    try:
-        import torch
-    except ImportError:  # pragma: no cover
-        return
-    gc.collect()
-    if torch.cuda.is_available():
-        if full:
-            torch.cuda.synchronize()
-        torch.cuda.empty_cache()
-
-
-def _normalize_device_map(device: str) -> str:
-    if device == "cuda":
-        return "cuda:0"
-    return device
-
-
-@contextmanager
-def _offline_model_loading(enabled: bool):
-    if not enabled:
-        yield
-        return
-
-    keys = ("HF_HUB_OFFLINE", "TRANSFORMERS_OFFLINE", "HF_DATASETS_OFFLINE")
-    previous = {key: os.environ.get(key) for key in keys}
-    try:
-        for key in keys:
-            os.environ[key] = "1"
-        yield
-    finally:
-        for key, value in previous.items():
-            if value is None:
-                os.environ.pop(key, None)
-            else:
-                os.environ[key] = value
 
 
 def _is_oom_error(exc: BaseException) -> bool:

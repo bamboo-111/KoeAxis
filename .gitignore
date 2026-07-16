@@ -1,8 +1,12 @@
 .venv*/
+tools/mfa-env/
+tools/mfa-root/
+tools/micromamba/
 .model-cache/
 __pycache__/
 *.pyc
 .pytest_cache/
+.ruff_cache/
 workspaces/
 work-*/
 work/
@@ -11,9 +15,13 @@ logs/
 dist/
 backups/
 tmp_manual_tests/
-samples/
 tmp_pytest/
 tmp_codex_pytest/
+benchmarks/**/runs/
+benchmarks/**/segments/
+benchmarks/**/*.wav
+benchmarks/**/*.mp3
+benchmarks/**/*.log
 $env
 None
 docs/api-credentials.local.md

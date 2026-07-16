@@ -1,0 +1,68 @@
+{
+  "schema_version": 1,
+  "incident_id": "P5-0-COMPILEALL-PROTECTED-MFA-ENVIRONMENT",
+  "status": "PASS",
+  "completed_at": "2026-07-15T14:54:27.2439119Z",
+  "approval": {
+    "source_package": "reports/p5_0_compileall_environment_incident.json",
+    "source_package_sha256": "2cd735bee6d6ba529bf879c48cf814103794abb5bf537d4dc20e7adf9cff7e5f",
+    "approved_action": "DELETE_EXACT_LISTED_DELETE_CANDIDATE_FILES",
+    "approved_candidate_count": 8931,
+    "scope_root": "tools/mfa-env/"
+  },
+  "preflight": {
+    "action_mismatches": 0,
+    "scope_mismatches": 0,
+    "duplicate_paths": 0,
+    "missing_paths": 0,
+    "non_file_paths": 0,
+    "fingerprint_mismatches": 0,
+    "verified_count": 8931,
+    "verified_bytes": 148496525,
+    "status": "PASS"
+  },
+  "backup": {
+    "path": "backups/p5-0-compileall-incident-delete-20260715-224938",
+    "files_root": "backups/p5-0-compileall-incident-delete-20260715-224938/files",
+    "copied_count": 8931,
+    "verified_count": 8931,
+    "verified_bytes": 148496525,
+    "backup_manifest": "backups/p5-0-compileall-incident-delete-20260715-224938/backup_manifest.json",
+    "backup_manifest_sha256": "fcb80c98157e310ff0f033713574dc955f51d5191373deebb69ea85660ddfe21",
+    "status": "PASS"
+  },
+  "deletion": {
+    "predelete_verified_count": 8931,
+    "deleted_count": 8931,
+    "remaining_count": 0,
+    "directories_deleted": 0,
+    "paths_outside_package_deleted": 0,
+    "deletion_manifest": "backups/p5-0-compileall-incident-delete-20260715-224938/deletion_manifest.json",
+    "deletion_manifest_sha256": "c6dadab2722d0ccf809db6213e9e768958bc707b11b9551fa2bd7698584cdba4",
+    "status": "PASS"
+  },
+  "verification": {
+    "approved_paths_recreated": 0,
+    "mfa_version": "3.4.0",
+    "mfa_environment_smoke": "PASS",
+    "mfa_local_fallback": "53 passed in 0.60s",
+    "local_check": "557 passed in 10.63s",
+    "compileall": "PASS",
+    "ruff": "PASS",
+    "git_diff_check": "PASS",
+    "cli_import_help": "PASS",
+    "web_and_production_smoke": "68 passed in 1.02s",
+    "source_test_mapping": "60 mapped, 0 unmapped",
+    "status": "PASS"
+  },
+  "protected_state": {
+    "virtual_environment_moved": false,
+    "directories_deleted": 0,
+    "unlisted_files_deleted": 0,
+    "historical_workspaces_modified": false,
+    "historical_reports_modified": false,
+    "models_modified": false
+  },
+  "goal_blocking": false,
+  "decision": "The approved incident paths were backed up, deleted exactly, and passed all required post-deletion gates."
+}

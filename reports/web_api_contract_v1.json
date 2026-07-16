@@ -1,0 +1,37 @@
+{
+  "api_version": "v1",
+  "schema_version": 1,
+  "data": {
+    "align_states": [
+      "completed_exact",
+      "completed_coarse",
+      "failed"
+    ],
+    "music_region_state": "SKIPPED_MUSIC_REGION",
+    "endpoints": {
+      "GET /api/v1/contract": {"query": [], "response": "contract"},
+      "GET /api/v1/job": {"query": [], "response": "job_state"},
+      "GET /api/v1/workspaces": {"query": [], "response": "workspace_summary[]"},
+      "GET /api/v1/workspace": {"query": ["workdir"], "response": "workspace_detail"},
+      "GET /api/v1/workspace/stages": {"query": ["workdir"], "response": "stage_view"},
+      "POST /api/v1/workspace/stage/start": {"body": ["workdir", "stage", "settings"], "response": "job_state"},
+      "GET /api/v1/workspace/align": {"query": ["workdir"], "response": "align_state"},
+      "GET /api/v1/workspace/recovery": {"query": ["workdir"], "response": "recovery_queue"},
+      "POST /api/v1/workspace/recovery/action": {"body": ["workdir", "segment_id", "action", "payload", "actor"], "response": "recovery_action_result"},
+      "GET /api/v1/workspace/review": {"query": ["workdir"], "response": "review_view"},
+      "POST /api/v1/workspace/review/edit": {"body": ["workdir", "cue_id", "original", "translation", "start_ms", "end_ms", "expected_revision", "actor"], "response": "review_edit_result"},
+      "POST /api/v1/workspace/review/undo": {"body": ["workdir", "expected_revision", "actor"], "response": "review_undo_result"},
+      "GET /api/v1/workspace/media": {"query": ["workdir", "path"], "response": "binary_range"},
+      "GET /api/v1/workspace/quality": {"query": ["workdir"], "response": "quality_gate"},
+      "GET /api/v1/workspace/quality-evidence": {"query": ["workdir", "path"], "response": "quality_evidence_file"},
+      "GET /api/v1/workspace/exports": {"query": ["workdir"], "response": "export_artifact[]"},
+      "GET /api/v1/workspace/export-file": {"query": ["workdir", "path", "download"], "response": "subtitle_file"}
+    },
+    "error_model": {"code": "ASCII_STABLE_CODE", "message": "UTF-8 message"},
+    "security": {
+      "workspace_scope": "first-level directories below workspaces",
+      "secrets": "environment-only and never serialized"
+    }
+  },
+  "error": null
+}

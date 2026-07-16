@@ -1,0 +1,94 @@
+{
+  "schema_version": 1,
+  "scope": [
+    "qwen_asr/**/*.py",
+    "optimizer/**/*.py"
+  ],
+  "method": "Parse production Python modules with utf-8-sig, normalize function names, and group functions whose complete AST (arguments, body, annotations, and defaults) is identical.",
+  "function_count": 962,
+  "duplicate_group_count": 12,
+  "duplicate_function_count": 24,
+  "consolidations_completed": [
+    {
+      "target": "qwen_asr/final_quality_common.py",
+      "helpers": [
+        "normalize_status",
+        "pass_result",
+        "warn_result",
+        "fail_result",
+        "skip_result",
+        "float_or_none",
+        "int_or_none"
+      ],
+      "reason": "Only AST-identical final-quality helpers with one shared contract and focused compatibility tests were consolidated."
+    }
+  ],
+  "remaining_groups": [
+    {
+      "members": ["qwen_asr/align.py:147 close", "qwen_asr/asr.py:210 close"],
+      "decision": "KEEP_SEPARATE",
+      "reason": "Lifecycle methods belong to different runtime owners; sharing would couple unrelated model wrappers."
+    },
+    {
+      "members": ["qwen_asr/ass_quality.py:446 _zh_status", "qwen_asr/ass_quality_diff.py:389 _zh_status"],
+      "decision": "KEEP_SEPARATE",
+      "reason": "The renderers are independently executable report cores; a shared two-branch label helper would add coupling without removing meaningful complexity."
+    },
+    {
+      "members": ["qwen_asr/ass_quality.py:573 _srt_ms", "qwen_asr/content_quality.py:358 _srt_ms"],
+      "decision": "KEEP_SEPARATE",
+      "reason": "Each helper is private to a separate report schema; moving a trivial conversion would create a cross-domain dependency."
+    },
+    {
+      "members": ["qwen_asr/final_quality.py:227 _manifest_key_sort", "qwen_asr/mimo_inputs.py:52 manifest_key_sort"],
+      "decision": "KEEP_COMPATIBILITY_WRAPPER",
+      "reason": "The final-quality private name is part of its compatibility surface while MiMo owns input ordering."
+    },
+    {
+      "members": ["qwen_asr/final_quality_common.py:27 float_or_none", "qwen_asr/mfa_guards.py:193 float_or_none"],
+      "decision": "KEEP_SEPARATE",
+      "reason": "MFA local fallback must remain independently usable and must not depend on final-quality orchestration."
+    },
+    {
+      "members": ["qwen_asr/final_quality_common.py:34 int_or_none", "qwen_asr/optimizer_bridge_guards.py:310 segment_time_ms"],
+      "decision": "KEEP_SEPARATE",
+      "reason": "The implementations are structurally equal but their contracts differ: optional conversion versus segment timing extraction."
+    },
+    {
+      "members": ["qwen_asr/history_glossary_rules.py:93 has_cjk", "qwen_asr/subtitle.py:204 _contains_cjk"],
+      "decision": "KEEP_SEPARATE",
+      "reason": "The helpers belong to glossary filtering and subtitle parsing respectively; sharing would cross ownership boundaries."
+    },
+    {
+      "members": ["qwen_asr/mfa_candidates.py:251 _int_or_none", "qwen_asr/mfa_guards.py:186 int_or_none"],
+      "decision": "KEEP_SEPARATE",
+      "reason": "Candidate collection and local writeback guards are deliberately isolated MFA boundaries; the helper is trivial and private."
+    },
+    {
+      "members": ["qwen_asr/mfa_guards.py:163 normalize_local_match_text", "qwen_asr/proofread_realign_strategy.py:270 normalize_mfa_content"],
+      "decision": "KEEP_SEPARATE",
+      "reason": "The same normalization currently serves different policy boundaries; keeping local names avoids an MFA fallback dependency inversion."
+    },
+    {
+      "members": ["qwen_asr/optimizer_bridge_adapter.py:493 _normalize_content", "qwen_asr/commands/align.py:303 _normalize_alignment_content"],
+      "decision": "KEEP_SEPARATE",
+      "reason": "Adapter payload normalization and command-level alignment comparison are separate contracts despite matching current bodies."
+    },
+    {
+      "members": ["qwen_asr/commands/export.py:134 _load_project_metadata", "qwen_asr/commands/stages.py:278 _load_project_metadata"],
+      "decision": "KEEP_COMPATIBILITY_WRAPPER",
+      "reason": "The stage facade preserves command compatibility and the export command remains independently importable."
+    },
+    {
+      "members": ["qwen_asr/commands/stages.py:407 _read_completed_list_count", "qwen_asr/web/status.py:309 _read_completed_list_count"],
+      "decision": "KEEP_SEPARATE",
+      "reason": "CLI stage reporting and Web status reading are separate presentation boundaries; sharing a tiny parser would couple them."
+    }
+  ],
+  "acceptance": {
+    "semantic_identity_required_for_merge": true,
+    "focused_tests_required_for_merge": true,
+    "production_tools_dependency_forbidden": true,
+    "status": "PASS"
+  }
+}

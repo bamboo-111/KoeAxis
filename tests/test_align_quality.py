@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from qwen_asr.align import QwenForcedAligner, validate_aligned_token_timing
+from qwen_asr.align import AlignTimingValidationConfig, QwenForcedAligner, validate_aligned_token_timing
 from qwen_asr.models import AlignedToken, TranscriptSegment
 
 
@@ -53,6 +53,42 @@ def test_validate_aligned_token_timing_rejects_local_density_collapse() -> None:
     assert "local density" in error
 
 
+def test_validate_aligned_token_timing_uses_explicit_thresholds() -> None:
+    low_coverage_tokens = [
+        AlignedToken("あ", 0.0, 0.1),
+        AlignedToken("い", 0.2, 0.3),
+    ]
+    dense_tokens = [
+        AlignedToken("あら", 1.0, 1.08),
+        AlignedToken("あ", 1.08, 1.08),
+        AlignedToken("られ", 1.08, 1.16),
+        AlignedToken("ちゃん", 1.16, 1.16),
+        AlignedToken("みっ", 1.16, 1.24),
+        AlignedToken("ちゃう", 1.24, 1.32),
+    ]
+
+    assert validate_aligned_token_timing(low_coverage_tokens, 0.0, 10.0) is not None
+    assert (
+        validate_aligned_token_timing(
+            low_coverage_tokens,
+            0.0,
+            10.0,
+            config=AlignTimingValidationConfig(min_coverage_ratio=0.01),
+        )
+        is None
+    )
+    assert validate_aligned_token_timing(dense_tokens, 1.0, 2.0) is not None
+    assert (
+        validate_aligned_token_timing(
+            dense_tokens,
+            1.0,
+            2.0,
+            config=AlignTimingValidationConfig(local_collapse_max_cps=200.0),
+        )
+        is None
+    )
+
+
 def test_run_segment_marks_unreliable_alignment_failed() -> None:
     aligner = QwenForcedAligner("fake")
 
@@ -83,3 +119,40 @@ def test_run_segment_marks_unreliable_alignment_failed() -> None:
     assert result.tokens == []
     assert result.error is not None
     assert "unreliable" in result.error
+
+
+def test_run_segment_can_keep_failed_tokens_for_diagnostics() -> None:
+    aligner = QwenForcedAligner("fake", keep_raw_model_output=True, keep_failed_tokens=True)
+
+    class FakeModel:
+        def align(self, **kwargs):
+            return {
+                "tokens": [
+                    {"text": "a", "start": 0.0, "end": 0.0},
+                    {"text": "b", "start": 0.0, "end": 0.0},
+                    {"text": "c", "start": 0.0, "end": 0.0},
+                ]
+            }
+
+    aligner._model = FakeModel()  # noqa: SLF001
+    transcript = TranscriptSegment(
+        segment_id="segment_000001",
+        audio_path="audio.wav",
+        global_start_time=1.0,
+        global_end_time=9.0,
+        text="abc",
+        language="Japanese",
+    )
+
+    result = aligner.run_segment(transcript)
+
+    assert result.status == "failed"
+    assert [token.text for token in result.tokens] == ["a", "b", "c"]
+    assert result.raw_model_output == {
+        "tokens": [
+            {"text": "a", "start": 0.0, "end": 0.0},
+            {"text": "b", "start": 0.0, "end": 0.0},
+            {"text": "c", "start": 0.0, "end": 0.0},
+        ]
+    }
+    assert result.error is not None
