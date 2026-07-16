@@ -53,6 +53,8 @@ class WorkPaths:
     progress_path: Path
     logs_dir: Path
     project_metadata: Path
+    content_quality_report: Path
+    final_quality_report: Path
 
     @classmethod
     def from_workdir(cls, workdir: Path) -> "WorkPaths":
@@ -88,6 +90,8 @@ class WorkPaths:
                 progress_path=workdir / "progress.json",
                 logs_dir=workdir / "logs",
                 project_metadata=workdir / "project.json",
+                content_quality_report=workdir / "reports" / "content_quality.json",
+                final_quality_report=workdir / "reports" / "final_quality.json",
             )
         return cls(
             workdir=workdir,
@@ -119,6 +123,8 @@ class WorkPaths:
             progress_path=workdir / "progress.json",
             logs_dir=workdir / "logs",
             project_metadata=workdir / "project.json",
+            content_quality_report=workdir / "content_quality.json",
+            final_quality_report=workdir / "final_quality.json",
         )
 
 
@@ -188,3 +194,15 @@ class AlignedSegment:
     raw_model_output: dict[str, Any] | list[Any] | str | None = None
     status: str = "completed"
     error: str | None = None
+    alignment_backend: str = "qwen"
+    alignment_unit: str = "token"
+    alignment_coverage: float | None = None
+    alignment_unknown_count: int = 0
+    alignment_failure_reason: str = ""
+    alignment_state: str = ""
+
+    def __post_init__(self) -> None:
+        from qwen_asr.alignment_state import compatibility_status, derive_alignment_state
+
+        self.alignment_state = derive_alignment_state(self)
+        self.status = compatibility_status(self.alignment_state)

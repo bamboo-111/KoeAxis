@@ -1,0 +1,967 @@
+{
+  "review_path_count": 222,
+  "group_count": 8,
+  "unclassified_count": 1,
+  "groups": [
+    {
+      "id": "asr_align_runtime",
+      "title": "ASR, align, and runtime infrastructure",
+      "purpose": "Model runtime, transcription, alignment, artifact state, and core stage behavior.",
+      "rollback": "Restore edited runtime files from their topic backups; newly created modules remain review-only until explicit deletion approval.",
+      "file_count": 25,
+      "files": [
+        {
+          "path": "qwen_asr/align.py",
+          "state": "modified"
+        },
+        {
+          "path": "qwen_asr/artifact_state.py",
+          "state": "modified"
+        },
+        {
+          "path": "qwen_asr/asr.py",
+          "state": "modified"
+        },
+        {
+          "path": "qwen_asr/commands/align.py",
+          "state": "untracked"
+        },
+        {
+          "path": "qwen_asr/commands/prepare.py",
+          "state": "untracked"
+        },
+        {
+          "path": "qwen_asr/commands/transcribe.py",
+          "state": "untracked"
+        },
+        {
+          "path": "qwen_asr/corrector.py",
+          "state": "modified"
+        },
+        {
+          "path": "qwen_asr/defaults.py",
+          "state": "modified"
+        },
+        {
+          "path": "qwen_asr/history_glossary.py",
+          "state": "modified"
+        },
+        {
+          "path": "qwen_asr/history_glossary_ass.py",
+          "state": "untracked"
+        },
+        {
+          "path": "qwen_asr/history_glossary_matching.py",
+          "state": "untracked"
+        },
+        {
+          "path": "qwen_asr/history_glossary_rules.py",
+          "state": "untracked"
+        },
+        {
+          "path": "qwen_asr/model_runtime.py",
+          "state": "untracked"
+        },
+        {
+          "path": "qwen_asr/models.py",
+          "state": "modified"
+        },
+        {
+          "path": "qwen_asr/optimizer_bridge.py",
+          "state": "modified"
+        },
+        {
+          "path": "qwen_asr/optimizer_bridge_adapter.py",
+          "state": "untracked"
+        },
+        {
+          "path": "qwen_asr/optimizer_bridge_guards.py",
+          "state": "untracked"
+        },
+        {
+          "path": "qwen_asr/optimizer_bridge_stages.py",
+          "state": "untracked"
+        },
+        {
+          "path": "qwen_asr/segmenter.py",
+          "state": "modified"
+        },
+        {
+          "path": "qwen_asr/stages.py",
+          "state": "modified"
+        },
+        {
+          "path": "qwen_asr/vendor_qwen.py",
+          "state": "modified"
+        },
+        {
+          "path": "tests/test_align_cleanup.py",
+          "state": "modified"
+        },
+        {
+          "path": "tests/test_artifact_state.py",
+          "state": "modified"
+        },
+        {
+          "path": "tests/test_model_runtime.py",
+          "state": "untracked"
+        },
+        {
+          "path": "tests/test_transcribe_profile.py",
+          "state": "untracked"
+        }
+      ]
+    },
+    {
+      "id": "split_readability",
+      "title": "Split and readability protection",
+      "purpose": "Rule split boundaries, timing allocation, display duration, and protected short-response behavior.",
+      "rollback": "Restore splitter and prompt files from their topic backups together with the matching split tests.",
+      "file_count": 20,
+      "files": [
+        {
+          "path": "optimizer/prompts/split/sentence.md",
+          "state": "modified"
+        },
+        {
+          "path": "optimizer/prompts/split/token_boundary.md",
+          "state": "modified"
+        },
+        {
+          "path": "optimizer/prompts/split/token_counts.md",
+          "state": "modified"
+        },
+        {
+          "path": "optimizer/prompts/split/token_delimited.md",
+          "state": "modified"
+        },
+        {
+          "path": "optimizer/split_by_llm.py",
+          "state": "modified"
+        },
+        {
+          "path": "optimizer/splitter.py",
+          "state": "modified"
+        },
+        {
+          "path": "optimizer/splitter_boundaries.py",
+          "state": "untracked"
+        },
+        {
+          "path": "optimizer/splitter_display.py",
+          "state": "untracked"
+        },
+        {
+          "path": "optimizer/splitter_readability.py",
+          "state": "untracked"
+        },
+        {
+          "path": "optimizer/splitter_timing.py",
+          "state": "untracked"
+        },
+        {
+          "path": "optimizer/token_boundary_split.py",
+          "state": "modified"
+        },
+        {
+          "path": "qwen_asr/commands/split.py",
+          "state": "untracked"
+        },
+        {
+          "path": "tests/test_align_split_audit.py",
+          "state": "untracked"
+        },
+        {
+          "path": "tests/test_final_quality_readability.py",
+          "state": "untracked"
+        },
+        {
+          "path": "tests/test_splitter_boundaries.py",
+          "state": "untracked"
+        },
+        {
+          "path": "tests/test_splitter_dialogue.py",
+          "state": "modified"
+        },
+        {
+          "path": "tests/test_splitter_display.py",
+          "state": "untracked"
+        },
+        {
+          "path": "tests/test_splitter_readability.py",
+          "state": "untracked"
+        },
+        {
+          "path": "tests/test_splitter_timing.py",
+          "state": "untracked"
+        },
+        {
+          "path": "tests/test_token_boundary_split.py",
+          "state": "modified"
+        }
+      ]
+    },
+    {
+      "id": "translation_mimo",
+      "title": "Translation and MiMo suspects-only flow",
+      "purpose": "Translation guards plus MiMo candidate, request, checkpoint, application, audio, and output boundaries.",
+      "rollback": "Restore translator/MiMo files and their paired tests from the corresponding extraction backups.",
+      "file_count": 27,
+      "files": [
+        {
+          "path": "optimizer/prompts/translate/standard.md",
+          "state": "modified"
+        },
+        {
+          "path": "optimizer/translator.py",
+          "state": "modified"
+        },
+        {
+          "path": "qwen_asr/commands/mimo_proofread.py",
+          "state": "untracked"
+        },
+        {
+          "path": "qwen_asr/commands/translate.py",
+          "state": "untracked"
+        },
+        {
+          "path": "qwen_asr/final_quality_mimo.py",
+          "state": "untracked"
+        },
+        {
+          "path": "qwen_asr/mimo_application.py",
+          "state": "untracked"
+        },
+        {
+          "path": "qwen_asr/mimo_audio.py",
+          "state": "untracked"
+        },
+        {
+          "path": "qwen_asr/mimo_candidates.py",
+          "state": "untracked"
+        },
+        {
+          "path": "qwen_asr/mimo_checkpoints.py",
+          "state": "untracked"
+        },
+        {
+          "path": "qwen_asr/mimo_guards.py",
+          "state": "untracked"
+        },
+        {
+          "path": "qwen_asr/mimo_inputs.py",
+          "state": "untracked"
+        },
+        {
+          "path": "qwen_asr/mimo_outputs.py",
+          "state": "untracked"
+        },
+        {
+          "path": "qwen_asr/mimo_proofread.py",
+          "state": "modified"
+        },
+        {
+          "path": "qwen_asr/mimo_requests.py",
+          "state": "untracked"
+        },
+        {
+          "path": "qwen_asr/quality_suspects.py",
+          "state": "untracked"
+        },
+        {
+          "path": "tests/test_final_quality_mimo.py",
+          "state": "untracked"
+        },
+        {
+          "path": "tests/test_final_quality_translation.py",
+          "state": "untracked"
+        },
+        {
+          "path": "tests/test_mimo_application.py",
+          "state": "untracked"
+        },
+        {
+          "path": "tests/test_mimo_audio.py",
+          "state": "untracked"
+        },
+        {
+          "path": "tests/test_mimo_candidates.py",
+          "state": "untracked"
+        },
+        {
+          "path": "tests/test_mimo_checkpoints.py",
+          "state": "untracked"
+        },
+        {
+          "path": "tests/test_mimo_guards.py",
+          "state": "untracked"
+        },
+        {
+          "path": "tests/test_mimo_inputs.py",
+          "state": "untracked"
+        },
+        {
+          "path": "tests/test_mimo_outputs.py",
+          "state": "untracked"
+        },
+        {
+          "path": "tests/test_mimo_proofread.py",
+          "state": "untracked"
+        },
+        {
+          "path": "tests/test_mimo_requests.py",
+          "state": "untracked"
+        },
+        {
+          "path": "tests/test_translator_suspects.py",
+          "state": "untracked"
+        }
+      ]
+    },
+    {
+      "id": "quality_realign",
+      "title": "Proofread realignment and quality gates",
+      "purpose": "Content, ASS, final-quality, proofread-realign, normalize, and export protection.",
+      "rollback": "Restore quality and realignment modules with their tests; do not bypass the pre-export quality gate.",
+      "file_count": 36,
+      "files": [
+        {
+          "path": "qwen_asr/ass_quality.py",
+          "state": "untracked"
+        },
+        {
+          "path": "qwen_asr/commands/export.py",
+          "state": "untracked"
+        },
+        {
+          "path": "qwen_asr/commands/normalize.py",
+          "state": "untracked"
+        },
+        {
+          "path": "qwen_asr/commands/proofread_realign.py",
+          "state": "untracked"
+        },
+        {
+          "path": "qwen_asr/commands/quality.py",
+          "state": "untracked"
+        },
+        {
+          "path": "qwen_asr/content_quality.py",
+          "state": "untracked"
+        },
+        {
+          "path": "qwen_asr/final_quality.py",
+          "state": "untracked"
+        },
+        {
+          "path": "qwen_asr/final_quality_alignment.py",
+          "state": "untracked"
+        },
+        {
+          "path": "qwen_asr/final_quality_ass.py",
+          "state": "untracked"
+        },
+        {
+          "path": "qwen_asr/final_quality_common.py",
+          "state": "untracked"
+        },
+        {
+          "path": "qwen_asr/final_quality_content.py",
+          "state": "untracked"
+        },
+        {
+          "path": "qwen_asr/final_quality_postproofread.py",
+          "state": "untracked"
+        },
+        {
+          "path": "qwen_asr/final_quality_readability.py",
+          "state": "untracked"
+        },
+        {
+          "path": "qwen_asr/final_quality_realign.py",
+          "state": "untracked"
+        },
+        {
+          "path": "qwen_asr/final_quality_srt.py",
+          "state": "untracked"
+        },
+        {
+          "path": "qwen_asr/final_quality_stage.py",
+          "state": "untracked"
+        },
+        {
+          "path": "qwen_asr/final_quality_translation.py",
+          "state": "untracked"
+        },
+        {
+          "path": "qwen_asr/proofread_realign.py",
+          "state": "untracked"
+        },
+        {
+          "path": "qwen_asr/proofread_realign_strategy.py",
+          "state": "untracked"
+        },
+        {
+          "path": "tests/test_align_quality.py",
+          "state": "modified"
+        },
+        {
+          "path": "tests/test_ass_quality.py",
+          "state": "untracked"
+        },
+        {
+          "path": "tests/test_ass_quality_diff.py",
+          "state": "untracked"
+        },
+        {
+          "path": "tests/test_content_quality.py",
+          "state": "untracked"
+        },
+        {
+          "path": "tests/test_export_paths.py",
+          "state": "modified"
+        },
+        {
+          "path": "tests/test_final_quality.py",
+          "state": "untracked"
+        },
+        {
+          "path": "tests/test_final_quality_alignment.py",
+          "state": "untracked"
+        },
+        {
+          "path": "tests/test_final_quality_ass.py",
+          "state": "untracked"
+        },
+        {
+          "path": "tests/test_final_quality_common.py",
+          "state": "untracked"
+        },
+        {
+          "path": "tests/test_final_quality_content.py",
+          "state": "untracked"
+        },
+        {
+          "path": "tests/test_final_quality_postproofread.py",
+          "state": "untracked"
+        },
+        {
+          "path": "tests/test_final_quality_realign.py",
+          "state": "untracked"
+        },
+        {
+          "path": "tests/test_final_quality_srt.py",
+          "state": "untracked"
+        },
+        {
+          "path": "tests/test_final_quality_stage.py",
+          "state": "untracked"
+        },
+        {
+          "path": "tests/test_proofread_realign.py",
+          "state": "untracked"
+        },
+        {
+          "path": "tests/test_proofread_realign_strategy.py",
+          "state": "untracked"
+        },
+        {
+          "path": "tests/test_quality_suspects.py",
+          "state": "untracked"
+        }
+      ]
+    },
+    {
+      "id": "mfa_diagnostics_benchmarks",
+      "title": "MFA, diagnostics, tools, and benchmarks",
+      "purpose": "Experimental MFA boundaries, diagnostic tools, benchmark definitions, and reproducibility metadata.",
+      "rollback": "Restore source/report files from backups; local environments, corpora, models, and run artifacts remain untouched.",
+      "file_count": 38,
+      "files": [
+        {
+          "path": "benchmarks/benchmark_results.csv",
+          "state": "untracked"
+        },
+        {
+          "path": "benchmarks/environment.txt",
+          "state": "untracked"
+        },
+        {
+          "path": "benchmarks/reproduction_commands.md",
+          "state": "untracked"
+        },
+        {
+          "path": "benchmarks/resume-audit-20260713-232937/commands.txt",
+          "state": "untracked"
+        },
+        {
+          "path": "benchmarks/resume-audit-20260713-232937/generate_reports.py",
+          "state": "untracked"
+        },
+        {
+          "path": "benchmarks/resume-audit-20260713-232937/raw_run_rows.json",
+          "state": "untracked"
+        },
+        {
+          "path": "benchmarks/resume_audit.md",
+          "state": "untracked"
+        },
+        {
+          "path": "qwen_asr/ass_quality_diff.py",
+          "state": "untracked"
+        },
+        {
+          "path": "qwen_asr/mfa_candidates.py",
+          "state": "untracked"
+        },
+        {
+          "path": "qwen_asr/mfa_environment.py",
+          "state": "untracked"
+        },
+        {
+          "path": "qwen_asr/mfa_experiment.py",
+          "state": "untracked"
+        },
+        {
+          "path": "qwen_asr/mfa_guards.py",
+          "state": "untracked"
+        },
+        {
+          "path": "qwen_asr/mfa_lab.py",
+          "state": "untracked"
+        },
+        {
+          "path": "qwen_asr/mfa_report.py",
+          "state": "untracked"
+        },
+        {
+          "path": "qwen_asr/mfa_runner.py",
+          "state": "untracked"
+        },
+        {
+          "path": "qwen_asr/mfa_words.py",
+          "state": "untracked"
+        },
+        {
+          "path": "qwen_asr/mfa_writeback.py",
+          "state": "untracked"
+        },
+        {
+          "path": "tests/test_align_diagnose.py",
+          "state": "untracked"
+        },
+        {
+          "path": "tests/test_baseline_snapshot.py",
+          "state": "untracked"
+        },
+        {
+          "path": "tests/test_local_state_audit.py",
+          "state": "untracked"
+        },
+        {
+          "path": "tests/test_mfa_backend.py",
+          "state": "untracked"
+        },
+        {
+          "path": "tests/test_mfa_candidates.py",
+          "state": "untracked"
+        },
+        {
+          "path": "tests/test_mfa_environment.py",
+          "state": "untracked"
+        },
+        {
+          "path": "tests/test_mfa_experiment.py",
+          "state": "untracked"
+        },
+        {
+          "path": "tests/test_mfa_guards.py",
+          "state": "untracked"
+        },
+        {
+          "path": "tests/test_mfa_lab.py",
+          "state": "untracked"
+        },
+        {
+          "path": "tests/test_mfa_report.py",
+          "state": "untracked"
+        },
+        {
+          "path": "tests/test_mfa_runner.py",
+          "state": "untracked"
+        },
+        {
+          "path": "tests/test_mfa_words.py",
+          "state": "untracked"
+        },
+        {
+          "path": "tests/test_mfa_writeback.py",
+          "state": "untracked"
+        },
+        {
+          "path": "tests/test_tuning_matrix.py",
+          "state": "untracked"
+        },
+        {
+          "path": "tools/align_diagnose.py",
+          "state": "untracked"
+        },
+        {
+          "path": "tools/align_split_audit.py",
+          "state": "untracked"
+        },
+        {
+          "path": "tools/baseline_snapshot.py",
+          "state": "untracked"
+        },
+        {
+          "path": "tools/diagnose_split_content_loss.py",
+          "state": "untracked"
+        },
+        {
+          "path": "tools/diagnose_split_readability.py",
+          "state": "untracked"
+        },
+        {
+          "path": "tools/mfa_full_alignment.py",
+          "state": "untracked"
+        },
+        {
+          "path": "tools/tuning_matrix.py",
+          "state": "untracked"
+        }
+      ]
+    },
+    {
+      "id": "cli_web_wiring",
+      "title": "CLI, WebUI, and pipeline wiring",
+      "purpose": "Argument parsing, command dispatch, PipelineRunner orchestration, Web command construction, and status presentation.",
+      "rollback": "Restore CLI/Web/pipeline files as one wiring set, then rerun CLI-help, WebUI, and PipelineRunner tests.",
+      "file_count": 14,
+      "files": [
+        {
+          "path": "qwen_asr/cli.py",
+          "state": "modified"
+        },
+        {
+          "path": "qwen_asr/commands/__init__.py",
+          "state": "modified"
+        },
+        {
+          "path": "qwen_asr/commands/correct.py",
+          "state": "untracked"
+        },
+        {
+          "path": "qwen_asr/commands/preflight.py",
+          "state": "untracked"
+        },
+        {
+          "path": "qwen_asr/commands/run.py",
+          "state": "untracked"
+        },
+        {
+          "path": "qwen_asr/commands/stages.py",
+          "state": "modified"
+        },
+        {
+          "path": "qwen_asr/commands/transcribe_profile.py",
+          "state": "untracked"
+        },
+        {
+          "path": "qwen_asr/pipeline_runner.py",
+          "state": "modified"
+        },
+        {
+          "path": "qwen_asr/web/commands.py",
+          "state": "modified"
+        },
+        {
+          "path": "qwen_asr/web/status.py",
+          "state": "modified"
+        },
+        {
+          "path": "qwen_asr/web/templates/index.html",
+          "state": "modified"
+        },
+        {
+          "path": "tests/test_cli_help.py",
+          "state": "modified"
+        },
+        {
+          "path": "tests/test_pipeline_runner.py",
+          "state": "modified"
+        },
+        {
+          "path": "tests/test_webui.py",
+          "state": "modified"
+        }
+      ]
+    },
+    {
+      "id": "tests_docs_acceptance",
+      "title": "Tests, documentation, configuration, and acceptance",
+      "purpose": "Regression coverage, developer tooling, documentation, inventory, and acceptance evidence.",
+      "rollback": "Restore edited documents/configuration from backups; retain generated evidence until its owning change is reviewed.",
+      "file_count": 61,
+      "files": [
+        {
+          "path": ".gitignore",
+          "state": "modified"
+        },
+        {
+          "path": "README.md",
+          "state": "modified"
+        },
+        {
+          "path": "docs/ARCHITECTURE.md",
+          "state": "modified"
+        },
+        {
+          "path": "docs/Goal模式完整任务提示词.md",
+          "state": "untracked"
+        },
+        {
+          "path": "docs/PIPELINE.md",
+          "state": "modified"
+        },
+        {
+          "path": "docs/STATUS.md",
+          "state": "untracked"
+        },
+        {
+          "path": "docs/字幕流程完整改造计划与验收清单.md",
+          "state": "untracked"
+        },
+        {
+          "path": "docs/项目文件与代码整理计划.md",
+          "state": "untracked"
+        },
+        {
+          "path": "pyproject.toml",
+          "state": "modified"
+        },
+        {
+          "path": "reports/archive_candidates.json",
+          "state": "untracked"
+        },
+        {
+          "path": "reports/archive_candidates.md",
+          "state": "untracked"
+        },
+        {
+          "path": "reports/change_groups.json",
+          "state": "untracked"
+        },
+        {
+          "path": "reports/change_groups.md",
+          "state": "untracked"
+        },
+        {
+          "path": "reports/evidence_reference_map.json",
+          "state": "untracked"
+        },
+        {
+          "path": "reports/evidence_reference_map.md",
+          "state": "untracked"
+        },
+        {
+          "path": "reports/final_acceptance.md",
+          "state": "untracked"
+        },
+        {
+          "path": "reports/git_file_classification.json",
+          "state": "untracked"
+        },
+        {
+          "path": "reports/git_file_classification.md",
+          "state": "untracked"
+        },
+        {
+          "path": "reports/local_state_register.json",
+          "state": "untracked"
+        },
+        {
+          "path": "reports/local_state_register.md",
+          "state": "untracked"
+        },
+        {
+          "path": "reports/p2_approval_status.json",
+          "state": "untracked"
+        },
+        {
+          "path": "reports/p5_0_a_execution_manifest.json",
+          "state": "untracked"
+        },
+        {
+          "path": "reports/p5_0_b_execution_manifest.json",
+          "state": "untracked"
+        },
+        {
+          "path": "reports/p5_0_compileall_environment_incident.json",
+          "state": "untracked"
+        },
+        {
+          "path": "reports/p5_0_compileall_environment_incident_execution.json",
+          "state": "untracked"
+        },
+        {
+          "path": "reports/p5_0_d_execution_manifest.json",
+          "state": "untracked"
+        },
+        {
+          "path": "reports/p5_0_e_execution_manifest.json",
+          "state": "untracked"
+        },
+        {
+          "path": "reports/p5_duplicate_helper_audit.json",
+          "state": "untracked"
+        },
+        {
+          "path": "reports/p5_duplicate_helper_audit.md",
+          "state": "untracked"
+        },
+        {
+          "path": "reports/p7_closeout.json",
+          "state": "untracked"
+        },
+        {
+          "path": "reports/p7_closeout.md",
+          "state": "untracked"
+        },
+        {
+          "path": "reports/project_inventory.json",
+          "state": "untracked"
+        },
+        {
+          "path": "reports/project_inventory.md",
+          "state": "untracked"
+        },
+        {
+          "path": "reports/rejected_feature_inventory.json",
+          "state": "untracked"
+        },
+        {
+          "path": "reports/rejected_feature_inventory.md",
+          "state": "untracked"
+        },
+        {
+          "path": "reports/source_test_mapping.json",
+          "state": "untracked"
+        },
+        {
+          "path": "reports/source_test_mapping.md",
+          "state": "untracked"
+        },
+        {
+          "path": "requirements-dev.txt",
+          "state": "untracked"
+        },
+        {
+          "path": "samples/radio-glossary.normalized.xlsx",
+          "state": "untracked"
+        },
+        {
+          "path": "samples/test.mp3",
+          "state": "untracked"
+        },
+        {
+          "path": "samples/test.srt",
+          "state": "untracked"
+        },
+        {
+          "path": "samples/无名字幕组任务分划.xlsx",
+          "state": "untracked"
+        },
+        {
+          "path": "samples/翻译对照.normalized-2.xlsx",
+          "state": "untracked"
+        },
+        {
+          "path": "samples/翻译对照.normalized.improved.xlsx",
+          "state": "untracked"
+        },
+        {
+          "path": "samples/翻译对照.normalized.xlsx",
+          "state": "untracked"
+        },
+        {
+          "path": "samples/翻译对照.xlsx",
+          "state": "untracked"
+        },
+        {
+          "path": "scripts/local_check.ps1",
+          "state": "untracked"
+        },
+        {
+          "path": "scripts/local_state_audit.py",
+          "state": "untracked"
+        },
+        {
+          "path": "scripts/project_inventory.py",
+          "state": "untracked"
+        },
+        {
+          "path": "scripts/review_scope.py",
+          "state": "untracked"
+        },
+        {
+          "path": "tests/test_credentials.py",
+          "state": "modified"
+        },
+        {
+          "path": "tests/test_history_glossary.py",
+          "state": "modified"
+        },
+        {
+          "path": "tests/test_history_glossary_ass.py",
+          "state": "untracked"
+        },
+        {
+          "path": "tests/test_history_glossary_matching.py",
+          "state": "untracked"
+        },
+        {
+          "path": "tests/test_history_glossary_rules.py",
+          "state": "untracked"
+        },
+        {
+          "path": "tests/test_optimizer_bridge_adapter.py",
+          "state": "untracked"
+        },
+        {
+          "path": "tests/test_optimizer_bridge_guards.py",
+          "state": "untracked"
+        },
+        {
+          "path": "tests/test_optimizer_bridge_timing.py",
+          "state": "modified"
+        },
+        {
+          "path": "tests/test_project_inventory.py",
+          "state": "untracked"
+        },
+        {
+          "path": "tests/test_review_scope.py",
+          "state": "untracked"
+        },
+        {
+          "path": "tools/README.md",
+          "state": "untracked"
+        }
+      ]
+    },
+    {
+      "id": "unclassified",
+      "title": "Unclassified review paths",
+      "purpose": "Paths that do not match an established source, test, documentation, or local-state boundary.",
+      "rollback": "No action is authorized. Inspect origin and purpose before editing, ignoring, moving, archiving, or deleting.",
+      "file_count": 1,
+      "files": [
+        {
+          "path": "1/clip.json",
+          "state": "untracked"
+        }
+      ]
+    }
+  ]
+}

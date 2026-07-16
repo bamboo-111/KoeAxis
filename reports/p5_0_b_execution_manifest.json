@@ -1,0 +1,113 @@
+﻿{
+    "batch_id":  "P5-0-B-mfa-full",
+    "approval_revision":  2,
+    "approval_json_sha256":  "e2c3600888033a51c107037b072387a11f8921fe2378fcbf9101a01a4ff583b4",
+    "status":  "PASS",
+    "completed_at":  "2026-07-15T13:49:57.2537526Z",
+    "backup_path":  "backups/p5-0-b-mfa-full-20260715-214700",
+    "paths":  [
+                  {
+                      "path":  "qwen_asr/mfa_backend.py",
+                      "action":  "move",
+                      "target_path":  "tools/mfa_full_alignment.py",
+                      "before_size_bytes":  11176,
+                      "before_sha256":  "aa94176872043f998d35dfc4111cfe5fe6d05438d9b72bca00e6432bcd086ded",
+                      "after_source_exists":  false,
+                      "after_target_exists":  true,
+                      "after_size_bytes":  11176,
+                      "after_sha256":  "aa94176872043f998d35dfc4111cfe5fe6d05438d9b72bca00e6432bcd086ded"
+                  },
+                  {
+                      "path":  "qwen_asr/commands/align.py",
+                      "action":  "edit",
+                      "before_size_bytes":  17302,
+                      "before_sha256":  "1d7b82815133d74285df450fd5ab75ff6d1761fe5894c0ed31a7abf8ca92eeed",
+                      "after_exists":  true,
+                      "after_size_bytes":  15882,
+                      "after_sha256":  "550221c39aa43f9edd259d58d7804d6de8e05c0f625dd9956d821c9b71d86e28"
+                  },
+                  {
+                      "path":  "qwen_asr/commands/stages.py",
+                      "action":  "edit",
+                      "before_size_bytes":  19000,
+                      "before_sha256":  "5781058a47478f6af60a9655d0b346f4d0de6f0fc52d712c769b738c5937005e",
+                      "after_exists":  true,
+                      "after_size_bytes":  18944,
+                      "after_sha256":  "47c65e58efbfb6e51dd1ed692a10071040123e6865a817a05eae8959f9778153"
+                  },
+                  {
+                      "path":  "qwen_asr/cli.py",
+                      "action":  "edit",
+                      "before_size_bytes":  42628,
+                      "before_sha256":  "4cf02873c15bb6b05de03a052bfdd0c9cb9192b19d726587626ec3e7335b3c73",
+                      "after_exists":  true,
+                      "after_size_bytes":  42197,
+                      "after_sha256":  "1859af12acd9afbe0d7a7ee48ba81de6a67b51946fdcbf1a3e3e26268884abb4"
+                  },
+                  {
+                      "path":  "qwen_asr/pipeline_runner.py",
+                      "action":  "edit",
+                      "before_size_bytes":  15090,
+                      "before_sha256":  "22a03827d8135cc327f1b178be42033428524b985086f7ee90303d7ed6c96781",
+                      "after_exists":  true,
+                      "after_size_bytes":  14933,
+                      "after_sha256":  "711518d1bebf5eac5b9ec09847011dfa0b97e449df9288b50891f772e6b2484f"
+                  },
+                  {
+                      "path":  "tests/test_mfa_backend.py",
+                      "action":  "edit",
+                      "before_size_bytes":  4286,
+                      "before_sha256":  "a11f077c0de436eeeed999e483821925b27b27e46325bd48e12a21cc4f1a5c90",
+                      "after_exists":  true,
+                      "after_size_bytes":  4306,
+                      "after_sha256":  "e2033945d1e7bcd8996b5d9b64dc954a4445f223082cf2e5b5776da24b666d7d"
+                  },
+                  {
+                      "path":  "tests/test_align_cleanup.py",
+                      "action":  "edit",
+                      "before_size_bytes":  21794,
+                      "before_sha256":  "b27cc20c56c58368f2bc93dace2bbf9618a04a21a2e6170c656f83ef9590c9dd",
+                      "after_exists":  true,
+                      "after_size_bytes":  19225,
+                      "after_sha256":  "117504c038c7c3331f8d0e44b1c5685de37be2dc37c9905a8f04c33d60dee14b"
+                  },
+                  {
+                      "path":  "tests/test_pipeline_runner.py",
+                      "action":  "edit",
+                      "before_size_bytes":  38775,
+                      "before_sha256":  "ea3cf17df94eefbbf09cbca5043fe6f9b8f527514e2d3bb7be3e91884b97528b",
+                      "after_exists":  true,
+                      "after_size_bytes":  38740,
+                      "after_sha256":  "4b14b208b215bb5853d6551fb89a10826dc732017c12ebdc1efabec1ac39ad8c"
+                  },
+                  {
+                      "path":  "tests/test_cli_help.py",
+                      "action":  "edit",
+                      "before_size_bytes":  18861,
+                      "before_sha256":  "2ec1b40fd3a84c3f287eafd0d42e819cc00f773f72a8c61a51432bf950c1d35f",
+                      "after_exists":  true,
+                      "after_size_bytes":  18834,
+                      "after_sha256":  "8ab0d8d5b93d837942cad66c971e9496d186b22b559a8204f75eaa7a6dad721b"
+                  }
+              ],
+    "preserve_checks":  {
+                            "qwen_asr/proofread_realign.py":  true,
+                            "qwen_asr/mfa_experiment.py":  true,
+                            "qwen_asr/mfa_environment.py":  true,
+                            "qwen_asr/mfa_runner.py":  true,
+                            "qwen_asr/pipeline_runner.py":  true,
+                            "qwen_production_alignment":  true,
+                            "historical_reports_untouched":  true,
+                            "historical_workspaces_untouched":  true
+                        },
+    "verification":  {
+                         "compileall":  "PASS",
+                         "ruff":  "PASS",
+                         "focused_pytest":  "118 passed in 7.33s",
+                         "cli_help":  "PASS",
+                         "imports":  "PASS",
+                         "production_references":  "PASS",
+                         "local_mfa_fallback":  "PASS",
+                         "git_diff_check":  "PASS"
+                     }
+}

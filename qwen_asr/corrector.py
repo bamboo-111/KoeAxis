@@ -392,21 +392,31 @@ def run_correction_stage(
     if not work_paths.raw_transcript_manifest.exists():
         shutil.copy2(work_paths.transcript_manifest, work_paths.raw_transcript_manifest)
 
-    corrector = ASRCorrector(
-        model=llm_model,
-        base_url=base_url,
-        api_key=api_key,
-        thread_num=thread_num,
-        batch_num=batch_num,
-        glossary_xlsx=glossary_xlsx,
-        disable_thinking=disable_thinking,
-        llm_extra_body=llm_extra_body,
-        timeout=timeout,
-    )
-    try:
-        corrected, report = corrector.correct(transcripts)
-    finally:
-        corrector.stop()
+    del llm_model, base_url, api_key, thread_num, batch_num
+    del glossary_xlsx, disable_thinking, llm_extra_body, timeout
+
+    corrected: list[TranscriptSegment] = []
+    report: list[CorrectionReportItem] = []
+    for item in transcripts:
+        clone = TranscriptSegment(**asdict(item))
+        if clone.status == "completed" and clone.text.strip():
+            cleaned = clean_asr_correction_text(clone.text).strip() or clone.text
+            changed = cleaned != clone.text
+            clone.text = cleaned
+            report.append(
+                CorrectionReportItem(
+                    segment_id=clone.segment_id,
+                    original_text=item.text,
+                    corrected_text=cleaned,
+                    changed=changed,
+                    reason=(
+                        "deterministic text cleanup"
+                        if changed
+                        else "kept; no deterministic cleanup needed"
+                    ),
+                )
+            )
+        corrected.append(clone)
 
     write_json_atomic(work_paths.transcript_manifest, serialize_manifest(corrected))
     write_json_atomic(work_paths.corrected_manifest, [asdict(item) for item in report])

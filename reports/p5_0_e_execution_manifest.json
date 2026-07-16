@@ -1,0 +1,147 @@
+﻿{
+    "batch_id":  "P5-0-E-diagnostic-tools",
+    "approval_revision":  2,
+    "approval_json_sha256":  "e2c3600888033a51c107037b072387a11f8921fe2378fcbf9101a01a4ff583b4",
+    "status":  "PASS",
+    "completed_at":  "2026-07-15T13:59:48.0479429Z",
+    "backup_path":  "backups/p5-0-e-diagnostic-tools-20260715-215721",
+    "paths":  [
+                  {
+                      "path":  "qwen_asr/tuning_matrix.py",
+                      "action":  "move",
+                      "target_path":  "tools/tuning_matrix.py",
+                      "before_size_bytes":  13622,
+                      "before_sha256":  "a98041b29f77ae37d541c10fde1e687152ef22ea15682e581068c49d5465923d",
+                      "after_source_exists":  false,
+                      "after_target_exists":  true,
+                      "after_size_bytes":  13622,
+                      "after_sha256":  "a98041b29f77ae37d541c10fde1e687152ef22ea15682e581068c49d5465923d"
+                  },
+                  {
+                      "path":  "qwen_asr/baseline_snapshot.py",
+                      "action":  "move",
+                      "target_path":  "tools/baseline_snapshot.py",
+                      "before_size_bytes":  10884,
+                      "before_sha256":  "10dd9a1160d2ed9785594eceb11ebbff901da104794317b9e30d6a1aecdcd75c",
+                      "after_source_exists":  false,
+                      "after_target_exists":  true,
+                      "after_size_bytes":  10884,
+                      "after_sha256":  "10dd9a1160d2ed9785594eceb11ebbff901da104794317b9e30d6a1aecdcd75c"
+                  },
+                  {
+                      "path":  "qwen_asr/align_diagnose.py",
+                      "action":  "move",
+                      "target_path":  "tools/align_diagnose.py",
+                      "before_size_bytes":  29662,
+                      "before_sha256":  "c9c049ae7c29d0a18b398df3e7558849b0b25bef04f905fa1ae428924ebe703d",
+                      "after_source_exists":  false,
+                      "after_target_exists":  true,
+                      "after_size_bytes":  29662,
+                      "after_sha256":  "c9c049ae7c29d0a18b398df3e7558849b0b25bef04f905fa1ae428924ebe703d"
+                  },
+                  {
+                      "path":  "qwen_asr/align_split_audit.py",
+                      "action":  "move",
+                      "target_path":  "tools/align_split_audit.py",
+                      "before_size_bytes":  21223,
+                      "before_sha256":  "1885bef67e2550aca2cca1b4680f1b10ccb9fa0ac926ab9feec545783fa3a4d4",
+                      "after_source_exists":  false,
+                      "after_target_exists":  true,
+                      "after_size_bytes":  21223,
+                      "after_sha256":  "1885bef67e2550aca2cca1b4680f1b10ccb9fa0ac926ab9feec545783fa3a4d4"
+                  },
+                  {
+                      "path":  "qwen_asr/cli.py",
+                      "action":  "edit",
+                      "before_size_bytes":  41753,
+                      "before_sha256":  "e9bd77877fb9dd880b33868f483d93a5780cedfc169fdc5b00e4ed650600302e",
+                      "after_exists":  true,
+                      "after_size_bytes":  38208,
+                      "after_sha256":  "8925a65d5b30ee759bb09a5abf3a7e1f719e8b16a45c5c07e51ffcaafb37b16c"
+                  },
+                  {
+                      "path":  "qwen_asr/ass_quality_diff.py",
+                      "action":  "edit",
+                      "before_size_bytes":  15617,
+                      "before_sha256":  "8d2d2e546ffca952e8332055a04eadc6c92ed6df5c356d8bdaca9d26aa668588",
+                      "after_exists":  true,
+                      "after_size_bytes":  15753,
+                      "after_sha256":  "3ca1cfe64af472cf6a8be243a7a0a231d164525bba0484200fe3b45cdebab851"
+                  },
+                  {
+                      "path":  "tests/test_tuning_matrix.py",
+                      "action":  "edit",
+                      "before_size_bytes":  3741,
+                      "before_sha256":  "c5a3f44355432fb8fe678938427902b89df74d14b2dd15e66eb407d4cc9ba896",
+                      "after_exists":  true,
+                      "after_size_bytes":  3738,
+                      "after_sha256":  "43cac4b6478ff73da6108d7c9eb073a2f4588f3c5daf0b3a8f24a105fbe21d08"
+                  },
+                  {
+                      "path":  "tests/test_baseline_snapshot.py",
+                      "action":  "edit",
+                      "before_size_bytes":  3269,
+                      "before_sha256":  "9dc7faea65730015f15ba97977a9903adad39a7f5167e0bcb0676394843387bd",
+                      "after_exists":  true,
+                      "after_size_bytes":  3266,
+                      "after_sha256":  "5f8ff5bfde100eae7fa5ac5effe947ec99e051cc55e57c19e654eefe54a92095"
+                  },
+                  {
+                      "path":  "tests/test_align_diagnose.py",
+                      "action":  "edit",
+                      "before_size_bytes":  8265,
+                      "before_sha256":  "f0f3b79aa0c6794a82357e038bc4f7666417a8c5a77b0594f63ce09780249aef",
+                      "after_exists":  true,
+                      "after_size_bytes":  8259,
+                      "after_sha256":  "0318bd4ef7f4b5e81af8f91d2bb0ea46083529d1c4fa71c3975353f485355b83"
+                  },
+                  {
+                      "path":  "tests/test_align_split_audit.py",
+                      "action":  "edit",
+                      "before_size_bytes":  7925,
+                      "before_sha256":  "fab20d65eade1e478fff404a272f4832d615840ecdf3ddf8f7d103d91855459e",
+                      "after_exists":  true,
+                      "after_size_bytes":  7921,
+                      "after_sha256":  "0a33e995bdb0730f7886798588c46c35260415f3d63be6ab65e1b5887b2f79a4"
+                  },
+                  {
+                      "path":  "tests/test_ass_quality_diff.py",
+                      "action":  "edit",
+                      "before_size_bytes":  3542,
+                      "before_sha256":  "3f9923000fb0e9dfcca33b6dc6acc4668e8ac564271694d55dab2ad706e201e0",
+                      "after_exists":  true,
+                      "after_size_bytes":  3836,
+                      "after_sha256":  "062c2587392907563f53870cce8433d1ca32ad69225502e195abbcec51663ff0"
+                  },
+                  {
+                      "path":  "tests/test_cli_help.py",
+                      "action":  "edit",
+                      "before_size_bytes":  18578,
+                      "before_sha256":  "1fde40b60392380b8810e69f6e636a7f4c98a6c808066e7c10c0dcbbdb087142",
+                      "after_exists":  true,
+                      "after_size_bytes":  16636,
+                      "after_sha256":  "a666c48c33e3ad96d4246a527d9ed1372b985d900673ddf54419796440d48119"
+                  }
+              ],
+    "preserve_checks":  {
+                            "qwen_asr/ass_quality_diff.py":  true,
+                            "tests/test_ass_quality_diff.py":  true,
+                            "qwen_asr/pipeline_runner.py":  true,
+                            "qwen_asr/quality_suspects.py":  true,
+                            "ass_quality_diff_cli":  true,
+                            "ass_quality_diff_pipeline_call":  true,
+                            "historical_reports_untouched":  true,
+                            "historical_workspaces_untouched":  true
+                        },
+    "verification":  {
+                         "compileall":  "PASS",
+                         "ruff":  "PASS",
+                         "focused_pytest":  "112 passed in 5.20s",
+                         "cli_help":  "PASS",
+                         "imports":  "PASS",
+                         "production_references":  "PASS",
+                         "moved_paths":  "PASS",
+                         "ass_quality_diff_production_smoke":  "PASS",
+                         "git_diff_check":  "PASS"
+                     }
+}

@@ -1,0 +1,102 @@
+﻿{
+    "batch_id":  "P5-0-D-align-variants",
+    "approval_revision":  2,
+    "approval_json_sha256":  "e2c3600888033a51c107037b072387a11f8921fe2378fcbf9101a01a4ff583b4",
+    "status":  "PASS",
+    "completed_at":  "2026-07-15T13:55:58.8697225Z",
+    "backup_path":  "backups/p5-0-d-align-variants-20260715-215107",
+    "paths":  [
+                  {
+                      "path":  "qwen_asr/align_timing_repair.py",
+                      "action":  "delete",
+                      "before_size_bytes":  3948,
+                      "before_sha256":  "fbd136f43748726a4641d40933bc416e460af718bb2755d0739a117c9796fce7",
+                      "after_exists":  false,
+                      "after_size_bytes":  null,
+                      "after_sha256":  null
+                  },
+                  {
+                      "path":  "tests/test_align_timing_repair.py",
+                      "action":  "delete",
+                      "before_size_bytes":  2727,
+                      "before_sha256":  "7b897c07aca411425f24ad5a3910ac0cf5bde5120dadd1a294aaefcfb5b5b779",
+                      "after_exists":  false,
+                      "after_size_bytes":  null,
+                      "after_sha256":  null
+                  },
+                  {
+                      "path":  "qwen_asr/align.py",
+                      "action":  "edit",
+                      "before_size_bytes":  12011,
+                      "before_sha256":  "a196ee8ddf8cf9f8b0224b57d2ea8246aafe7643f75a33a7e942e66e7b4a0f96",
+                      "after_exists":  true,
+                      "after_size_bytes":  10767,
+                      "after_sha256":  "ad8f6abd76500ef9a326556c70ae72c82487249da55d0c3ef71d863c70b4094a"
+                  },
+                  {
+                      "path":  "qwen_asr/commands/align.py",
+                      "action":  "edit",
+                      "before_size_bytes":  15882,
+                      "before_sha256":  "550221c39aa43f9edd259d58d7804d6de8e05c0f625dd9956d821c9b71d86e28",
+                      "after_exists":  true,
+                      "after_size_bytes":  15361,
+                      "after_sha256":  "8a4cf2bb183f81132ab562e685f81e4087ebab47d41aaff13d081c96f42bfb5f"
+                  },
+                  {
+                      "path":  "qwen_asr/commands/stages.py",
+                      "action":  "edit",
+                      "before_size_bytes":  18944,
+                      "before_sha256":  "47c65e58efbfb6e51dd1ed692a10071040123e6865a817a05eae8959f9778153",
+                      "after_exists":  true,
+                      "after_size_bytes":  18879,
+                      "after_sha256":  "592a8466c812b3af975d1773d40e05b33479c2d6f33ea229642b395a58b0c5bb"
+                  },
+                  {
+                      "path":  "qwen_asr/cli.py",
+                      "action":  "edit",
+                      "before_size_bytes":  42197,
+                      "before_sha256":  "1859af12acd9afbe0d7a7ee48ba81de6a67b51946fdcbf1a3e3e26268884abb4",
+                      "after_exists":  true,
+                      "after_size_bytes":  41753,
+                      "after_sha256":  "e9bd77877fb9dd880b33868f483d93a5780cedfc169fdc5b00e4ed650600302e"
+                  },
+                  {
+                      "path":  "tests/test_align_quality.py",
+                      "action":  "edit",
+                      "before_size_bytes":  6338,
+                      "before_sha256":  "8111fff5d30eac30292ee819ed9ea395f01c159f88ec50615ef593d5df1ba84d",
+                      "after_exists":  true,
+                      "after_size_bytes":  5058,
+                      "after_sha256":  "e3e99488866783e41d740ed103978cc6b3c4c3bdae065a39d2df1f75c318d824"
+                  },
+                  {
+                      "path":  "tests/test_cli_help.py",
+                      "action":  "edit",
+                      "before_size_bytes":  18834,
+                      "before_sha256":  "8ab0d8d5b93d837942cad66c971e9496d186b22b559a8204f75eaa7a6dad721b",
+                      "after_exists":  true,
+                      "after_size_bytes":  18578,
+                      "after_sha256":  "1fde40b60392380b8810e69f6e636a7f4c98a6c808066e7c10c0dcbbdb087142"
+                  }
+              ],
+    "preserve_checks":  {
+                            "qwen_asr/align.py":  true,
+                            "qwen_asr/final_quality_alignment.py":  true,
+                            "monotonicity_gate":  true,
+                            "coverage_gate":  true,
+                            "timing_legality_gate":  true,
+                            "historical_parameter_matrix_evidence_untouched":  true,
+                            "historical_reports_untouched":  true,
+                            "historical_workspaces_untouched":  true
+                        },
+    "verification":  {
+                         "compileall":  "PASS",
+                         "ruff":  "PASS",
+                         "focused_pytest":  "91 passed in 5.24s",
+                         "cli_help":  "PASS",
+                         "imports":  "PASS",
+                         "timing_gates":  "PASS",
+                         "deleted_paths_absent":  "PASS",
+                         "git_diff_check":  "PASS"
+                     }
+}

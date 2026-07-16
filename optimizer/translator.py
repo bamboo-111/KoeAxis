@@ -20,13 +20,14 @@ Voxlign 不使用 VideoCaptioner 的 Bing/DeepLx 等翻译服务。
 
 import json
 import logging
+import re
 import threading
 import time
 from concurrent.futures import (  # pylint: disable=no-name-in-module
     ThreadPoolExecutor,
     as_completed,
 )
-from typing import Callable, Dict, List, Optional
+from typing import Any, Callable, Dict, List, Optional
 
 import json_repair
 
@@ -49,6 +50,41 @@ BACKOFF_FACTOR = 2.0             # 指数退避因子
 # 全局冷却参数
 GLOBAL_COOLDOWN_SECONDS = 10.0   # 收到 429 后全局冷却秒数
 SUBMIT_INTERVAL = 0.5            # 批次提交间隔秒数（避免瞬时并发）
+
+_HIRAGANA_KATAKANA_RE = re.compile(r"[\u3040-\u30ff]")
+_CJK_RE = re.compile(r"[\u3400-\u9fff]")
+_DIGIT_RE = re.compile(r"\d+")
+_LATIN_ENTITY_RE = re.compile(r"[A-Za-z][A-Za-z0-9_-]{1,}")
+_KATAKANA_ENTITY_RE = re.compile(r"[\u30a1-\u30ff]{3,}")
+_NAME_SUFFIX_RE = re.compile(r"[\u3040-\u30ff\u3400-\u9fff]{2,}(?:\u3055\u3093|\u541b|\u3061\u3083\u3093|\u5148\u751f)")
+_QUESTION_SOURCE_RE = re.compile(r"[?？]\s*$|(?:\u304b|\u306e)\s*[?？]?\s*$")
+_QUESTION_TARGET_RE = re.compile(r"[?？]|[\u5417\u5462\u5427\u4e48]\s*$")
+_NEGATION_SOURCE_RE = re.compile(
+    r"\u306a\u3044|\u307e\u305b\u3093|\u306c|\u3058\u3083\u306a\u3044|"
+    r"\u3067\u306f\u306a\u3044|\u5acc|\u30c0\u30e1|\u3060\u3081"
+)
+_NEGATION_TARGET_RE = re.compile(r"\u4e0d|\u6ca1|\u7121|\u65e0|\u522b|\u975e|\u5426|\u672a")
+_SHORT_RESPONSE_NORMALIZED = {
+    "\u306f\u3044",
+    "\u3046\u3093",
+    "\u3048\u3048",
+    "\u3044\u3044\u3048",
+    "\u3044\u3084",
+    "\u3046\u3046\u3093",
+    "\u3060\u3081",
+    "\u30c0\u30e1",
+}
+_FRAGMENT_NORMALIZED = {
+    "\u3042",
+    "\u3048",
+    "\u3093",
+    "\u3042\u306e",
+    "\u305d\u306e",
+    "\u3067\u3082",
+    "\u3058\u3083\u3042",
+    "\u3051\u3069",
+    "\u3063\u3066",
+}
 
 
 class SubtitleTranslator:
@@ -296,17 +332,21 @@ class SubtitleTranslator:
                 "翻译失败：agent loop 未返回有效结果"
             )
 
-        # 将翻译结果写入 segments
+        # 将翻译结果写入 segments。兼容旧格式 {"1": "译文"} 和
+        # 新格式 {"1": {"translation": "译文", ...疑点字段...}}。
         for i, seg in enumerate(chunk, 1):
-            translated = result_dict.get(str(i))
+            translated, suspect_meta = _normalize_translation_payload(result_dict.get(str(i)))
             if translated is not None:
-                seg.translated_text = str(translated)
+                seg.translated_text = translated
+            suspect_meta = _augment_translation_suspects(seg, translated or "", suspect_meta)
+            for key, value in suspect_meta.items():
+                setattr(seg, key, value)
 
     def _agent_loop(
         self,
         system_prompt: str,
         subtitle_dict: Dict[str, str],
-    ) -> Optional[Dict[str, str]]:
+    ) -> Optional[Dict[str, Any]]:
         """Agent loop 翻译字幕批次。
 
         LLM → 验证 → 反馈 → 重试（最多 MAX_STEPS 次）
@@ -330,7 +370,7 @@ class SubtitleTranslator:
             {"role": "user", "content": user_content},
         ]
 
-        last_result: Optional[Dict[str, str]] = None
+        last_result: Optional[Dict[str, Any]] = None
         rate_limit_delay = RATE_LIMIT_BASE_DELAY
         connection_delay = CONNECTION_BASE_DELAY
 
@@ -415,9 +455,7 @@ class SubtitleTranslator:
                 )
                 continue
 
-            result_dict: Dict[str, str] = {
-                str(k): str(v) for k, v in parsed.items()
-            }
+            result_dict: Dict[str, Any] = {str(k): v for k, v in parsed.items()}
             last_result = result_dict
 
             # 成功收到有效响应，重置退避计时器
@@ -481,7 +519,7 @@ class SubtitleTranslator:
     @staticmethod
     def _validate_translation_result(
         original_dict: Dict[str, str],
-        translated_dict: Dict[str, str],
+        translated_dict: Dict[str, Any],
     ) -> tuple[bool, str]:
         """验证翻译结果。
 
@@ -498,11 +536,10 @@ class SubtitleTranslator:
         expected_keys = set(original_dict.keys())
         actual_keys = set(translated_dict.keys())
 
+        error_parts: list[str] = []
         if expected_keys != actual_keys:
             missing = expected_keys - actual_keys
             extra = actual_keys - expected_keys
-
-            error_parts: list[str] = []
             if missing:
                 error_parts.append(
                     f"Missing keys {sorted(missing)} — "
@@ -514,9 +551,12 @@ class SubtitleTranslator:
                     "these keys are not in input, remove them"
                 )
 
-            return False, "; ".join(error_parts)
+        for key in expected_keys & actual_keys:
+            translated, _ = _normalize_translation_payload(translated_dict.get(key))
+            if translated is None or not translated.strip():
+                error_parts.append(f"{key} is missing translation")
 
-        return True, ""
+        return (not error_parts), "; ".join(error_parts)
 
     def stop(self) -> None:
         """停止翻译器并清理资源。
@@ -535,3 +575,147 @@ class SubtitleTranslator:
                 pass
             finally:
                 self.executor = None
+
+
+def _normalize_translation_payload(value: Any) -> tuple[str | None, dict[str, Any]]:
+    if isinstance(value, dict):
+        translated = value.get("translation")
+        if translated is None:
+            translated = value.get("translated_text")
+        if translated is None:
+            translated = value.get("translated_subtitle")
+        meta = {
+            "asr_suspect": _coerce_bool(value.get("asr_suspect")),
+            "needs_audio_review": _coerce_bool(value.get("needs_audio_review")),
+            "suspect_types": _coerce_string_list(value.get("suspect_types")),
+            "suspect_reason": str(value.get("reason", "")).strip(),
+            "suspect_confidence": _coerce_confidence(value.get("confidence")),
+        }
+        return (str(translated).strip() if translated is not None else None), meta
+    if value is None:
+        return None, {}
+    return str(value).strip(), {}
+
+
+def _augment_translation_suspects(
+    segment: ASRDataSeg,
+    translated: str,
+    suspect_meta: dict[str, Any],
+) -> dict[str, Any]:
+    meta = dict(suspect_meta)
+    existing_types = _coerce_string_list(meta.get("suspect_types"))
+    rule_hits = _detect_translation_suspect_types(segment, translated)
+    merged_types = list(dict.fromkeys(existing_types + [hit[0] for hit in rule_hits]))
+    if merged_types:
+        meta["asr_suspect"] = _coerce_bool(meta.get("asr_suspect")) or bool(rule_hits)
+        meta["needs_audio_review"] = _coerce_bool(meta.get("needs_audio_review")) or bool(rule_hits)
+        meta["suspect_types"] = merged_types
+        reasons = [str(meta.get("suspect_reason", "")).strip()]
+        reasons.extend(hit[1] for hit in rule_hits)
+        meta["suspect_reason"] = "; ".join(dict.fromkeys(reason for reason in reasons if reason))
+        confidence = _coerce_confidence(meta.get("suspect_confidence", 1.0))
+        if rule_hits:
+            confidence = min(confidence, min(hit[2] for hit in rule_hits))
+        meta["suspect_confidence"] = confidence
+    else:
+        meta["asr_suspect"] = _coerce_bool(meta.get("asr_suspect"))
+        meta["needs_audio_review"] = _coerce_bool(meta.get("needs_audio_review"))
+        meta["suspect_types"] = []
+        meta["suspect_reason"] = str(meta.get("suspect_reason", "")).strip()
+        meta["suspect_confidence"] = _coerce_confidence(meta.get("suspect_confidence", 1.0))
+    return meta
+
+
+def _detect_translation_suspect_types(
+    segment: ASRDataSeg,
+    translated: str,
+) -> list[tuple[str, str, float]]:
+    source = str(segment.text or "").strip()
+    target = str(translated or "").strip()
+    source_norm = _normalize_signal_text(source)
+    target_norm = _normalize_signal_text(target)
+    hits: list[tuple[str, str, float]] = []
+
+    if not source_norm:
+        return hits
+
+    if source_norm in _SHORT_RESPONSE_NORMALIZED:
+        hits.append(("short_response", "short response needs audio confirmation", 0.72))
+
+    if source_norm in _FRAGMENT_NORMALIZED or source.endswith(("\u2026", "...")):
+        hits.append(("fragment", "source looks fragmentary", 0.68))
+
+    if target_norm and (source_norm == target_norm or _HIRAGANA_KATAKANA_RE.search(target)):
+        hits.append(("untranslated", "translation appears to contain source-language text", 0.55))
+
+    if _QUESTION_SOURCE_RE.search(source) and target and not _QUESTION_TARGET_RE.search(target):
+        hits.append(("question", "source looks interrogative but translation is not marked as a question", 0.70))
+
+    if _NEGATION_SOURCE_RE.search(source) and target and not _NEGATION_TARGET_RE.search(target):
+        hits.append(("negation", "source contains negation that is not obvious in translation", 0.68))
+
+    source_digits = _DIGIT_RE.findall(source)
+    target_digits = _DIGIT_RE.findall(target)
+    if source_digits and source_digits != target_digits:
+        hits.append(("quantity", "numeric content differs between source and translation", 0.66))
+
+    if _NAME_SUFFIX_RE.search(source):
+        hits.append(("name", "source contains a name-like expression", 0.74))
+    elif _KATAKANA_ENTITY_RE.search(source) or _LATIN_ENTITY_RE.search(source):
+        hits.append(("entity", "source contains an entity-like expression", 0.76))
+
+    if target and _content_looks_dropped(source, target):
+        hits.append(("content_conservation", "translation may have dropped source content", 0.58))
+
+    duration_ms = int(getattr(segment, "end_time", 0) or 0) - int(getattr(segment, "start_time", 0) or 0)
+    if 0 < duration_ms <= 350 and len(source_norm) >= 5:
+        hits.append(("time", "source is dense for a very short timing span", 0.62))
+
+    if source_norm.startswith(("\u3067\u3082", "\u3060\u304b\u3089", "\u3058\u3083\u3042", "\u305d\u308c\u3067")):
+        hits.append(("context_linkage", "source depends on adjacent context", 0.72))
+
+    return list(dict.fromkeys(hits))
+
+
+def _normalize_signal_text(value: str) -> str:
+    return re.sub(r"[\s\u3000、。，,.!?！？\"'`~\-\u2014\u2026]+", "", value)
+
+
+def _content_looks_dropped(source: str, target: str) -> bool:
+    source_units = _signal_unit_count(source)
+    target_units = _signal_unit_count(target)
+    return source_units >= 8 and target_units <= max(1, source_units // 5)
+
+
+def _signal_unit_count(value: str) -> int:
+    cjk_count = len(_CJK_RE.findall(value))
+    kana_count = len(_HIRAGANA_KATAKANA_RE.findall(value))
+    latin_count = sum(len(match.group(0)) for match in _LATIN_ENTITY_RE.finditer(value))
+    digit_count = sum(len(match.group(0)) for match in _DIGIT_RE.finditer(value))
+    return cjk_count + kana_count + latin_count + digit_count
+
+
+def _coerce_bool(value: Any) -> bool:
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, (int, float)):
+        return bool(value)
+    if isinstance(value, str):
+        return value.strip().lower() in {"1", "true", "yes", "y", "on"}
+    return False
+
+
+def _coerce_string_list(value: Any) -> list[str]:
+    if isinstance(value, list):
+        return [str(item).strip() for item in value if str(item).strip()]
+    if isinstance(value, str) and value.strip():
+        return [value.strip()]
+    return []
+
+
+def _coerce_confidence(value: Any) -> float:
+    try:
+        confidence = float(value)
+    except (TypeError, ValueError):
+        return 1.0
+    return max(0.0, min(1.0, confidence))

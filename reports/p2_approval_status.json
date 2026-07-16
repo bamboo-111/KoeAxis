@@ -1,0 +1,28 @@
+{
+  "generated_at": "2026-07-15T15:00:04.218138+00:00",
+  "status": "AWAITING_OPTIONAL_APPROVAL",
+  "goal_blocking": false,
+  "policy": {
+    "audit_and_approval_package_required": true,
+    "archive_or_delete_execution_required_for_goal": false,
+    "path_level_approval_required": true,
+    "bulk_directory_approval_inferred": false
+  },
+  "source": "reports/archive_candidates.json",
+  "candidate_count": 34856,
+  "status_counts": {
+    "DELETE_CANDIDATE": 8845,
+    "UNKNOWN": 25883,
+    "ARCHIVE_CANDIDATE": 128
+  },
+  "candidate_size_bytes": 70876857036,
+  "approval_required_count": 34856,
+  "approved_paths": [],
+  "approved_count": 0,
+  "archived_count": 0,
+  "deleted_count": 0,
+  "file_candidate_count": 34852,
+  "directory_aggregate_count": 4,
+  "missing_file_sha256_count": 0,
+  "decision": "No archive or delete action is approved or executed. P2-D remains optional and does not block Goal completion."
+}

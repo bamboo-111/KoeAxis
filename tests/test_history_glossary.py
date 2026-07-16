@@ -3,7 +3,6 @@ from __future__ import annotations
 from pathlib import Path
 import json
 
-from qwen_asr.glossary import read_xlsx_glossary
 from qwen_asr.history_glossary import (
     MatchResult,
     _parse_history_llm_extra_body,
@@ -427,7 +426,6 @@ def test_parse_history_llm_extra_body_accepts_python_literal_dict() -> None:
 
 
 def parse_ass_dialogues_from_lines(lines: list[str]):
-    path = Path(__file__).with_name("tmp-inline.ass")
     return [
         dialogue
         for dialogue in parse_ass_dialogues_from_text(

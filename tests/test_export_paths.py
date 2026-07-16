@@ -79,3 +79,14 @@ def test_export_custom_file_uses_exact_path(tmp_path: Path) -> None:
     assert cmd_export(_args(media, export_mode="custom", export_path=str(out_file)), paths) == 0
 
     assert out_file.exists()
+
+
+def test_export_custom_file_can_target_cache_path(tmp_path: Path) -> None:
+    media = tmp_path / "demo.mp3"
+    media.write_bytes(b"media")
+    paths = WorkPaths.from_workdir(tmp_path / "workspaces" / "0001-demo")
+    _write_transcript(paths)
+
+    assert cmd_export(_args(media, export_mode="custom", export_path=str(paths.subtitles_srt)), paths) == 0
+
+    assert paths.subtitles_srt.exists()

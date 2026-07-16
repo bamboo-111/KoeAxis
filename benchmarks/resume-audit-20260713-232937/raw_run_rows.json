@@ -1,0 +1,68 @@
+﻿[
+    {
+        "variant":  "baseline_a_fixed_b1",
+        "repeat":  1,
+        "workdir":  "benchmarks\\resume-audit-20260713-232937\\runs\\baseline_a_fixed_b1_r1",
+        "log":  "benchmarks\\resume-audit-20260713-232937\\runs\\baseline_a_fixed_b1_r1\\benchmark.log",
+        "success":  true,
+        "prepare_s":  6.882,
+        "transcribe_s":  42.127,
+        "align_s":  17.855,
+        "total_s":  66.864
+    },
+    {
+        "variant":  "baseline_a_fixed_b1",
+        "repeat":  2,
+        "workdir":  "benchmarks\\resume-audit-20260713-232937\\runs\\baseline_a_fixed_b1_r2",
+        "log":  "benchmarks\\resume-audit-20260713-232937\\runs\\baseline_a_fixed_b1_r2\\benchmark.log",
+        "success":  true,
+        "prepare_s":  5.966,
+        "transcribe_s":  41.294,
+        "align_s":  18.985,
+        "total_s":  66.245
+    },
+    {
+        "variant":  "baseline_b_fixed_b2",
+        "repeat":  1,
+        "workdir":  "benchmarks\\resume-audit-20260713-232937\\runs\\baseline_b_fixed_b2_r1",
+        "log":  "benchmarks\\resume-audit-20260713-232937\\runs\\baseline_b_fixed_b2_r1\\benchmark.log",
+        "success":  true,
+        "prepare_s":  6.195,
+        "transcribe_s":  35.254,
+        "align_s":  19.566,
+        "total_s":  61.015
+    },
+    {
+        "variant":  "baseline_b_fixed_b2",
+        "repeat":  2,
+        "workdir":  "benchmarks\\resume-audit-20260713-232937\\runs\\baseline_b_fixed_b2_r2",
+        "log":  "benchmarks\\resume-audit-20260713-232937\\runs\\baseline_b_fixed_b2_r2\\benchmark.log",
+        "success":  true,
+        "prepare_s":  5.985,
+        "transcribe_s":  35.511,
+        "align_s":  17.45,
+        "total_s":  58.946
+    },
+    {
+        "variant":  "current_adaptive_auto",
+        "repeat":  1,
+        "workdir":  "benchmarks\\resume-audit-20260713-232937\\runs\\current_adaptive_auto_r1",
+        "log":  "benchmarks\\resume-audit-20260713-232937\\runs\\current_adaptive_auto_r1\\benchmark.log",
+        "success":  true,
+        "prepare_s":  5.68,
+        "transcribe_s":  35.639,
+        "align_s":  18.525,
+        "total_s":  59.844
+    },
+    {
+        "variant":  "current_adaptive_auto",
+        "repeat":  2,
+        "workdir":  "benchmarks\\resume-audit-20260713-232937\\runs\\current_adaptive_auto_r2",
+        "log":  "benchmarks\\resume-audit-20260713-232937\\runs\\current_adaptive_auto_r2\\benchmark.log",
+        "success":  true,
+        "prepare_s":  7.031,
+        "transcribe_s":  35.603,
+        "align_s":  17.643,
+        "total_s":  60.277
+    }
+]

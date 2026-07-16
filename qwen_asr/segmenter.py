@@ -11,8 +11,8 @@ LOGGER = logging.getLogger(__name__)
 
 @dataclass(slots=True)
 class SegmenterConfig:
-    max_segment_seconds: float = 60.0
-    min_segment_seconds: float = 8.0
+    max_segment_seconds: float = 15.0
+    min_segment_seconds: float = 2.0
     preferred_silence_ms: int = 800
     min_silence_ms: int = 500
     padding_ms: int = 300

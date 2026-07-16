@@ -615,8 +615,8 @@
                 <div class="field"><label for="vadMinSpeechMs">最短语音(ms)</label><input id="vadMinSpeechMs" type="number" min="0" step="10" value="180"></div>
                 <div class="field"><label for="vadMinSilenceMs">最短静音(ms)</label><input id="vadMinSilenceMs" type="number" min="0" step="10" value="250"></div>
                 <div class="field"><label for="vadSpeechPadMs">VAD padding(ms)</label><input id="vadSpeechPadMs" type="number" min="0" step="10" value="120"></div>
-                <div class="field"><label for="maxSegmentSeconds">切段最大时长(s)</label><input id="maxSegmentSeconds" type="number" min="1" step="1" value="60"></div>
-                <div class="field"><label for="minSegmentSeconds">切段最小时长(s)</label><input id="minSegmentSeconds" type="number" min="0" step="1" value="8"></div>
+                <div class="field"><label for="maxSegmentSeconds">切段最大时长(s)</label><input id="maxSegmentSeconds" type="number" min="1" step="1" value="15"></div>
+                <div class="field"><label for="minSegmentSeconds">切段最小时长(s)</label><input id="minSegmentSeconds" type="number" min="0" step="1" value="2"></div>
                 <div class="field"><label for="preferredSilenceMs">首选静音(ms)</label><input id="preferredSilenceMs" type="number" min="0" step="10" value="800"></div>
                 <div class="field"><label for="minSilenceMs">最小静音(ms)</label><input id="minSilenceMs" type="number" min="0" step="10" value="500"></div>
                 <div class="field"><label for="paddingMs">切段 padding(ms)</label><input id="paddingMs" type="number" min="0" step="10" value="300"></div>
@@ -673,16 +673,14 @@
               <summary>LLM / 翻译 / 校正</summary>
               <div class="group-body form-grid">
                 <div class="field"><label for="llmModel">LLM 模型</label><input id="llmModel" value="mimo-v2.5" placeholder="split/translate/correct 可选或必填"></div>
-                <div class="field"><label for="threadNum">LLM 线程数</label><input id="threadNum" type="number" min="1" step="1" value="4"></div>
+                <div class="field"><label for="threadNum">LLM 线程数</label><input id="threadNum" type="number" min="1" step="1" value="5"></div>
                 <div class="field"><label for="llmBaseUrl">LLM Base URL</label><input id="llmBaseUrl" value="https://api.xiaomimimo.com/v1" placeholder="https://api.xiaomimimo.com/v1"></div>
-                <div class="field"><label for="llmApiKey">LLM API Key</label><input id="llmApiKey" placeholder="sk-..."></div>
+                <div class="field wide"><span>API 凭据仅从 Web 服务进程的环境变量读取；页面不会保存或提交凭据。</span></div>
                 <div class="field"><label for="proofreadKind">校对方式</label><select id="proofreadKind"><option value="normal">普通校对</option><option value="mimo-audio">MiMo + 音频校对</option></select></div>
                 <div class="field"><label for="correctBatchNum">Correct 批大小</label><input id="correctBatchNum" type="number" min="1" step="1" value="8"></div>
                 <div class="field"><label for="translateBatchNum">Translate 批大小</label><input id="translateBatchNum" type="number" min="1" step="1" value="20"></div>
-                <div class="field"><label for="splitMode">Split 模式</label><select id="splitMode"><option value="token-counts">token-counts</option><option value="token-delimited">token-delimited</option><option value="token-boundary">token-boundary</option><option value="text">text</option><option value="rule">rule</option></select></div>
-                <div class="field"><label for="splitMaxWordCountCjk">Split CJK 限制</label><input id="splitMaxWordCountCjk" type="number" min="1" step="1" value="25"></div>
+                <div class="field"><label for="splitMaxWordCountCjk">Split CJK 限制</label><input id="splitMaxWordCountCjk" type="number" min="1" step="1" value="18"></div>
                 <div class="field"><label for="splitMaxWordCountEnglish">Split 英文限制</label><input id="splitMaxWordCountEnglish" type="number" min="1" step="1" value="18"></div>
-                <div class="field"><label for="splitPromptLimitRatio">Split Prompt 比例</label><input id="splitPromptLimitRatio" type="number" min="0.1" step="0.05" value="0.8"></div>
                 <div class="field"><label for="llmTimeout">LLM 超时(秒)</label><input id="llmTimeout" type="number" min="1" step="1" value="120"></div>
                 <label class="check field"><input id="disableThinking" type="checkbox" checked> 禁用思考</label>
                 <div class="field"><label for="targetLanguage">目标语言</label><input id="targetLanguage" value="简体中文"></div>
@@ -690,12 +688,12 @@
                 <div class="field wide"><label for="glossaryXlsx">翻译对照 XLSX</label><div class="inline"><div class="path-combo"><input id="glossaryXlsx" placeholder="选择或输入 glossary.xlsx 路径"><button type="button" class="path-combo-toggle" onclick="togglePathMenu('glossaryHistory')" title="历史路径">⌄</button><div class="path-menu" id="glossaryHistory"></div></div><button type="button" id="pickGlossaryXlsxButton" onclick="pickPath('glossaryXlsx', '/api/pick-glossary-xlsx', 'glossaryHistory')">选择</button><button type="button" id="normalizeGlossaryButton" onclick="normalizeGlossary()">标准化</button></div></div>
                 <div class="field wide"><label for="translateCustomPrompt">Translate 自定义 Prompt</label><textarea id="translateCustomPrompt" placeholder="术语表、专有名词翻译偏好、风格要求"></textarea></div>
                 <div class="field"><label for="mimoProofreadMode">MiMo 校对模式</label><select id="mimoProofreadMode"><option value="segment-audio">整段音频</option><option value="two-stage-nearby">分步短音频</option></select></div>
-                <div class="field"><label for="mimoProofreadWorkers">MiMo 线程</label><input id="mimoProofreadWorkers" type="number" min="1" step="1" value="1"></div>
+                <div class="field"><label for="mimoProofreadWorkers">MiMo 线程</label><input id="mimoProofreadWorkers" type="number" min="1" step="1" value="5"></div>
                 <div class="field"><label for="mimoNearbyBatchSize">短音频批量</label><input id="mimoNearbyBatchSize" type="number" min="1" step="1" value="5"></div>
                 <div class="field"><label for="mimoNearbyBatchMaxGapS">批内间隔(秒)</label><input id="mimoNearbyBatchMaxGapS" type="number" min="0" step="0.5" value="20"></div>
                 <div class="field"><label for="mimoNearbyPaddingS">短音频留白(秒)</label><input id="mimoNearbyPaddingS" type="number" min="0" step="0.5" value="1.5"></div>
                 <div class="field"><label for="mimoNearbyContextSubtitles">上下文字幕数</label><input id="mimoNearbyContextSubtitles" type="number" min="0" step="1" value="1"></div>
-                <div class="field"><label for="mimoNearbyAudioWorkers">短音频线程</label><input id="mimoNearbyAudioWorkers" type="number" min="1" step="1" value="1"></div>
+                <div class="field"><label for="mimoNearbyAudioWorkers">短音频线程</label><input id="mimoNearbyAudioWorkers" type="number" min="1" step="1" value="5"></div>
                 <div class="field"><label for="mimoProofreadMaxTokens">MiMo Max Tokens</label><input id="mimoProofreadMaxTokens" type="number" min="512" step="512" value="4096"></div>
                 <label class="check field"><input id="mimoCompactOutput" type="checkbox"> 精简输出</label>
                 <div class="field wide"><label for="mimoProofreadOutputDir">MiMo 输出目录</label><div class="inline"><div class="path-combo"><input id="mimoProofreadOutputDir" placeholder="留空则写入 workdir\\experiments\\mimo-proofread"><button type="button" class="path-combo-toggle" onclick="togglePathMenu('mimoOutputHistory')" title="历史路径">⌄</button><div class="path-menu" id="mimoOutputHistory"></div></div><button type="button" id="pickMiMoOutputDirButton" onclick="pickPath('mimoProofreadOutputDir', '/api/pick-output-directory', 'mimoOutputHistory')">选择</button></div></div>
@@ -772,7 +770,10 @@
 
   <script>
     const SETTINGS_KEY = 'koeaxis_webui_settings_v1';
-    const LEGACY_SETTINGS_KEY = 'qwen3_asr_webui_settings_v3';
+    const LEGACY_SETTINGS_KEYS = [
+      'qwen3_asr_webui_settings_v3',
+      ['qwen3_asr_webui_settings', 'v2'].join('_')
+    ];
     const UI_KEY = 'qwen3_asr_webui_ui_state_v1';
     const EXPORT_HISTORY_KEY = 'qwen3_asr_export_history_v1';
     const PATH_HISTORY_KEYS = {
@@ -791,7 +792,7 @@
       mimoOutputHistory: 'mimoProofreadOutputDir',
       exportHistory: 'exportPath',
     };
-    const STAGES = ['prepare', 'transcribe', 'correct', 'align', 'split', 'translate', 'normalize', 'export', 'mimo-proofread'];
+    const STAGES = ['prepare', 'transcribe', 'correct', 'align', 'split', 'translate', 'mimo-proofread', 'proofread-realign', 'quality-gate', 'normalize', 'export'];
     const FILE_LABELS = {
       audio: 'Audio',
       segments: 'Segments',
@@ -800,13 +801,15 @@
       aligned: 'Aligned',
       split: 'Split',
       translated: 'Translated',
+      proofread_realign: 'Proofread Realign',
+      final_quality: 'Quality Gate',
       normalized: 'Normalized',
       srt: 'SRT',
       vtt: 'VTT'
     };
     const ARTIFACT_GROUPS = [
       ['输入', ['audio']],
-      ['中间结果', ['segments', 'transcript', 'corrected', 'aligned', 'split', 'translated', 'normalized']],
+      ['中间结果', ['segments', 'transcript', 'corrected', 'aligned', 'split', 'translated', 'proofread_realign', 'final_quality', 'normalized']],
       ['导出', ['srt', 'vtt']]
     ];
     const FIELD_GROUPS = {
@@ -819,7 +822,6 @@
       glossaryXlsx: 'llm',
       llmModel: 'llm',
       llmBaseUrl: 'llm',
-      llmApiKey: 'llm',
       proofreadKind: 'llm'
     };
     let selectedLogStage = '';
@@ -832,7 +834,7 @@
         'vadBackend', 'pyannoteOnnxModel', 'vadOnset', 'vadOffset', 'vadThreshold', 'vadMinSpeechMs', 'vadMinSilenceMs', 'vadSpeechPadMs',
         'maxSegmentSeconds', 'minSegmentSeconds', 'preferredSilenceMs', 'minSilenceMs', 'paddingMs', 'overlapMs',
         'workdir', 'asrModel', 'asrLanguage', 'alignModel', 'dtype', 'device', 'localFilesOnly', 'modelCacheDir',
-        'llmModel', 'threadNum', 'splitMode', 'splitMaxWordCountCjk', 'splitMaxWordCountEnglish', 'splitPromptLimitRatio',
+        'llmModel', 'threadNum', 'splitMaxWordCountCjk', 'splitMaxWordCountEnglish',
         'proofreadKind', 'correctBatchNum', 'translateBatchNum', 'llmTimeout', 'disableThinking', 'llmExtraBodyJson', 'llmBaseUrl',
         'targetLanguage', 'normalizeSource', 'normalizeExtendMs', 'normalizeSnapGapMs', 'normalizeMinBlankMs', 'translateCustomPrompt', 'glossaryXlsx',
         'mimoProofreadMode', 'mimoProofreadWorkers', 'mimoNearbyBatchSize', 'mimoNearbyBatchMaxGapS', 'mimoNearbyPaddingS',
@@ -841,22 +843,28 @@
       ];
     }
 
+    function sanitizedSettings(settings) {
+      if (!settings || typeof settings !== 'object' || Array.isArray(settings)) return {};
+      return Object.fromEntries(Object.entries(settings).filter(([name]) => !/(?:api.?key|secret|authorization|access.?token|auth.?token)/i.test(name)));
+    }
+
     function saveSettings() {
       const settings = {};
       for (const id of settingFields()) {
         const el = document.getElementById(id);
         settings[id] = el.type === 'checkbox' ? el.checked : el.value;
       }
-      localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+      localStorage.setItem(SETTINGS_KEY, JSON.stringify(sanitizedSettings(settings)));
       updateRailState();
       renderPathHistories();
     }
 
     function loadSettings() {
-      const raw = localStorage.getItem(SETTINGS_KEY) || localStorage.getItem(LEGACY_SETTINGS_KEY);
+      const sourceKey = [SETTINGS_KEY, ...LEGACY_SETTINGS_KEYS].find(key => localStorage.getItem(key));
+      const raw = sourceKey ? localStorage.getItem(sourceKey) : '';
       if (!raw) return;
       try {
-        const settings = JSON.parse(raw);
+        const settings = sanitizedSettings(JSON.parse(raw));
         for (const id of settingFields()) {
           const el = document.getElementById(id);
           if (!el || !(id in settings)) continue;
@@ -867,7 +875,8 @@
             el.value = hasOption ? wanted : '';
           } else el.value = settings[id];
         }
-        if (!localStorage.getItem(SETTINGS_KEY)) localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+        localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+        LEGACY_SETTINGS_KEYS.forEach(key => localStorage.removeItem(key));
       } catch (_) {}
       renderPathHistories();
       syncExportMode();
@@ -1001,10 +1010,8 @@
         local_files_only: document.getElementById('localFilesOnly').checked,
         llm_model: document.getElementById('llmModel').value,
         thread_num: document.getElementById('threadNum').value,
-        split_mode: document.getElementById('splitMode').value,
         split_max_word_count_cjk: document.getElementById('splitMaxWordCountCjk').value,
         split_max_word_count_english: document.getElementById('splitMaxWordCountEnglish').value,
-        split_prompt_limit_ratio: document.getElementById('splitPromptLimitRatio').value,
         proofread_kind: document.getElementById('proofreadKind').value,
         correct_batch_num: document.getElementById('correctBatchNum').value,
         translate_batch_num: document.getElementById('translateBatchNum').value,
@@ -1012,7 +1019,6 @@
         disable_thinking: document.getElementById('disableThinking').checked,
         llm_extra_body_json: document.getElementById('llmExtraBodyJson').value,
         llm_base_url: document.getElementById('llmBaseUrl').value,
-        llm_api_key: document.getElementById('llmApiKey').value,
         mimo_proofread_mode: document.getElementById('mimoProofreadMode').value,
         mimo_proofread_workers: document.getElementById('mimoProofreadWorkers').value,
         mimo_nearby_batch_size: document.getElementById('mimoNearbyBatchSize').value,
@@ -1070,7 +1076,6 @@
       const workdir = document.getElementById('workdir').value.trim();
       const llmModel = document.getElementById('llmModel').value.trim();
       const llmBaseUrl = document.getElementById('llmBaseUrl').value.trim();
-      const llmApiKey = document.getElementById('llmApiKey').value.trim();
       const exportMode = document.getElementById('exportMode').value;
       const exportPath = document.getElementById('exportPath').value.trim();
       if (!workdir) return { message: '工作目录不能为空。', fieldId: 'workdir' };

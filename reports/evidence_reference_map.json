@@ -1,0 +1,2094 @@
+{
+  "generated_at": "2026-07-15T15:01:27.340398+00:00",
+  "reference_documents": [
+    "benchmarks/reproduction_commands.md",
+    "benchmarks/resume_audit.md",
+    "docs/api-credentials.template.md",
+    "docs/ARCHITECTURE.md",
+    "docs/Goal模式完整任务提示词.md",
+    "docs/PERFORMANCE_OPTIMIZATION.md",
+    "docs/PIPELINE.md",
+    "docs/STATUS.md",
+    "docs/WEBUI.md",
+    "docs/字幕流程完整改造计划与验收清单.md",
+    "docs/项目文件与代码整理计划.md",
+    "reports/final_acceptance.md",
+    "reports/rejected_feature_inventory.md"
+  ],
+  "workspaces": [
+    {
+      "path": "workspaces/0003-media",
+      "files": 19,
+      "size_bytes": 15392493,
+      "modified_at": "2026-06-06T17:08:59.320406+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative document reference found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "workspaces/0004-media",
+      "files": 19,
+      "size_bytes": 17183159,
+      "modified_at": "2026-06-06T17:13:42.107932+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative document reference found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "workspaces/0005-media",
+      "files": 20,
+      "size_bytes": 16506474,
+      "modified_at": "2026-06-06T17:26:38.933793+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative document reference found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "workspaces/0006-36-0609",
+      "files": 38,
+      "size_bytes": 126161221,
+      "modified_at": "2026-06-09T17:40:45.216791+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative document reference found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "workspaces/0007-media",
+      "files": 20,
+      "size_bytes": 19639581,
+      "modified_at": "2026-06-09T18:16:59.567455+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative document reference found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "workspaces/0008-YouTuber",
+      "files": 19,
+      "size_bytes": 12562266,
+      "modified_at": "2026-06-10T04:21:57.121546+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative document reference found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "workspaces/0008-YouTuber-current-regression",
+      "files": 24,
+      "size_bytes": 12649016,
+      "modified_at": "2026-07-09T06:57:25.878024+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative document reference found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "workspaces/0999-align-compare-20260610-151001-ci1",
+      "files": 48,
+      "size_bytes": 6278568,
+      "modified_at": "2026-06-10T07:10:52.025490+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative document reference found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "workspaces/0999-align-compare-20260610-151001-ci20",
+      "files": 3,
+      "size_bytes": 580331,
+      "modified_at": "2026-06-10T07:12:56.742111+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative document reference found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "workspaces/0999-align-compare-20260610-151001-ci20b",
+      "files": 48,
+      "size_bytes": 6285748,
+      "modified_at": "2026-06-10T07:14:22.201491+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative document reference found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "workspaces/0999-align-compare-20260610-151001-ci4",
+      "files": 48,
+      "size_bytes": 6276695,
+      "modified_at": "2026-06-10T07:10:49.148271+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative document reference found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "workspaces/0999-align-compare-20260610-151001-ci8",
+      "files": 6,
+      "size_bytes": 581037,
+      "modified_at": "2026-06-10T07:12:56.742111+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative document reference found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "workspaces/0999-align-compare-20260610-151001-ci8b",
+      "files": 48,
+      "size_bytes": 6285767,
+      "modified_at": "2026-06-10T07:13:50.758681+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative document reference found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "workspaces/0999-auto-profile-20260610-144415-iter1",
+      "files": 50,
+      "size_bytes": 523291,
+      "modified_at": "2026-06-10T06:47:00.559603+00:00",
+      "status": "KEY_EVIDENCE",
+      "reason": "Referenced by a current or historical acceptance, benchmark, or planning document.",
+      "references": [
+        "benchmarks/resume_audit.md"
+      ]
+    },
+    {
+      "path": "workspaces/0999-auto-profile-20260610-144415-iter2",
+      "files": 50,
+      "size_bytes": 532019,
+      "modified_at": "2026-06-10T06:50:26.045926+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative document reference found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "workspaces/0999-auto-profile-20260610-144415-iter3",
+      "files": 50,
+      "size_bytes": 523277,
+      "modified_at": "2026-06-10T06:53:35.907089+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative document reference found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "workspaces/0999-batch2-sweep-20260610-131932",
+      "files": 29,
+      "size_bytes": 124627929,
+      "modified_at": "2026-06-10T05:21:41.118840+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative document reference found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "workspaces/0999-batch3-sweep-20260610-132141",
+      "files": 29,
+      "size_bytes": 124626725,
+      "modified_at": "2026-06-10T05:23:19.701374+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative document reference found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "workspaces/0999-batch4-20260610-130108",
+      "files": 29,
+      "size_bytes": 124645543,
+      "modified_at": "2026-06-10T05:02:31.768831+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative document reference found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "workspaces/0999-batch4-vram-20260610-131411",
+      "files": 29,
+      "size_bytes": 124625955,
+      "modified_at": "2026-06-10T05:15:30.116853+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative document reference found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "workspaces/0999-batch5-sweep-20260610-132320",
+      "files": 29,
+      "size_bytes": 124625743,
+      "modified_at": "2026-06-10T05:24:32.582801+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative document reference found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "workspaces/0999-batch6-sweep-20260610-132433",
+      "files": 29,
+      "size_bytes": 124625791,
+      "modified_at": "2026-06-10T05:25:48.027542+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative document reference found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "workspaces/0999-batch7-sweep-20260610-132549",
+      "files": 29,
+      "size_bytes": 124625559,
+      "modified_at": "2026-06-10T05:26:56.992823+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative document reference found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "workspaces/0999-batch8-sweep-20260610-132657",
+      "files": 29,
+      "size_bytes": 124625632,
+      "modified_at": "2026-06-10T05:28:08.439459+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative document reference found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "workspaces/0999-manual-probe",
+      "files": 4,
+      "size_bytes": 62302628,
+      "modified_at": "2026-06-10T04:36:52.856403+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative document reference found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "workspaces/0999-manual-probe2",
+      "files": 28,
+      "size_bytes": 124623887,
+      "modified_at": "2026-06-10T04:41:09.636272+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative document reference found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "workspaces/0999-oomprobe-20260610-133853",
+      "files": 27,
+      "size_bytes": 124623302,
+      "modified_at": "2026-06-10T05:39:54.691449+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative document reference found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "workspaces/0999-oomprobe20-20260610-134007",
+      "files": 27,
+      "size_bytes": 124623262,
+      "modified_at": "2026-06-10T05:41:08.003860+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative document reference found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "workspaces/0999-oomprobe40-20260610-134131",
+      "files": 26,
+      "size_bytes": 124551120,
+      "modified_at": "2026-07-15T14:04:32.063860+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative document reference found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "workspaces/0999-oomprobe40b-20260610-134150",
+      "files": 27,
+      "size_bytes": 124700402,
+      "modified_at": "2026-06-10T05:50:26.455841+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative document reference found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "workspaces/0999-perfbench-20260610-123614",
+      "files": 3,
+      "size_bytes": 617,
+      "modified_at": "2026-06-10T04:36:27.640964+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative document reference found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "workspaces/0999-perfbench2-20260610-124149",
+      "files": 4,
+      "size_bytes": 2964,
+      "modified_at": "2026-06-10T04:42:02.343085+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative document reference found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "workspaces/0999-perfbench3-20260610-124214",
+      "files": 38,
+      "size_bytes": 125197826,
+      "modified_at": "2026-06-10T04:57:23.770113+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative document reference found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "workspaces/1000-test",
+      "files": 2,
+      "size_bytes": 60431888,
+      "modified_at": "2026-06-10T07:57:01.718409+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative document reference found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "workspaces/1001-test",
+      "files": 4,
+      "size_bytes": 60439956,
+      "modified_at": "2026-06-10T08:11:36.116615+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative document reference found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "workspaces/1002-test",
+      "files": 27,
+      "size_bytes": 120866247,
+      "modified_at": "2026-06-10T08:17:09.832080+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative document reference found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "workspaces/1003-test",
+      "files": 30,
+      "size_bytes": 122257673,
+      "modified_at": "2026-06-10T08:49:24.818280+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative document reference found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "workspaces/1004-test",
+      "files": 27,
+      "size_bytes": 120866247,
+      "modified_at": "2026-06-10T09:23:06.101598+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative document reference found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "workspaces/1004-test-2",
+      "files": 27,
+      "size_bytes": 120866427,
+      "modified_at": "2026-06-10T09:26:26.911942+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative document reference found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "workspaces/1005-186-2026.6.12-GWJWuGaFnnE",
+      "files": 32,
+      "size_bytes": 54723210,
+      "modified_at": "2026-06-14T16:50:32.615212+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative document reference found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "workspaces/1006-37-0616",
+      "files": 44,
+      "size_bytes": 113844501,
+      "modified_at": "2026-06-17T07:21:26.047667+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative document reference found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "workspaces/1007-37-0616--00.25.49.780-00.28.18.988",
+      "files": 23,
+      "size_bytes": 9772162,
+      "modified_at": "2026-06-17T08:47:11.197783+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative document reference found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "workspaces/1008-38",
+      "files": 26,
+      "size_bytes": 23391198,
+      "modified_at": "2026-06-24T06:18:13.721057+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative document reference found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "workspaces/1009-media",
+      "files": 68,
+      "size_bytes": 253283589,
+      "modified_at": "2026-06-29T14:46:03.803572+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative document reference found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "workspaces/1010-gemini-branch-20260707",
+      "files": 144,
+      "size_bytes": 248559897,
+      "modified_at": "2026-07-08T11:13:32.287283+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative document reference found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "workspaces/1011-BDEP4",
+      "files": 1439,
+      "size_bytes": 111853577,
+      "modified_at": "2026-07-10T08:27:43.921678+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative document reference found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "workspaces/1011-BDEP4-mdx-exp",
+      "files": 1178,
+      "size_bytes": 663151694,
+      "modified_at": "2026-07-10T08:13:48.500691+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative document reference found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "workspaces/1011-BDEP4-pyannote-exp",
+      "files": 878,
+      "size_bytes": 107186084,
+      "modified_at": "2026-07-10T08:13:56.593494+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative document reference found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "workspaces/1011-BDEP4-token-boundary-smoke",
+      "files": 40,
+      "size_bytes": 87377463,
+      "modified_at": "2026-07-09T01:55:33.722971+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative document reference found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "workspaces/align-split-audit-20260712-041500",
+      "files": 16,
+      "size_bytes": 331574,
+      "modified_at": "2026-07-13T07:39:03.980949+00:00",
+      "status": "KEY_EVIDENCE",
+      "reason": "Referenced by a current or historical acceptance, benchmark, or planning document.",
+      "references": [
+        "docs/字幕流程完整改造计划与验收清单.md"
+      ]
+    },
+    {
+      "path": "workspaces/align-timing-repair-ab-20260712-043000",
+      "files": 12,
+      "size_bytes": 1400943,
+      "modified_at": "2026-07-13T06:16:52.017101+00:00",
+      "status": "KEY_EVIDENCE",
+      "reason": "Referenced by a current or historical acceptance, benchmark, or planning document.",
+      "references": [
+        "docs/字幕流程完整改造计划与验收清单.md"
+      ]
+    },
+    {
+      "path": "workspaces/aligner-ab-20260712-033720",
+      "files": 774,
+      "size_bytes": 98385962,
+      "modified_at": "2026-07-13T05:57:21.697133+00:00",
+      "status": "KEY_EVIDENCE",
+      "reason": "Referenced by a current or historical acceptance, benchmark, or planning document.",
+      "references": [
+        "docs/字幕流程完整改造计划与验收清单.md"
+      ]
+    },
+    {
+      "path": "workspaces/ass-low-audio-review-20260713-100000",
+      "files": 403,
+      "size_bytes": 273178118,
+      "modified_at": "2026-07-13T02:40:14.784934+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative document reference found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "workspaces/clean-regression-20260712-002943",
+      "files": 144,
+      "size_bytes": 111854561,
+      "modified_at": "2026-07-13T07:05:43.919796+00:00",
+      "status": "KEY_EVIDENCE",
+      "reason": "Referenced by a current or historical acceptance, benchmark, or planning document.",
+      "references": [
+        "docs/Goal模式完整任务提示词.md",
+        "docs/字幕流程完整改造计划与验收清单.md"
+      ]
+    },
+    {
+      "path": "workspaces/clean-regression-20260712-002943-dedupe-check",
+      "files": 36,
+      "size_bytes": 92195829,
+      "modified_at": "2026-07-11T16:53:52.738807+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative document reference found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "workspaces/diff-only-audio-review-20260711-214733",
+      "files": 153,
+      "size_bytes": 111878244,
+      "modified_at": "2026-07-11T14:03:03.175600+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative document reference found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "workspaces/diff-only-audio-review-guarded-20260711-223737",
+      "files": 142,
+      "size_bytes": 110567347,
+      "modified_at": "2026-07-11T16:07:43.915666+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative document reference found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "workspaces/diff-only-audio-review-safe-20260711-220619",
+      "files": 148,
+      "size_bytes": 111405267,
+      "modified_at": "2026-07-11T14:29:37.584124+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative document reference found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "workspaces/diff-only-audio-review-stage1clean-20260712-000950",
+      "files": 110,
+      "size_bytes": 101758704,
+      "modified_at": "2026-07-11T16:23:31.630440+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative document reference found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "workspaces/final-regression-20260713-104500",
+      "files": 43,
+      "size_bytes": 2310505,
+      "modified_at": "2026-07-13T01:51:10.390758+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative document reference found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "workspaces/final-regression-content-repair-20260713-095014",
+      "files": 24,
+      "size_bytes": 1547216,
+      "modified_at": "2026-07-13T01:56:13.392437+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative document reference found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "workspaces/final-regression-post-content-fix-20260713-095014",
+      "files": 57,
+      "size_bytes": 2531224,
+      "modified_at": "2026-07-13T02:02:40.938035+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative document reference found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "workspaces/history-glossary-episode15-curated",
+      "files": 27,
+      "size_bytes": 36530771,
+      "modified_at": "2026-06-10T12:36:06.810730+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative document reference found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "workspaces/history-glossary-llm-episode15-20260610",
+      "files": 27,
+      "size_bytes": 36530837,
+      "modified_at": "2026-06-10T12:58:28.959727+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative document reference found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "workspaces/history-glossary-llm-episode15-20260610-v2",
+      "files": 27,
+      "size_bytes": 36530821,
+      "modified_at": "2026-06-10T13:05:50.267022+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative document reference found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "workspaces/history-glossary-llm-full-20260610",
+      "files": 106,
+      "size_bytes": 191872954,
+      "modified_at": "2026-06-10T12:55:12.205868+00:00",
+      "status": "KEY_EVIDENCE",
+      "reason": "Referenced by a current or historical acceptance, benchmark, or planning document.",
+      "references": [
+        "benchmarks/resume_audit.md"
+      ]
+    },
+    {
+      "path": "workspaces/history-glossary-llm-full-20260610-v2",
+      "files": 112,
+      "size_bytes": 192137674,
+      "modified_at": "2026-06-10T17:01:28.881638+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative document reference found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "workspaces/history-glossary-run-20260610",
+      "files": 110,
+      "size_bytes": 192204499,
+      "modified_at": "2026-06-10T12:16:21.174142+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative document reference found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "workspaces/history-glossary-run-20260610-v2",
+      "files": 106,
+      "size_bytes": 191871546,
+      "modified_at": "2026-06-10T12:24:32.638988+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative document reference found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "workspaces/history-glossary-run-20260610-v3",
+      "files": 107,
+      "size_bytes": 191873227,
+      "modified_at": "2026-06-10T12:32:13.694023+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative document reference found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "workspaces/kono-dual-route-second-pass-20260713-114400",
+      "files": 294,
+      "size_bytes": 124797144,
+      "modified_at": "2026-07-13T04:06:41.148680+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative document reference found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "workspaces/mfa-candidate-normalize-ab-20260712-060000",
+      "files": 27,
+      "size_bytes": 91756274,
+      "modified_at": "2026-07-12T04:03:23.404437+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative document reference found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "workspaces/mfa-lab-choice-ab-20260712-052000",
+      "files": 27,
+      "size_bytes": 91755687,
+      "modified_at": "2026-07-11T20:26:06.511103+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative document reference found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "workspaces/mfa-local-fallback-ab-20260712-045500",
+      "files": 27,
+      "size_bytes": 91757422,
+      "modified_at": "2026-07-11T20:18:57.697087+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative document reference found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "workspaces/mfa-local-score-guard-ab-20260712-063000",
+      "files": 27,
+      "size_bytes": 91757405,
+      "modified_at": "2026-07-12T04:12:44.514985+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative document reference found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "workspaces/mfa-smoke-20260712-011606",
+      "files": 3,
+      "size_bytes": 96732,
+      "modified_at": "2026-07-11T17:20:36.101619+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative document reference found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "workspaces/mfa-writeback-apply-ab-20260712-073000",
+      "files": 27,
+      "size_bytes": 91766770,
+      "modified_at": "2026-07-12T04:33:26.344405+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative document reference found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "workspaces/mfa-writeback-dryrun-ab-20260712-070000",
+      "files": 27,
+      "size_bytes": 91761999,
+      "modified_at": "2026-07-12T04:23:00.701562+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative document reference found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "workspaces/mimo-content-deletion-guard-20260713-094500",
+      "files": 11,
+      "size_bytes": 590748,
+      "modified_at": "2026-07-13T01:34:43.094002+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative document reference found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "workspaces/p0-split-content-diagnosis-20260713-162400",
+      "files": 16,
+      "size_bytes": 1126099,
+      "modified_at": "2026-07-13T08:42:35.344239+00:00",
+      "status": "KEY_EVIDENCE",
+      "reason": "Referenced by a current or historical acceptance, benchmark, or planning document.",
+      "references": [
+        "docs/字幕流程完整改造计划与验收清单.md"
+      ]
+    },
+    {
+      "path": "workspaces/p1-split-strategy-ab-20260713-164700",
+      "files": 11,
+      "size_bytes": 1281839,
+      "modified_at": "2026-07-13T08:50:36.487147+00:00",
+      "status": "KEY_EVIDENCE",
+      "reason": "Referenced by a current or historical acceptance, benchmark, or planning document.",
+      "references": [
+        "docs/字幕流程完整改造计划与验收清单.md"
+      ]
+    },
+    {
+      "path": "workspaces/p1-split-strategy-ab-20260713-181217",
+      "files": 23,
+      "size_bytes": 1999211,
+      "modified_at": "2026-07-13T10:19:41.989121+00:00",
+      "status": "KEY_EVIDENCE",
+      "reason": "Referenced by a current or historical acceptance, benchmark, or planning document.",
+      "references": [
+        "docs/字幕流程完整改造计划与验收清单.md"
+      ]
+    },
+    {
+      "path": "workspaces/p2-split-readability-20260713-170016",
+      "files": 44,
+      "size_bytes": 2316064,
+      "modified_at": "2026-07-13T09:14:44.796587+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative document reference found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "workspaces/p2-split-readability-20260713-172905",
+      "files": 32,
+      "size_bytes": 1121625,
+      "modified_at": "2026-07-13T10:08:09.622693+00:00",
+      "status": "KEY_EVIDENCE",
+      "reason": "Referenced by a current or historical acceptance, benchmark, or planning document.",
+      "references": [
+        "docs/字幕流程完整改造计划与验收清单.md"
+      ]
+    },
+    {
+      "path": "workspaces/p3-suspects-mimo-20260713-182318",
+      "files": 239,
+      "size_bytes": 203867372,
+      "modified_at": "2026-07-13T10:38:42.846941+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative document reference found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "workspaces/p3-suspects-mimo-guarded-20260713-185119",
+      "files": 235,
+      "size_bytes": 204245793,
+      "modified_at": "2026-07-13T11:02:43.502330+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative document reference found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "workspaces/p3-suspects-mimo-guarded-v2-20260713-190506",
+      "files": 235,
+      "size_bytes": 204235244,
+      "modified_at": "2026-07-13T11:16:17.039511+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative document reference found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "workspaces/p3-suspects-mimo-guarded-v3-20260713-191850",
+      "files": 235,
+      "size_bytes": 204180456,
+      "modified_at": "2026-07-13T11:37:45.007493+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative document reference found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "workspaces/p3-suspects-mimo-guarded-v4-20260713-193936",
+      "files": 237,
+      "size_bytes": 204174681,
+      "modified_at": "2026-07-13T11:55:19.511608+00:00",
+      "status": "KEY_EVIDENCE",
+      "reason": "Referenced by a current or historical acceptance, benchmark, or planning document.",
+      "references": [
+        "docs/字幕流程完整改造计划与验收清单.md"
+      ]
+    },
+    {
+      "path": "workspaces/p4-proofread-realign-20260713-195633",
+      "files": 246,
+      "size_bytes": 204651790,
+      "modified_at": "2026-07-13T13:06:01.875061+00:00",
+      "status": "KEY_EVIDENCE",
+      "reason": "Referenced by a current or historical acceptance, benchmark, or planning document.",
+      "references": [
+        "docs/字幕流程完整改造计划与验收清单.md",
+        "reports/rejected_feature_inventory.md"
+      ]
+    },
+    {
+      "path": "workspaces/p4-proofread-realign-clamped-20260713-202024",
+      "files": 244,
+      "size_bytes": 205048251,
+      "modified_at": "2026-07-13T12:29:39.612973+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative document reference found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "workspaces/p4-proofread-realign-conservative-20260713-203647",
+      "files": 126,
+      "size_bytes": 106210588,
+      "modified_at": "2026-07-13T12:39:16.474911+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative document reference found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "workspaces/p4-proofread-realign-final-20260713-203004",
+      "files": 244,
+      "size_bytes": 204904827,
+      "modified_at": "2026-07-13T12:35:27.142278+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative document reference found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "workspaces/p4-proofread-realign-final2-20260713-205103",
+      "files": 244,
+      "size_bytes": 204904718,
+      "modified_at": "2026-07-13T12:56:54.574381+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative document reference found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "workspaces/p4-proofread-realign-final3-20260713-205857",
+      "files": 244,
+      "size_bytes": 204905153,
+      "modified_at": "2026-07-13T13:04:18.544299+00:00",
+      "status": "KEY_EVIDENCE",
+      "reason": "Referenced by a current or historical acceptance, benchmark, or planning document.",
+      "references": [
+        "docs/字幕流程完整改造计划与验收清单.md"
+      ]
+    },
+    {
+      "path": "workspaces/p4-proofread-realign-mid-20260713-200944",
+      "files": 126,
+      "size_bytes": 106047825,
+      "modified_at": "2026-07-13T12:16:22.125699+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative document reference found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "workspaces/p4-proofread-realign-wide-20260713-200649",
+      "files": 126,
+      "size_bytes": 106210175,
+      "modified_at": "2026-07-13T12:09:19.155482+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative document reference found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "workspaces/p5-final-regression-20260714-115952",
+      "files": 580,
+      "size_bytes": 523078935,
+      "modified_at": "2026-07-14T05:48:33.305059+00:00",
+      "status": "KEY_EVIDENCE",
+      "reason": "Referenced by a current or historical acceptance, benchmark, or planning document.",
+      "references": [
+        "docs/字幕流程完整改造计划与验收清单.md"
+      ]
+    },
+    {
+      "path": "workspaces/p6-acceptance-audit-20260714-151921",
+      "files": 2,
+      "size_bytes": 12266,
+      "modified_at": "2026-07-14T08:00:00.827170+00:00",
+      "status": "KEY_EVIDENCE",
+      "reason": "Referenced by a current or historical acceptance, benchmark, or planning document.",
+      "references": [
+        "docs/字幕流程完整改造计划与验收清单.md"
+      ]
+    },
+    {
+      "path": "workspaces/p6-align-matrix-20260714-154652",
+      "files": 185,
+      "size_bytes": 14060082,
+      "modified_at": "2026-07-14T07:54:59.882057+00:00",
+      "status": "KEY_EVIDENCE",
+      "reason": "Referenced by a current or historical acceptance, benchmark, or planning document.",
+      "references": [
+        "docs/字幕流程完整改造计划与验收清单.md"
+      ]
+    },
+    {
+      "path": "workspaces/p6-final-regression-20260714-160541",
+      "files": 122,
+      "size_bytes": 234484373,
+      "modified_at": "2026-07-14T08:26:25.552751+00:00",
+      "status": "CURRENT_BASELINE",
+      "reason": "Latest named P6 final-regression workspace; retain as the current acceptance baseline.",
+      "references": [
+        "docs/字幕流程完整改造计划与验收清单.md"
+      ]
+    },
+    {
+      "path": "workspaces/p6-konoato-llm-split-probe-20260714-155633",
+      "files": 41,
+      "size_bytes": 480145,
+      "modified_at": "2026-07-14T08:00:00.826172+00:00",
+      "status": "KEY_EVIDENCE",
+      "reason": "Referenced by a current or historical acceptance, benchmark, or planning document.",
+      "references": [
+        "docs/字幕流程完整改造计划与验收清单.md"
+      ]
+    },
+    {
+      "path": "workspaces/p6-mfa-qwen-ab-20260714-152423",
+      "files": 62,
+      "size_bytes": 4589052,
+      "modified_at": "2026-07-14T07:44:10.754088+00:00",
+      "status": "KEY_EVIDENCE",
+      "reason": "Referenced by a current or historical acceptance, benchmark, or planning document.",
+      "references": [
+        "docs/字幕流程完整改造计划与验收清单.md"
+      ]
+    },
+    {
+      "path": "workspaces/p6-slep2-mixed-language-realign-20260714-160258",
+      "files": 7,
+      "size_bytes": 142098,
+      "modified_at": "2026-07-14T08:04:26.137918+00:00",
+      "status": "KEY_EVIDENCE",
+      "reason": "Referenced by a current or historical acceptance, benchmark, or planning document.",
+      "references": [
+        "docs/字幕流程完整改造计划与验收清单.md"
+      ]
+    },
+    {
+      "path": "workspaces/proofread-realign-guard-20260713-101000",
+      "files": 9,
+      "size_bytes": 589235,
+      "modified_at": "2026-07-13T01:39:04.483836+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative document reference found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "workspaces/proofread-realign-mfa-ab-20260712-020410",
+      "files": 10,
+      "size_bytes": 44338104,
+      "modified_at": "2026-07-11T18:07:17.546683+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative document reference found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "workspaces/proofread-realign-mfa-ab-madougushi-20260712-020843",
+      "files": 10,
+      "size_bytes": 45716326,
+      "modified_at": "2026-07-11T18:12:05.844211+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative document reference found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "workspaces/proofread-realign-original-timing-validation-20260713-122700",
+      "files": 68,
+      "size_bytes": 3141015,
+      "modified_at": "2026-07-13T06:30:29.534679+00:00",
+      "status": "KEY_EVIDENCE",
+      "reason": "Referenced by a current or historical acceptance, benchmark, or planning document.",
+      "references": [
+        "docs/字幕流程完整改造计划与验收清单.md"
+      ]
+    },
+    {
+      "path": "workspaces/quality-gate-explicit-20260713-102500",
+      "files": 13,
+      "size_bytes": 587369,
+      "modified_at": "2026-07-13T01:42:42.975795+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative document reference found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "workspaces/quality-gate-web-validation-20260713-121700",
+      "files": 35,
+      "size_bytes": 2117940,
+      "modified_at": "2026-07-13T04:24:07.213219+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative document reference found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "workspaces/quality-suspects-expanded-20260713-104300",
+      "files": 426,
+      "size_bytes": 209540440,
+      "modified_at": "2026-07-13T03:25:02.239332+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative document reference found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "workspaces/quality-suspects-expanded-kana-20260713-110000",
+      "files": 479,
+      "size_bytes": 244623666,
+      "modified_at": "2026-07-13T03:16:59.047729+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative document reference found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "workspaces/second-pass-matched-key-20260713-112700",
+      "files": 479,
+      "size_bytes": 229297920,
+      "modified_at": "2026-07-13T03:42:29.326733+00:00",
+      "status": "KEY_EVIDENCE",
+      "reason": "Referenced by a current or historical acceptance, benchmark, or planning document.",
+      "references": [
+        "docs/字幕流程完整改造计划与验收清单.md"
+      ]
+    },
+    {
+      "path": "workspaces/SLEP2-baseline-test",
+      "files": 148,
+      "size_bytes": 95522100,
+      "modified_at": "2026-07-10T12:08:52.745587+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative document reference found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "workspaces/split-default-rule-cjk18-ab-20260713-091758",
+      "files": 1,
+      "size_bytes": 2082,
+      "modified_at": "2026-07-13T01:19:50.095300+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative document reference found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "workspaces/split-llm-modes-ab-20260713-085740",
+      "files": 85,
+      "size_bytes": 364952297,
+      "modified_at": "2026-07-13T01:06:23.065095+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative document reference found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "workspaces/split-overlong-diagnostic-refine-ab-20260713-091459",
+      "files": 17,
+      "size_bytes": 1676341,
+      "modified_at": "2026-07-13T01:17:21.549246+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative document reference found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "workspaces/split-overlong-threshold-ab-20260713-091353",
+      "files": 41,
+      "size_bytes": 182442925,
+      "modified_at": "2026-07-13T01:27:23.748112+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative document reference found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "workspaces/split-protected-extract-ab-20260712-090000",
+      "files": 31,
+      "size_bytes": 182396146,
+      "modified_at": "2026-07-12T04:46:49.704466+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative document reference found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "workspaces/split-short-context-refine-ab-20260713-090921",
+      "files": 28,
+      "size_bytes": 91632741,
+      "modified_at": "2026-07-13T01:17:12.517343+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative document reference found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "workspaces/split-short-guard-ab-20260712-080000",
+      "files": 2,
+      "size_bytes": 2187,
+      "modified_at": "2026-07-12T04:37:33.872208+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative document reference found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "workspaces/split-strategy-ab-20260712-083000",
+      "files": 18,
+      "size_bytes": 91197262,
+      "modified_at": "2026-07-12T04:41:39.453080+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative document reference found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "workspaces/split-zero-token-anchor-ab-20260713-120000",
+      "files": 144,
+      "size_bytes": 109971886,
+      "modified_at": "2026-07-13T04:01:44.162117+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative document reference found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "workspaces/stable-baseline-20260712-035208",
+      "files": 10,
+      "size_bytes": 28276,
+      "modified_at": "2026-07-11T19:54:58.209281+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative document reference found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "workspaces/stable-baseline-v2-20260712-035724",
+      "files": 11,
+      "size_bytes": 34864,
+      "modified_at": "2026-07-13T05:16:11.756284+00:00",
+      "status": "KEY_EVIDENCE",
+      "reason": "Referenced by a current or historical acceptance, benchmark, or planning document.",
+      "references": [
+        "docs/字幕流程完整改造计划与验收清单.md"
+      ]
+    },
+    {
+      "path": "workspaces/timing-shifted-realign-route-20260713-121100",
+      "files": 12,
+      "size_bytes": 750778,
+      "modified_at": "2026-07-13T04:14:20.167476+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative document reference found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "workspaces/translation-suspects-refine-20260713-093000",
+      "files": 5,
+      "size_bytes": 421137,
+      "modified_at": "2026-07-13T01:28:59.172503+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative document reference found; no archive or delete action is inferred.",
+      "references": []
+    }
+  ],
+  "tmp_manual_tests": [
+    {
+      "path": "tmp_manual_tests/align-vs-asr-downgrade",
+      "files": 3,
+      "size_bytes": 33660,
+      "modified_at": "2026-07-15T14:03:57.243179+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative replacement mapping found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "tmp_manual_tests/ass-quality-aligned-segment-20260711-2113",
+      "files": 24,
+      "size_bytes": 2769248,
+      "modified_at": "2026-07-11T13:12:50.028744+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative replacement mapping found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "tmp_manual_tests/ass-quality-diagnostics-20260711-1932",
+      "files": 8,
+      "size_bytes": 634074,
+      "modified_at": "2026-07-11T11:29:51.776972+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative replacement mapping found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "tmp_manual_tests/ass-quality-diff-20260711-2102",
+      "files": 4,
+      "size_bytes": 181060,
+      "modified_at": "2026-07-11T13:06:14.253590+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative replacement mapping found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "tmp_manual_tests/ass-quality-dual-20260711-1840",
+      "files": 7,
+      "size_bytes": 35078,
+      "modified_at": "2026-07-11T10:47:23.886047+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative replacement mapping found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "tmp_manual_tests/ass-quality-match-score-20260711-2110",
+      "files": 24,
+      "size_bytes": 2638317,
+      "modified_at": "2026-07-11T13:10:59.246406+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative replacement mapping found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "tmp_manual_tests/ass-quality-short-classification-20260711-1941",
+      "files": 4,
+      "size_bytes": 451734,
+      "modified_at": "2026-07-11T11:39:54.335066+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative replacement mapping found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "tmp_manual_tests/ass-quality-short-score-20260711-2107",
+      "files": 24,
+      "size_bytes": 2521025,
+      "modified_at": "2026-07-11T13:09:17.779733+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative replacement mapping found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "tmp_manual_tests/batch",
+      "files": 3,
+      "size_bytes": 647,
+      "modified_at": "2026-06-10T07:57:01.725198+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative replacement mapping found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "tmp_manual_tests/batch2",
+      "files": 3,
+      "size_bytes": 815,
+      "modified_at": "2026-06-10T07:58:47.081287+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative replacement mapping found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "tmp_manual_tests/batch3",
+      "files": 3,
+      "size_bytes": 1632,
+      "modified_at": "2026-06-10T08:11:42.842434+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative replacement mapping found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "tmp_manual_tests/batch4",
+      "files": 3,
+      "size_bytes": 6505,
+      "modified_at": "2026-06-10T08:17:09.833079+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative replacement mapping found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "tmp_manual_tests/case-61c3adb343cb4b87be683928fbd77c54",
+      "files": 21,
+      "size_bytes": 17456,
+      "modified_at": "2026-06-10T06:05:24.674315+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative replacement mapping found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "tmp_manual_tests/case-68ce907d79ee47a9bb0afabae6da2087",
+      "files": 21,
+      "size_bytes": 17456,
+      "modified_at": "2026-06-10T06:19:35.428334+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative replacement mapping found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "tmp_manual_tests/case-73e7894019f049a8bc995c271c7a590e",
+      "files": 9,
+      "size_bytes": 2898,
+      "modified_at": "2026-06-10T06:58:33.893276+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative replacement mapping found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "tmp_manual_tests/case-7429f3e7400045afb84f93bac109d6a7",
+      "files": 21,
+      "size_bytes": 17456,
+      "modified_at": "2026-06-10T06:24:52.420438+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative replacement mapping found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "tmp_manual_tests/case-75c8f5b9d3a34189b031d97567b0c177",
+      "files": 21,
+      "size_bytes": 17456,
+      "modified_at": "2026-06-10T06:58:33.877011+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative replacement mapping found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "tmp_manual_tests/case-8946988f1429473998752f4154f718a7",
+      "files": 11,
+      "size_bytes": 6321,
+      "modified_at": "2026-06-10T06:24:52.428967+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative replacement mapping found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "tmp_manual_tests/case-a33e5c5796814ae99c18d92820182a3b",
+      "files": 14,
+      "size_bytes": 8778,
+      "modified_at": "2026-06-10T07:09:37.084617+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative replacement mapping found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "tmp_manual_tests/case-b7a5143c850f43c3ae461b0111e4654b",
+      "files": 11,
+      "size_bytes": 7223,
+      "modified_at": "2026-06-10T06:36:44.869531+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative replacement mapping found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "tmp_manual_tests/case-c83056f407184c0caf9fb68234048af8",
+      "files": 21,
+      "size_bytes": 17456,
+      "modified_at": "2026-06-10T06:16:02.552474+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative replacement mapping found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "tmp_manual_tests/case-d90e84784bda4186a2bafa030235631a",
+      "files": 11,
+      "size_bytes": 8619,
+      "modified_at": "2026-06-10T06:58:33.883029+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative replacement mapping found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "tmp_manual_tests/case-e79dbccb6fe74d6c81933a38c9d9ced5",
+      "files": 2,
+      "size_bytes": 3540,
+      "modified_at": "2026-06-10T06:04:57.661258+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative replacement mapping found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "tmp_manual_tests/case-eff530aa9c65492785830fe6db980d71",
+      "files": 21,
+      "size_bytes": 17456,
+      "modified_at": "2026-06-10T06:36:44.864531+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative replacement mapping found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "tmp_manual_tests/compare-madougushi02-official-20260710-213319",
+      "files": 22,
+      "size_bytes": 792027,
+      "modified_at": "2026-07-10T14:32:35.995544+00:00",
+      "status": "KEY_EVIDENCE",
+      "reason": "Referenced by an acceptance or historical evidence document; retain in place.",
+      "references": [
+        "docs/Goal模式完整任务提示词.md",
+        "docs/字幕流程完整改造计划与验收清单.md"
+      ]
+    },
+    {
+      "path": "tmp_manual_tests/content-gate-konoato01-20260711-181557",
+      "files": 6,
+      "size_bytes": 618836,
+      "modified_at": "2026-07-11T10:19:01.687243+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative replacement mapping found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "tmp_manual_tests/denoise-compare-mdx",
+      "files": 5,
+      "size_bytes": 179461,
+      "modified_at": "2026-07-15T14:03:57.322285+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative replacement mapping found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "tmp_manual_tests/diff-suspect-routing-20260711-2125",
+      "files": 69,
+      "size_bytes": 5468942,
+      "modified_at": "2026-07-11T13:27:43.516292+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative replacement mapping found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "tmp_manual_tests/faster-whisper-madougushi02-20260710-235959",
+      "files": 4,
+      "size_bytes": 310111,
+      "modified_at": "2026-07-10T16:08:19.767098+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative replacement mapping found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "tmp_manual_tests/final-quality-regression-20260711-204609",
+      "files": 63,
+      "size_bytes": 5112866,
+      "modified_at": "2026-07-11T12:48:20.936808+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative replacement mapping found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "tmp_manual_tests/full-regression-local-collapse-20260709-161534",
+      "files": 66,
+      "size_bytes": 198118570,
+      "modified_at": "2026-07-09T08:31:23.990964+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative replacement mapping found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "tmp_manual_tests/full-run-1",
+      "files": 31,
+      "size_bytes": 122265113,
+      "modified_at": "2026-06-10T08:32:23.728409+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative replacement mapping found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "tmp_manual_tests/fullpost-madougushi02-20260710-213555",
+      "files": 184,
+      "size_bytes": 110833441,
+      "modified_at": "2026-07-10T13:53:54.395510+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative replacement mapping found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "tmp_manual_tests/fullpost-madougushi02-20260710-213555-mimo-applied",
+      "files": 13,
+      "size_bytes": 298784,
+      "modified_at": "2026-07-10T14:56:38.775382+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative replacement mapping found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "tmp_manual_tests/gemini-cps-diagnosis",
+      "files": 26,
+      "size_bytes": 3649825,
+      "modified_at": "2026-07-15T14:03:57.463779+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative replacement mapping found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "tmp_manual_tests/gemini-mdx-compare",
+      "files": 29,
+      "size_bytes": 2680638,
+      "modified_at": "2026-07-15T14:03:57.506197+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative replacement mapping found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "tmp_manual_tests/goal-bdep4-pyannote-fallback-20260710-201416",
+      "files": 148,
+      "size_bytes": 59089390,
+      "modified_at": "2026-07-10T12:16:06.580486+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative replacement mapping found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "tmp_manual_tests/goal-madougushi01-20260710-200928",
+      "files": 104,
+      "size_bytes": 98857006,
+      "modified_at": "2026-07-10T12:11:39.899392+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative replacement mapping found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "tmp_manual_tests/goal-madougushi02-20260710-210857",
+      "files": 247,
+      "size_bytes": 111666944,
+      "modified_at": "2026-07-10T13:11:57.992969+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative replacement mapping found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "tmp_manual_tests/goal-madougushi02-ja-20260710-211954",
+      "files": 167,
+      "size_bytes": 104224394,
+      "modified_at": "2026-07-10T13:22:22.919163+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative replacement mapping found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "tmp_manual_tests/goal-slep2-fallback-20260710-195550",
+      "files": 104,
+      "size_bytes": 55080884,
+      "modified_at": "2026-07-10T11:57:26.053049+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative replacement mapping found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "tmp_manual_tests/goal-slep2-pyannote-20260710-195750",
+      "files": 102,
+      "size_bytes": 99282938,
+      "modified_at": "2026-07-10T12:08:52.746598+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative replacement mapping found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "tmp_manual_tests/mimo-all-audio-madougushi02-20260710-232826",
+      "files": 99,
+      "size_bytes": 106727916,
+      "modified_at": "2026-07-10T16:03:25.677948+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative replacement mapping found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "tmp_manual_tests/mimo-confirm-goal-20260710-201700",
+      "files": 2,
+      "size_bytes": 6015,
+      "modified_at": "2026-07-10T12:17:40.301594+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative replacement mapping found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "tmp_manual_tests/mimo-confirm-madougushi02-20260710-211232",
+      "files": 3,
+      "size_bytes": 3076,
+      "modified_at": "2026-07-10T13:12:35.711498+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative replacement mapping found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "tmp_manual_tests/mimo-confirm-madougushi02-ja-20260710-212253",
+      "files": 3,
+      "size_bytes": 2754,
+      "modified_at": "2026-07-10T13:22:56.922758+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative replacement mapping found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "tmp_manual_tests/mimo-gemini-audio-eval",
+      "files": 41,
+      "size_bytes": 6387140,
+      "modified_at": "2026-07-09T08:52:42.731436+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative replacement mapping found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "tmp_manual_tests/pf",
+      "files": 2,
+      "size_bytes": 172,
+      "modified_at": "2026-06-10T07:58:47.016350+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative replacement mapping found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "tmp_manual_tests/pf2",
+      "files": 2,
+      "size_bytes": 172,
+      "modified_at": "2026-06-10T08:11:13.142659+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative replacement mapping found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "tmp_manual_tests/pf3",
+      "files": 2,
+      "size_bytes": 175,
+      "modified_at": "2026-06-10T08:13:27.707741+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative replacement mapping found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "tmp_manual_tests/pf4",
+      "files": 2,
+      "size_bytes": 175,
+      "modified_at": "2026-06-10T08:18:12.420317+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative replacement mapping found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "tmp_manual_tests/pipeline-ass-diff-suspects-20260711-2134",
+      "files": 87,
+      "size_bytes": 7659716,
+      "modified_at": "2026-07-11T13:36:25.106884+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative replacement mapping found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "tmp_manual_tests/pipeline-ass-diff-suspects-20260711-2138",
+      "files": 87,
+      "size_bytes": 7461027,
+      "modified_at": "2026-07-11T13:37:39.593278+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative replacement mapping found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "tmp_manual_tests/pipeline-auto-ass-quality-20260711-1950",
+      "files": 3,
+      "size_bytes": 448,
+      "modified_at": "2026-07-11T11:50:13.346861+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative replacement mapping found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "tmp_manual_tests/pipeline-auto-ass-quality-20260711-1951",
+      "files": 3,
+      "size_bytes": 478,
+      "modified_at": "2026-07-11T11:50:32.003386+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative replacement mapping found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "tmp_manual_tests/pipeline-diff-debug-20260711-2130",
+      "files": 18,
+      "size_bytes": 24612,
+      "modified_at": "2026-07-11T13:33:54.777497+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative replacement mapping found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "tmp_manual_tests/pipeline-improve-madougushi02-20260710-230647",
+      "files": 164,
+      "size_bytes": 113755764,
+      "modified_at": "2026-07-10T16:11:53.565295+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative replacement mapping found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "tmp_manual_tests/pipeline-quality-suspects-20260711-1948",
+      "files": 7,
+      "size_bytes": 1989,
+      "modified_at": "2026-07-11T11:46:48.055774+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative replacement mapping found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "tmp_manual_tests/quality-suspect-injection-20260711-1945",
+      "files": 0,
+      "size_bytes": 0,
+      "modified_at": "2026-07-11T11:43:36.387860+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative replacement mapping found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "tmp_manual_tests/quality-suspect-injection-20260711-1946",
+      "files": 2,
+      "size_bytes": 70955,
+      "modified_at": "2026-07-11T11:43:51.407552+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative replacement mapping found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "tmp_manual_tests/qwen15s-correct-eval-20260711-004824",
+      "files": 5,
+      "size_bytes": 37935,
+      "modified_at": "2026-07-15T14:03:57.770913+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative replacement mapping found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "tmp_manual_tests/qwen15s-madougushi02-20260711-000850",
+      "files": 261,
+      "size_bytes": 104535644,
+      "modified_at": "2026-07-11T11:29:50.653248+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative replacement mapping found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "tmp_manual_tests/qwen15s-postflow-fixed-20260711-002827",
+      "files": 3,
+      "size_bytes": 79952,
+      "modified_at": "2026-07-10T16:28:28.664057+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative replacement mapping found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "tmp_manual_tests/qwen15s-postflow-punct-20260711-003337",
+      "files": 3,
+      "size_bytes": 81796,
+      "modified_at": "2026-07-10T16:33:39.167263+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative replacement mapping found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "tmp_manual_tests/qwen15s-postflow-salvage-20260711-004050",
+      "files": 3,
+      "size_bytes": 88495,
+      "modified_at": "2026-07-10T16:40:52.339981+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative replacement mapping found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "tmp_manual_tests/qwen15s-postflow-salvage2-20260711-004146",
+      "files": 2,
+      "size_bytes": 25989,
+      "modified_at": "2026-07-10T16:41:47.749149+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative replacement mapping found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "tmp_manual_tests/qwen15s-postflow-sentence-20260711-003535",
+      "files": 3,
+      "size_bytes": 90554,
+      "modified_at": "2026-07-10T16:35:37.928821+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative replacement mapping found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "tmp_manual_tests/radio-mimo-translation-eval",
+      "files": 19,
+      "size_bytes": 2172973,
+      "modified_at": "2026-07-15T14:03:57.835751+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative replacement mapping found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "tmp_manual_tests/radio-regression-check",
+      "files": 6,
+      "size_bytes": 85503,
+      "modified_at": "2026-07-15T14:03:57.847236+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative replacement mapping found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "tmp_manual_tests/rerun-rule-split-quality-20260711-204939",
+      "files": 60,
+      "size_bytes": 93520884,
+      "modified_at": "2026-07-11T13:12:48.776411+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative replacement mapping found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "tmp_manual_tests/single",
+      "files": 2,
+      "size_bytes": 1359,
+      "modified_at": "2026-06-10T07:58:47.010841+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative replacement mapping found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "tmp_manual_tests/single2",
+      "files": 5,
+      "size_bytes": 60444629,
+      "modified_at": "2026-06-10T08:11:42.875017+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative replacement mapping found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "tmp_manual_tests/single3",
+      "files": 2,
+      "size_bytes": 1320,
+      "modified_at": "2026-06-10T08:13:27.699150+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative replacement mapping found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "tmp_manual_tests/single4",
+      "files": 31,
+      "size_bytes": 122239197,
+      "modified_at": "2026-06-10T08:25:06.663239+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative replacement mapping found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "tmp_manual_tests/single5",
+      "files": 29,
+      "size_bytes": 122201417,
+      "modified_at": "2026-06-10T08:26:23.267327+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative replacement mapping found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "tmp_manual_tests/slep2-baseline-test",
+      "files": 5,
+      "size_bytes": 87543,
+      "modified_at": "2026-07-15T14:03:57.880624+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative replacement mapping found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "tmp_manual_tests/split-inline-boundary-20260711-1935",
+      "files": 22,
+      "size_bytes": 1528668,
+      "modified_at": "2026-07-11T11:34:42.819473+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative replacement mapping found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "tmp_manual_tests/split-inline-boundary-20260711-1938",
+      "files": 22,
+      "size_bytes": 1528827,
+      "modified_at": "2026-07-11T11:39:53.940625+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative replacement mapping found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "tmp_manual_tests/split-residual-timing-20260711-1925",
+      "files": 22,
+      "size_bytes": 1263967,
+      "modified_at": "2026-07-11T11:26:04.160039+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative replacement mapping found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "tmp_manual_tests/split-residual-timing-20260711-1930",
+      "files": 23,
+      "size_bytes": 1370072,
+      "modified_at": "2026-07-11T11:29:51.656085+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative replacement mapping found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "tmp_manual_tests/split-tail-fragment-validation-20260711-2116",
+      "files": 122,
+      "size_bytes": 100509611,
+      "modified_at": "2026-07-11T13:21:49.427864+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative replacement mapping found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "tmp_manual_tests/stage-ass-baselines-20260711-1905",
+      "files": 27,
+      "size_bytes": 359538,
+      "modified_at": "2026-07-11T11:22:24.786758+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative replacement mapping found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "tmp_manual_tests/subtitle_fix_work",
+      "files": 7,
+      "size_bytes": 106957,
+      "modified_at": "2026-07-15T14:03:57.934211+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative replacement mapping found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "tmp_manual_tests/tuning-matrix-20260711-1850",
+      "files": 2,
+      "size_bytes": 46443,
+      "modified_at": "2026-07-11T10:51:36.954760+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative replacement mapping found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "tmp_manual_tests/tuning-matrix-20260711-1933",
+      "files": 2,
+      "size_bytes": 739361,
+      "modified_at": "2026-07-11T11:31:17.485591+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative replacement mapping found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "tmp_manual_tests/tuning-matrix-20260711-1939",
+      "files": 2,
+      "size_bytes": 742080,
+      "modified_at": "2026-07-11T11:36:17.254940+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative replacement mapping found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "tmp_manual_tests/tuning-matrix-20260711-1942",
+      "files": 2,
+      "size_bytes": 527562,
+      "modified_at": "2026-07-11T11:40:34.354930+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative replacement mapping found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "tmp_manual_tests/vad-compare-pyannote",
+      "files": 5,
+      "size_bytes": 160225,
+      "modified_at": "2026-07-09T06:32:59.170769+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative replacement mapping found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "tmp_manual_tests/validate-ani-konoato01-20260711-005627",
+      "files": 219,
+      "size_bytes": 97724119,
+      "modified_at": "2026-07-10T17:24:53.659150+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative replacement mapping found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "tmp_manual_tests/validate-konoato01-suspects-20260711-161355",
+      "files": 2,
+      "size_bytes": 324,
+      "modified_at": "2026-07-11T08:13:56.113744+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative replacement mapping found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "tmp_manual_tests/validate-konoato01-suspects-20260711-161434",
+      "files": 2,
+      "size_bytes": 0,
+      "modified_at": "2026-07-11T08:14:34.551404+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative replacement mapping found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "tmp_manual_tests/validate-konoato01-suspects-20260711-161458",
+      "files": 265,
+      "size_bytes": 118724369,
+      "modified_at": "2026-07-11T11:29:48.558656+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative replacement mapping found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "tmp_manual_tests/web-batch-smoke",
+      "files": 3,
+      "size_bytes": 9789,
+      "modified_at": "2026-06-10T08:49:24.819284+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative replacement mapping found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "tmp_manual_tests/web-batch-summary-smoke",
+      "files": 3,
+      "size_bytes": 13716,
+      "modified_at": "2026-06-10T09:26:26.923485+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative replacement mapping found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "tmp_manual_tests/wheels",
+      "files": 2,
+      "size_bytes": 2754860811,
+      "modified_at": "2026-07-09T06:18:23.528084+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative replacement mapping found; no archive or delete action is inferred.",
+      "references": []
+    },
+    {
+      "path": "tmp_manual_tests/whisperx-eval",
+      "files": 60,
+      "size_bytes": 1364566,
+      "modified_at": "2026-07-15T14:03:58.049654+00:00",
+      "status": "UNKNOWN",
+      "reason": "No authoritative replacement mapping found; no archive or delete action is inferred.",
+      "references": []
+    }
+  ],
+  "summary": {
+    "workspace_count": 127,
+    "workspace_status_counts": {
+      "UNKNOWN": 104,
+      "KEY_EVIDENCE": 22,
+      "CURRENT_BASELINE": 1
+    },
+    "tmp_directory_count": 96,
+    "tmp_status_counts": {
+      "UNKNOWN": 95,
+      "KEY_EVIDENCE": 1
+    },
+    "missing_referenced_paths": 0
+  }
+}

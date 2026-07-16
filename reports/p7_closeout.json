@@ -1,0 +1,157 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-07-15T14:55:03.390757+00:00",
+  "status": "COMPLETE",
+  "p0_baseline": {
+    "inventory": "backups/inventory-refresh-20260715-122904/project_inventory.json",
+    "generated_at": "2026-07-15T04:20:29.146601+00:00",
+    "full_test_count": 384
+  },
+  "p7_inventory": {
+    "inventory": "reports/project_inventory.json",
+    "generated_at": "2026-07-15T14:55:03.390757+00:00",
+    "git_counts": {
+      "tracked": 101,
+      "modified": 45,
+      "untracked": 177,
+      "ignored": 179623
+    },
+    "source_and_test_counts": {
+      "qwen_asr_python_files": 90,
+      "optimizer_python_files": 20,
+      "test_python_files": 79,
+      "qwen_asr_lines": 19716,
+      "optimizer_lines": 4021,
+      "test_lines": 14300
+    },
+    "selected_p0_deltas": {
+      "optimizer_files": 2,
+      "optimizer_bytes": -60982,
+      "qwen_asr_files": 72,
+      "qwen_asr_bytes": 15273,
+      "tests_files": 121,
+      "tests_bytes": 681602,
+      "tools_files": 11,
+      "tools_bytes": 196491,
+      "backups_files": 10283,
+      "backups_bytes": 3871288545
+    }
+  },
+  "p5_0": {
+    "approval_revision": 2,
+    "approval_sha256": "e2c3600888033a51c107037b072387a11f8921fe2378fcbf9101a01a4ff583b4",
+    "execution_order": [
+      "P5-0-A-llm-split",
+      "P5-0-B-mfa-full",
+      "P5-0-D-align-variants",
+      "P5-0-E-diagnostic-tools"
+    ],
+    "manifest_status": "PASS",
+    "action_counts": {
+      "delete": 9,
+      "move": 5,
+      "edit": 33
+    },
+    "unique_approved_paths": 36,
+    "production_and_test_bytes_removed_from_approved_source_paths": 197323,
+    "p5_0_c": "KEEP_LOCAL_FALLBACK",
+    "historical_workspaces_modified": 0,
+    "historical_reports_modified_by_retirement": 0
+  },
+  "retention": {
+    "workspaces": {
+      "count": 127,
+      "current_baseline": 1,
+      "key_evidence": 22,
+      "unknown": 104,
+      "action": "KEEP_IN_PLACE"
+    },
+    "tmp_manual_tests": {
+      "count": 96,
+      "key_evidence": 1,
+      "unknown": 95,
+      "action": "KEEP_IN_PLACE"
+    },
+    "backup_directories": {
+      "count": 519,
+      "action": "KEEP_ROLLBACK"
+    },
+    "models_and_environments": "KEEP_IN_PLACE"
+  },
+  "optional_p2": {
+    "status": "AWAITING_OPTIONAL_APPROVAL",
+    "goal_blocking": false,
+    "candidate_count": 34856,
+    "delete_candidate_count": 8845,
+    "archive_candidate_count": 128,
+    "unknown_count": 25883,
+    "approved_count": 0,
+    "archived_count": 0,
+    "deleted_count": 0
+  },
+  "root_paths_requiring_no_unapproved_action": [
+    {
+      "path": "$env",
+      "classification": "DELETE_CANDIDATE",
+      "explanation": "Zero-byte suspicious generated file present at P0 baseline; no deletion approval."
+    },
+    {
+      "path": "None",
+      "classification": "DELETE_CANDIDATE",
+      "explanation": "Empty suspicious generated directory present at P0 baseline; no deletion approval."
+    },
+    {
+      "path": ".agents",
+      "classification": "UNKNOWN",
+      "explanation": "Empty local metadata directory; no edit, move, archive, or deletion approval."
+    },
+    {
+      "path": "1/clip.json",
+      "classification": "UNKNOWN",
+      "explanation": "Small word-tier JSON sample created outside the approved retirement paths; retained pending owner classification."
+    }
+  ],
+  "verification": {
+    "latest_local_check": "557 passed in 10.71s; compileall PASS; Ruff PASS; git diff --check PASS",
+    "cli_web_pipeline_focused": "84 passed in 1.61s",
+    "review_scope_focused": "53 passed in 1.48s",
+    "final_audit_tests": "8 passed in 0.25s",
+    "final_cli_web_quality_smoke": "68 passed in 1.02s",
+    "mfa_environment": "3.4.0; PASS",
+    "mfa_local_fallback": "53 passed in 0.60s",
+    "source_test_mapping": "60 mapped, 0 unmapped",
+    "review_paths": 222,
+    "unclassified_paths": 1,
+    "production_tools_imports": 0,
+    "missing_evidence_references": 0
+  },
+  "resolved_incidents": [
+    {
+      "id": "MFA_ENV_PYC_INCIDENT",
+      "package": "reports/p5_0_compileall_environment_incident.json",
+      "package_sha256": "2cd735bee6d6ba529bf879c48cf814103794abb5bf537d4dc20e7adf9cff7e5f",
+      "candidate_count": 8931,
+      "backup_verified_count": 8931,
+      "deleted_count": 8931,
+      "remaining_count": 0,
+      "directories_deleted": 0,
+      "execution_manifest": "reports/p5_0_compileall_environment_incident_execution.json",
+      "status": "PASS",
+      "goal_blocking": false
+    }
+  ],
+  "non_blocking_risks": [
+    {
+      "id": "PIP_CHECK_SETuptools_CONSTRAINT",
+      "status": "OPEN_ENVIRONMENT_WARNING",
+      "goal_blocking": false,
+      "detail": "torch 2.11.0+cu128 requires setuptools<82 while the primary environment currently has setuptools 83.0.0; no unapproved downgrade was performed."
+    }
+  ],
+  "git_actions": {
+    "staged": false,
+    "committed": false,
+    "pushed": false
+  },
+  "goal_complete": true
+}

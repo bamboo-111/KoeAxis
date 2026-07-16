@@ -1,0 +1,776 @@
+{
+  "generated": "2026-07-15 20:39 Asia/Shanghai",
+  "approval_revision": 2,
+  "status": "AWAITING_REAPPROVAL",
+  "audit_status": "PREFLIGHT_CORRECTED_AWAITING_REAPPROVAL",
+  "authorization_history": [
+    {
+      "revision": 1,
+      "sha256": "f04afeaba9983f87bf4f4341e1a738f1e34de4c9d02ee13ab029335c3730e825",
+      "authorized_batches": [
+        "P5-0-A-llm-split",
+        "P5-0-B-mfa-full",
+        "P5-0-D-align-variants",
+        "P5-0-E-diagnostic-tools"
+      ],
+      "execution_started": false,
+      "invalidated_before_execution": true,
+      "reason": "Preflight found ten unique affected files without package fingerprints and shared edit paths whose hashes necessarily change between sequential batches."
+    }
+  ],
+  "execution_fingerprint_policy": {
+    "first_touch": "Before a path is first edited, deleted, or moved, its size and SHA-256 must match this revision's fingerprint tables.",
+    "shared_later_touch": "Before a later batch edits a path already edited by an earlier approved batch, its SHA-256 must match that path's after_sha256 in the immediately preceding execution manifest that touched it.",
+    "delete_or_move": "Every delete or move source must always have a package baseline fingerprint and must not have been modified by an earlier batch unless explicitly listed in shared_paths.",
+    "mismatch": "Any mismatch, missing path, unexpected move target, or required destructive path outside approval_batches stops the affected batch and requires another approval revision.",
+    "execution_manifests": {
+      "P5-0-A-llm-split": "reports/p5_0_a_execution_manifest.json",
+      "P5-0-B-mfa-full": "reports/p5_0_b_execution_manifest.json",
+      "P5-0-D-align-variants": "reports/p5_0_d_execution_manifest.json",
+      "P5-0-E-diagnostic-tools": "reports/p5_0_e_execution_manifest.json"
+    },
+    "shared_paths": {
+      "qwen_asr/cli.py": [
+        "P5-0-A-llm-split",
+        "P5-0-B-mfa-full",
+        "P5-0-D-align-variants",
+        "P5-0-E-diagnostic-tools"
+      ],
+      "qwen_asr/commands/align.py": [
+        "P5-0-B-mfa-full",
+        "P5-0-D-align-variants"
+      ],
+      "qwen_asr/commands/stages.py": [
+        "P5-0-B-mfa-full",
+        "P5-0-D-align-variants"
+      ],
+      "qwen_asr/align_split_audit.py": [
+        "P5-0-A-llm-split",
+        "P5-0-E-diagnostic-tools"
+      ],
+      "qwen_asr/tuning_matrix.py": [
+        "P5-0-A-llm-split",
+        "P5-0-E-diagnostic-tools"
+      ],
+      "tests/test_align_split_audit.py": [
+        "P5-0-A-llm-split",
+        "P5-0-E-diagnostic-tools"
+      ],
+      "tests/test_cli_help.py": [
+        "P5-0-A-llm-split",
+        "P5-0-B-mfa-full",
+        "P5-0-D-align-variants",
+        "P5-0-E-diagnostic-tools"
+      ]
+    }
+  },
+  "goal_blocking": true,
+  "blocking_reason": "P5-0 is a required retirement gate before further P5 modularization. The audit package is complete, but no path-level deletion or move approval has been granted and no retirement action has been executed.",
+  "scope": "P5-0 rejected experiment retirement audit package. No file deletion, move, archive, stage, commit, or push was performed.",
+  "approval_summary": {
+    "approved_paths": 0,
+    "executed_deletions": 0,
+    "executed_moves": 0,
+    "executed_archives": 0
+  },
+  "direct_delete_conditions": [
+    "COMPLETED_REJECTED evidence is present.",
+    "No current production default, PipelineRunner, Web, or formal CLI call remains.",
+    "No inseparable shared implementation remains.",
+    "Historical reports, metrics, commands, and conclusions are preserved.",
+    "Manifest, checkpoint, and report schemas remain readable.",
+    "A precise file/symbol/CLI/test deletion list has path-level approval."
+  ],
+  "call_graph_audits": {
+    "llm_split": "Current exposure includes optimizer/splitter.py, optimizer_bridge, CLI/Web, and focused/integration tests. Translation LLM, MiMo, generic llm_client, and rule split are outside retirement scope.",
+    "mfa": "Full main alignment, local proofread fallback, environment management, and experiment reports are separable. Full alignment also reaches commands/stages.py, PipelineRunner, and integration tests; local fallback remains a separate explicit decision.",
+    "align_parameters": "The rejected A-B matrix covers experimental timing variants. The public variants can be retired only while preserving independent alignment legality and quality-gate checks.",
+    "diagnostics": "tuning_matrix, baseline_snapshot, align_diagnose, and align_split_audit are tools-move candidates. ass_quality_diff is not wholly movable because PipelineRunner imports its report builder for production quality-suspect routing."
+  },
+  "approval_batches": [
+    {
+      "id": "P5-0-A-llm-split",
+      "decision_required": "Approve or reject the exact LLM split retirement batch.",
+      "delete": [
+        "optimizer/split_by_llm.py",
+        "optimizer/token_boundary_split.py",
+        "optimizer/prompts/split/sentence.md",
+        "optimizer/prompts/split/token_counts.md",
+        "optimizer/prompts/split/token_delimited.md",
+        "optimizer/prompts/split/token_boundary.md",
+        "tests/test_token_boundary_split.py"
+      ],
+      "edit": [
+        "optimizer/splitter.py",
+        "qwen_asr/optimizer_bridge.py",
+        "qwen_asr/cli.py",
+        "qwen_asr/web/templates/index.html",
+        "qwen_asr/web/commands.py",
+        "qwen_asr/align_split_audit.py",
+        "qwen_asr/tuning_matrix.py",
+        "tests/test_optimizer_bridge_timing.py",
+        "tests/test_align_split_audit.py",
+        "tests/test_cli_help.py",
+        "tests/test_webui.py"
+      ],
+      "preserve": [
+        "optimizer/translator.py",
+        "qwen_asr/mimo_proofread.py",
+        "qwen_asr/llm_client.py",
+        "rule split implementation and tests",
+        "historical reports and workspaces"
+      ]
+    },
+    {
+      "id": "P5-0-B-mfa-full",
+      "decision_required": "Approve or reject moving the full MFA backend out of the production package and removing its formal backend switch.",
+      "move": [
+        {
+          "from": "qwen_asr/mfa_backend.py",
+          "to": "tools/mfa_full_alignment.py"
+        }
+      ],
+      "edit": [
+        "qwen_asr/commands/align.py",
+        "qwen_asr/commands/stages.py",
+        "qwen_asr/cli.py",
+        "qwen_asr/pipeline_runner.py",
+        "tests/test_mfa_backend.py",
+        "tests/test_align_cleanup.py",
+        "tests/test_pipeline_runner.py",
+        "tests/test_cli_help.py"
+      ],
+      "preserve": [
+        "Qwen production alignment",
+        "MFA environment helpers used by an approved local fallback decision",
+        "historical MFA reports and workspaces"
+      ]
+    },
+    {
+      "id": "P5-0-C-mfa-local",
+      "decision_required": "None. KEEP_LOCAL_FALLBACK is resolved from independent local-benefit evidence and performs no destructive path action.",
+      "resolved_action": "KEEP_LOCAL_FALLBACK",
+      "resolved": true,
+      "evidence": [
+        "workspaces/p4-proofread-realign-20260713-195633/reports/p4_proofread_realign_status.md records Madougushi02 id 219 and Konoato01 id 110 completed by MFA local after Qwen could not complete those local candidates.",
+        "docs/字幕流程完整改造计划与验收清单.md:758 records the final P4 result: Madougushi02 3/3 and Konoato01 4/4 completed, fallback 0, failed 0, with one MFA-local success in each dataset.",
+        "workspaces/p6-final-regression-20260714-160541/reports/p6_final_summary.md preserves Qwen as the production main aligner and MFA local only as proofread-realign fallback."
+      ],
+      "keep_or_edit": [
+        "qwen_asr/proofread_realign.py",
+        "qwen_asr/proofread_realign_strategy.py",
+        "qwen_asr/mfa_experiment.py",
+        "qwen_asr/mfa_candidates.py",
+        "qwen_asr/mfa_environment.py",
+        "qwen_asr/mfa_guards.py",
+        "qwen_asr/mfa_lab.py",
+        "qwen_asr/mfa_report.py",
+        "qwen_asr/mfa_runner.py",
+        "qwen_asr/mfa_words.py",
+        "qwen_asr/mfa_writeback.py",
+        "qwen_asr/cli.py",
+        "tests/test_proofread_realign.py",
+        "tests/test_cli_help.py",
+        "tests/test_mfa_backend.py",
+        "tests/test_mfa_candidates.py",
+        "tests/test_mfa_environment.py",
+        "tests/test_mfa_experiment.py",
+        "tests/test_mfa_guards.py",
+        "tests/test_mfa_lab.py",
+        "tests/test_mfa_report.py",
+        "tests/test_mfa_runner.py",
+        "tests/test_mfa_words.py",
+        "tests/test_mfa_writeback.py"
+      ]
+    },
+    {
+      "id": "P5-0-D-align-variants",
+      "decision_required": "Approve or reject retiring the rejected public timing-repair variants while retaining independent legality checks.",
+      "delete": [
+        "qwen_asr/align_timing_repair.py",
+        "tests/test_align_timing_repair.py"
+      ],
+      "edit": [
+        "qwen_asr/align.py",
+        "qwen_asr/commands/align.py",
+        "qwen_asr/commands/stages.py",
+        "qwen_asr/cli.py",
+        "tests/test_align_quality.py",
+        "tests/test_cli_help.py"
+      ],
+      "preserve": [
+        "alignment monotonicity, coverage, overlap, and timing legality quality checks",
+        "historical parameter-matrix evidence"
+      ]
+    },
+    {
+      "id": "P5-0-E-diagnostic-tools",
+      "decision_required": "Approve or reject the exact tools moves; ass_quality_diff production core remains in qwen_asr.",
+      "move": [
+        {
+          "from": "qwen_asr/tuning_matrix.py",
+          "to": "tools/tuning_matrix.py"
+        },
+        {
+          "from": "qwen_asr/baseline_snapshot.py",
+          "to": "tools/baseline_snapshot.py"
+        },
+        {
+          "from": "qwen_asr/align_diagnose.py",
+          "to": "tools/align_diagnose.py"
+        },
+        {
+          "from": "qwen_asr/align_split_audit.py",
+          "to": "tools/align_split_audit.py"
+        }
+      ],
+      "edit": [
+        "qwen_asr/cli.py",
+        "qwen_asr/ass_quality_diff.py",
+        "tests/test_tuning_matrix.py",
+        "tests/test_baseline_snapshot.py",
+        "tests/test_align_diagnose.py",
+        "tests/test_align_split_audit.py",
+        "tests/test_ass_quality_diff.py",
+        "tests/test_cli_help.py"
+      ],
+      "keep": [
+        "qwen_asr/ass_quality_diff.py",
+        "tests/test_ass_quality_diff.py",
+        "qwen_asr/pipeline_runner.py",
+        "qwen_asr/quality_suspects.py"
+      ]
+    }
+  ],
+  "audit_correction_fingerprints": [
+    {"path": "optimizer/splitter.py", "size_bytes": 46567, "sha256": "c7635b7774c66cdb5b62bfbdc7f1dd5ec1169fda6cf3025847f655d7a9b44e77"},
+    {"path": "tests/test_optimizer_bridge_timing.py", "size_bytes": 32207, "sha256": "8281f3f16ba05e431c2cdb5fdab7b589682ec2e3592ebe28a04c1b96ecdd373e"},
+    {"path": "tests/test_cli_help.py", "size_bytes": 18753, "sha256": "c454480217fb6092b420cf0844093c5aa58551659978df1c852f20f008d231b3"},
+    {"path": "tests/test_webui.py", "size_bytes": 28025, "sha256": "dccd10e515edf85d737ad14289306118add5bcc892937fbe824be96c26ff03a7"},
+    {"path": "qwen_asr/commands/stages.py", "size_bytes": 19000, "sha256": "5781058a47478f6af60a9655d0b346f4d0de6f0fc52d712c769b738c5937005e"},
+    {"path": "tests/test_align_cleanup.py", "size_bytes": 21794, "sha256": "b27cc20c56c58368f2bc93dace2bbf9618a04a21a2e6170c656f83ef9590c9dd"},
+    {"path": "tests/test_pipeline_runner.py", "size_bytes": 38775, "sha256": "ea3cf17df94eefbbf09cbca5043fe6f9b8f527514e2d3bb7be3e91884b97528b"},
+    {"path": "qwen_asr/pipeline_runner.py", "size_bytes": 15090, "sha256": "22a03827d8135cc327f1b178be42033428524b985086f7ee90303d7ed6c96781"},
+    {"path": "qwen_asr/ass_quality_diff.py", "size_bytes": 15617, "sha256": "8d2d2e546ffca952e8332055a04eadc6c92ed6df5c356d8bdaca9d26aa668588"},
+    {"path": "tests/test_align_split_audit.py", "size_bytes": 9884, "sha256": "0facfea41276e62b972f24932e6aa6b3a7dc8819e996c921fbe846115f6f4603"},
+    {"path": "tests/test_token_boundary_split.py", "size_bytes": 6886, "sha256": "5d63eb6739047233560f8101b5c6f49ca274c02cebc3ef8c93aaad2206c8f29d"},
+    {"path": "qwen_asr/commands/align.py", "size_bytes": 17302, "sha256": "1d7b82815133d74285df450fd5ab75ff6d1761fe5894c0ed31a7abf8ca92eeed"},
+    {"path": "tests/test_mfa_backend.py", "size_bytes": 4286, "sha256": "a11f077c0de436eeeed999e483821925b27b27e46325bd48e12a21cc4f1a5c90"},
+    {"path": "tests/test_align_timing_repair.py", "size_bytes": 2727, "sha256": "7b897c07aca411425f24ad5a3910ac0cf5bde5120dadd1a294aaefcfb5b5b779"},
+    {"path": "qwen_asr/align.py", "size_bytes": 12011, "sha256": "a196ee8ddf8cf9f8b0224b57d2ea8246aafe7643f75a33a7e942e66e7b4a0f96"},
+    {"path": "tests/test_align_quality.py", "size_bytes": 6338, "sha256": "8111fff5d30eac30292ee819ed9ea395f01c159f88ec50615ef593d5df1ba84d"},
+    {"path": "tests/test_tuning_matrix.py", "size_bytes": 3741, "sha256": "c5a3f44355432fb8fe678938427902b89df74d14b2dd15e66eb407d4cc9ba896"},
+    {"path": "tests/test_baseline_snapshot.py", "size_bytes": 3269, "sha256": "9dc7faea65730015f15ba97977a9903adad39a7f5167e0bcb0676394843387bd"},
+    {"path": "tests/test_align_diagnose.py", "size_bytes": 8265, "sha256": "f0f3b79aa0c6794a82357e038bc4f7666417a8c5a77b0594f63ce09780249aef"},
+    {"path": "tests/test_ass_quality_diff.py", "size_bytes": 3542, "sha256": "3f9923000fb0e9dfcca33b6dc6acc4668e8ac564271694d55dab2ad706e201e0"}
+  ],
+  "features": [
+    {
+      "id": "llm_split_modes",
+      "feature": "LLM split modes",
+      "status": "COMPLETED_REJECTED evidence found",
+      "candidate_action": "DELETE",
+      "production_exposure": "Formal CLI, Web form, qwen_asr.optimizer_bridge split_mode branches, and split prompts are still present.",
+      "decision": {
+        "approved": false,
+        "executed": false,
+        "deleted": false,
+        "moved": false,
+        "archived": false,
+        "requires_path_level_approval": true
+      },
+      "evidence": [
+        "docs/字幕流程完整改造计划与验收清单.md:752 records Madougushi02 LLM split probes rejected for content conservation or protected short-response failures.",
+        "docs/字幕流程完整改造计划与验收清单.md:888 records Konoato01 LLM split probe evidence and concludes rule remains the only production default.",
+        "docs/项目文件与代码整理计划.md:318 requests removal from production CLI/Web/prompt/run paths, preserving historical reports."
+      ],
+      "code_symbols": [
+        "qwen_asr.optimizer_bridge.split_aligned_manifest(split_mode=...)",
+        "optimizer.split_by_llm.split_text_by_llm",
+        "optimizer.token_boundary_split.split_aligned_payload_by_token_counts",
+        "optimizer.token_boundary_split.split_aligned_payload_by_token_delimited_text",
+        "optimizer.token_boundary_split.split_aligned_payload_by_token_boundaries"
+      ],
+      "cli_web_entries": [
+        "qwen_asr/cli.py --split-mode choices include text/token-counts/token-delimited/token-boundary/rule for split/run/batch-run.",
+        "qwen_asr/web/templates/index.html splitMode select includes token-counts/token-delimited/token-boundary/text/rule.",
+        "qwen_asr/web/commands.py forwards payload split_mode to split/run commands."
+      ],
+      "path_level_candidates": [
+        {
+          "action": "delete_after_approval",
+          "path": "optimizer/split_by_llm.py"
+        },
+        {
+          "action": "delete_after_approval",
+          "path": "optimizer/token_boundary_split.py"
+        },
+        {
+          "action": "delete_after_approval",
+          "path": "optimizer/prompts/split/sentence.md"
+        },
+        {
+          "action": "delete_after_approval",
+          "path": "optimizer/prompts/split/token_counts.md"
+        },
+        {
+          "action": "delete_after_approval",
+          "path": "optimizer/prompts/split/token_delimited.md"
+        },
+        {
+          "action": "delete_after_approval",
+          "path": "optimizer/prompts/split/token_boundary.md"
+        },
+        {
+          "action": "edit_after_approval",
+          "path": "qwen_asr/optimizer_bridge.py"
+        },
+        {
+          "action": "edit_after_approval",
+          "path": "qwen_asr/cli.py"
+        },
+        {
+          "action": "edit_after_approval",
+          "path": "qwen_asr/web/templates/index.html"
+        },
+        {
+          "action": "edit_after_approval",
+          "path": "qwen_asr/web/commands.py"
+        },
+        {
+          "action": "delete_after_approval",
+          "path": "tests/test_token_boundary_split.py"
+        }
+      ],
+      "audit_result": "Not safe for immediate deletion because production CLI/Web/run exposure remains and path-level approval is absent."
+    },
+    {
+      "id": "mfa_full_main_alignment",
+      "feature": "MFA full main alignment backend",
+      "status": "COMPLETED_REJECTED evidence found",
+      "candidate_action": "MOVE_TO_TOOLS",
+      "production_exposure": "Formal align/run/batch-run expose --align-backend mfa; qwen_asr.commands.align can call run_mfa_full_alignment.",
+      "decision": {
+        "approved": false,
+        "executed": false,
+        "deleted": false,
+        "moved": false,
+        "archived": false,
+        "requires_path_level_approval": true
+      },
+      "evidence": [
+        "docs/字幕流程完整改造计划与验收清单.md:652 records MFA full replacement as COMPLETED_REJECTED and Qwen remains main alignment.",
+        "docs/字幕流程完整改造计划与验收清单.md:828 records double-dataset MFA/Qwen A-B rejection.",
+        "docs/项目文件与代码整理计划.md:319 requests removing MFA full alignment from production default/composite pipeline and evaluating a tools move."
+      ],
+      "code_symbols": [
+        "qwen_asr.mfa_backend.run_mfa_full_alignment",
+        "qwen_asr.commands.align.cmd_align align_backend == mfa branch",
+        "qwen_asr.pipeline_runner.PipelineRunner.build_invocations passes align_backend through run/batch-run"
+      ],
+      "cli_web_entries": [
+        "qwen_asr/cli.py align/run/batch-run --align-backend choices include mfa.",
+        "PipelineRunner still forwards align_backend into the align stage."
+      ],
+      "path_level_candidates": [
+        {
+          "action": "move_to_tools_after_approval",
+          "path": "qwen_asr/mfa_backend.py",
+          "target": "tools/mfa_full_alignment.py"
+        },
+        {
+          "action": "edit_after_approval",
+          "path": "qwen_asr/commands/align.py"
+        },
+        {
+          "action": "edit_after_approval",
+          "path": "qwen_asr/cli.py"
+        },
+        {
+          "action": "edit_after_approval",
+          "path": "qwen_asr/pipeline_runner.py"
+        },
+        {
+          "action": "edit_after_approval",
+          "path": "tests/test_mfa_backend.py"
+        }
+      ],
+      "audit_result": "Not safe for immediate deletion because the formal CLI still exposes MFA as an align backend and local fallback shares MFA modules."
+    },
+    {
+      "id": "mfa_proofread_local_fallback",
+      "feature": "MFA proofread local fallback",
+      "status": "independent local-benefit evidence found; retain as an explicit default-off fallback",
+      "candidate_action": "KEEP_LOCAL_FALLBACK",
+      "production_exposure": "Formal proofread-realign/run/batch-run expose MFA local fallback controls, default off.",
+      "decision": {
+        "approved": false,
+        "executed": false,
+        "deleted": false,
+        "moved": false,
+        "archived": false,
+        "requires_path_level_approval": false,
+        "resolved_without_destructive_action": true
+      },
+      "evidence": [
+        "docs/字幕流程完整改造计划与验收清单.md:717 records MFA local only as explicit experiment/candidate fallback, not default.",
+        "docs/字幕流程完整改造计划与验收清单.md:758 records two independent final P4 successes: Madougushi02 id 219 and Konoato01 id 110 completed by MFA local, with both datasets reaching complete proofread-realign results and zero fallback/failed items.",
+        "workspaces/p4-proofread-realign-20260713-195633/reports/p4_proofread_realign_status.md records the per-item methods and the Qwen-to-MFA local recovery reason.",
+        "docs/项目文件与代码整理计划.md:320 says keep only if independent local-use evidence supports it, otherwise retire separately."
+      ],
+      "code_symbols": [
+        "qwen_asr.proofread_realign.run_proofread_realign_stage",
+        "qwen_asr.proofread_realign._try_mfa_local_realign",
+        "qwen_asr.mfa_experiment.run_local_mfa_alignment_experiments"
+      ],
+      "cli_web_entries": [
+        "qwen_asr/cli.py proofread-realign/run/batch-run --proofread-realign-mfa-fallback choices off/local."
+      ],
+      "path_level_candidates": [
+        {
+          "action": "keep_or_retire_after_approval",
+          "path": "qwen_asr/proofread_realign.py"
+        },
+        {
+          "action": "keep_or_retire_after_approval",
+          "path": "qwen_asr/proofread_realign_strategy.py"
+        },
+        {
+          "action": "keep_or_move_shared_helpers_after_approval",
+          "path": "qwen_asr/mfa_experiment.py"
+        },
+        {
+          "action": "edit_after_approval",
+          "path": "qwen_asr/cli.py"
+        },
+        {
+          "action": "delete_or_retarget_after_approval",
+          "path": "tests/test_proofread_realign.py"
+        }
+      ],
+      "audit_result": "Resolved as KEEP_LOCAL_FALLBACK. Two separate datasets contain a final accepted item that Qwen did not complete and MFA local completed; the path remains explicit, default off, guarded, and separate from rejected full MFA alignment."
+    },
+    {
+      "id": "align_parameter_variants",
+      "feature": "No-benefit align timing parameter variants",
+      "status": "COMPLETED_REJECTED evidence found for the experimental matrix",
+      "candidate_action": "DELETE",
+      "production_exposure": "Formal align/run/batch-run expose --align-timing-repair min-duration/local-interpolate.",
+      "decision": {
+        "approved": false,
+        "executed": false,
+        "deleted": false,
+        "moved": false,
+        "archived": false,
+        "requires_path_level_approval": true
+      },
+      "evidence": [
+        "docs/字幕流程完整改造计划与验收清单.md:381 records prior align timing repair A-B evidence superseded by final matrix.",
+        "docs/字幕流程完整改造计划与验收清单.md:863 records 9 variants with no target metric improvement.",
+        "docs/项目文件与代码整理计划.md:321 requests removing production CLI switches that only serve failed experiments while keeping valid defaults and checks."
+      ],
+      "code_symbols": [
+        "qwen_asr.align_timing_repair.AlignTimingRepairConfig",
+        "qwen_asr.align_timing_repair.repair_token_timing",
+        "qwen_asr.align.QwenAligner.run_segment timing_repair_config",
+        "qwen_asr.cli._add_align_timing_arguments"
+      ],
+      "cli_web_entries": [
+        "qwen_asr/cli.py align/run/batch-run --align-timing-repair choices off/min-duration/local-interpolate."
+      ],
+      "path_level_candidates": [
+        {
+          "action": "delete_after_approval",
+          "path": "qwen_asr/align_timing_repair.py"
+        },
+        {
+          "action": "edit_after_approval",
+          "path": "qwen_asr/align.py"
+        },
+        {
+          "action": "edit_after_approval",
+          "path": "qwen_asr/commands/align.py"
+        },
+        {
+          "action": "edit_after_approval",
+          "path": "qwen_asr/commands/stages.py"
+        },
+        {
+          "action": "edit_after_approval",
+          "path": "qwen_asr/cli.py"
+        },
+        {
+          "action": "delete_after_approval",
+          "path": "tests/test_align_timing_repair.py"
+        },
+        {
+          "action": "edit_after_approval",
+          "path": "tests/test_align_quality.py"
+        }
+      ],
+      "audit_result": "Not safe for immediate deletion because the parameter is still read by production align code and tests cover timing legality behavior."
+    },
+    {
+      "id": "experiment_diagnostic_tools",
+      "feature": "Parameter matrix, A/B, and diagnostic reporters",
+      "status": "four experiment tools are movable; ass_quality_diff has a shared production core",
+      "candidate_action": "MOVE_TO_TOOLS_WITH_KEEP_PRODUCTION_CORE",
+      "production_exposure": "Formal CLI exposes diagnostic subcommands from qwen_asr; PipelineRunner also imports ass_quality_diff report-building logic for production quality-suspect routing.",
+      "decision": {
+        "approved": false,
+        "executed": false,
+        "deleted": false,
+        "moved": false,
+        "archived": false,
+        "requires_path_level_approval": true
+      },
+      "evidence": [
+        "docs/项目文件与代码整理计划.md:322 requests moving parameter matrix, A-B, and diagnostic reporters to tools or archive.",
+        "docs/Goal模式完整任务提示词.md:76 lists these modules as existing quality/diagnostic modules."
+      ],
+      "code_symbols": [
+        "qwen_asr.tuning_matrix.cmd_tuning_matrix",
+        "qwen_asr.baseline_snapshot.cmd_baseline_snapshot",
+        "qwen_asr.align_diagnose.cmd_align_diagnose",
+        "qwen_asr.align_split_audit.cmd_align_split_audit",
+        "qwen_asr.ass_quality_diff.cmd_ass_quality_diff (CLI wrapper may move, report builder must remain production-accessible)"
+      ],
+      "cli_web_entries": [
+        "qwen_asr/cli.py subcommands tuning-matrix, baseline-snapshot, align-diagnose, align-split-audit, ass-quality-diff; PipelineRunner directly imports build_ass_quality_diff_report."
+      ],
+      "path_level_candidates": [
+        {
+          "action": "move_to_tools_after_approval",
+          "path": "qwen_asr/tuning_matrix.py"
+        },
+        {
+          "action": "move_to_tools_after_approval",
+          "path": "qwen_asr/baseline_snapshot.py"
+        },
+        {
+          "action": "move_to_tools_after_approval",
+          "path": "qwen_asr/align_diagnose.py"
+        },
+        {
+          "action": "move_to_tools_after_approval",
+          "path": "qwen_asr/align_split_audit.py"
+        },
+        {
+          "action": "edit_keep_production_core_after_approval",
+          "path": "qwen_asr/ass_quality_diff.py"
+        },
+        {
+          "action": "edit_after_approval",
+          "path": "qwen_asr/cli.py"
+        }
+      ],
+      "audit_result": "Move four standalone experiment tools after approval. Keep the ass_quality_diff production report core and only retire or relocate its formal diagnostic CLI wrapper."
+    },
+    {
+      "id": "quality_gate_bypass_or_auto_publish",
+      "feature": "Automatic publish or quality-gate bypass paths",
+      "status": "no approval to add bypass; existing quality gate blocks remain active",
+      "candidate_action": "KEEP_EVIDENCE_ONLY",
+      "production_exposure": "PipelineRunner explicitly runs final quality before formal export completion and stops on non-zero status.",
+      "decision": {
+        "approved": false,
+        "executed": false,
+        "deleted": false,
+        "moved": false,
+        "archived": false,
+        "requires_path_level_approval": true
+      },
+      "evidence": [
+        "docs/项目文件与代码整理计划.md:323 says no bypass path; quality-gate continues to block formal output.",
+        "reports/final_acceptance.md records pipeline tests covering export/normalize blocks when quality gate fails."
+      ],
+      "code_symbols": [
+        "qwen_asr.pipeline_runner.PipelineRunner.run",
+        "qwen_asr.pipeline_runner.PipelineRunner._run_final_gate",
+        "qwen_asr.commands.quality.cmd_quality_gate"
+      ],
+      "cli_web_entries": [
+        "Common --skip-preflight and --dry-run-check exist but are not quality-gate completion bypass approvals.",
+        "qwen_asr/preflight.py dry_run_reserved warning is diagnostic only."
+      ],
+      "path_level_candidates": [],
+      "audit_result": "No deletion candidate. Preserve and test the blocking gate while documenting that bypass is not approved."
+    }
+  ],
+  "file_fingerprints": [
+    {
+      "path": "optimizer/split_by_llm.py",
+      "exists": true,
+      "size_bytes": 13382,
+      "sha256": "4f270e77f3f514902671bb584506ae5e5a36a543b3c389f896f047f425fb27f1"
+    },
+    {
+      "path": "optimizer/token_boundary_split.py",
+      "exists": true,
+      "size_bytes": 27977,
+      "sha256": "9c1c65b994be64f4ad945dde93cf4e4b43b93d9fa682f7591482c4c5b2a0806f"
+    },
+    {
+      "path": "optimizer/prompts/split/sentence.md",
+      "exists": true,
+      "size_bytes": 4420,
+      "sha256": "638e89a185f61bbe2605b3ff744200db5f26994fb38f23d7e535047b94c84607"
+    },
+    {
+      "path": "optimizer/prompts/split/token_counts.md",
+      "exists": true,
+      "size_bytes": 1065,
+      "sha256": "21770366ccd63051bf5673eec2e636f3691a15cdaa11678b6626185110a2b4f2"
+    },
+    {
+      "path": "optimizer/prompts/split/token_delimited.md",
+      "exists": true,
+      "size_bytes": 1261,
+      "sha256": "bdabda5bf97e6116e2d884fa48fae3ee9e5823bdc811a406d907575d21980fb3"
+    },
+    {
+      "path": "optimizer/prompts/split/token_boundary.md",
+      "exists": true,
+      "size_bytes": 1732,
+      "sha256": "397859e4d3a95b9f42161cd0d9788e6e1cb884a3be6e2c8309cab40224845a05"
+    },
+    {
+      "path": "qwen_asr/optimizer_bridge.py",
+      "exists": true,
+      "size_bytes": 20156,
+      "sha256": "6278c2ad5e1d19f458457c242fdebf9ef96fb6d0bc0ecea3b73377c64356f15b"
+    },
+    {
+      "path": "qwen_asr/commands/split.py",
+      "exists": true,
+      "size_bytes": 1890,
+      "sha256": "ccadc3f6fb486339a8f8d365629b9b3f2baee44d638caf73327171f5834adae5"
+    },
+    {
+      "path": "qwen_asr/mfa_backend.py",
+      "exists": true,
+      "size_bytes": 11176,
+      "sha256": "aa94176872043f998d35dfc4111cfe5fe6d05438d9b72bca00e6432bcd086ded"
+    },
+    {
+      "path": "qwen_asr/mfa_experiment.py",
+      "exists": true,
+      "size_bytes": 11634,
+      "sha256": "10ff489243fb0d3ce5afe413a0187e1dc2c27e5be55d25984a734707536297f5"
+    },
+    {
+      "path": "qwen_asr/mfa_candidates.py",
+      "exists": true,
+      "size_bytes": 8872,
+      "sha256": "b38a2b3778887f926894c9c4341c30a84db29625d3c5886ce8a5c6fea4123c6c"
+    },
+    {
+      "path": "qwen_asr/mfa_environment.py",
+      "exists": true,
+      "size_bytes": 3703,
+      "sha256": "25b1b77291ac55892bfe07b25c5a367e3b479a348d67f6ae35d12da872b912c5"
+    },
+    {
+      "path": "qwen_asr/mfa_guards.py",
+      "exists": true,
+      "size_bytes": 7081,
+      "sha256": "b8f280232c28f18e55fddfb8f5d25545e965ec7bc18eaf8ff77dad13625be7be"
+    },
+    {
+      "path": "qwen_asr/mfa_lab.py",
+      "exists": true,
+      "size_bytes": 4110,
+      "sha256": "3334bb52a996611d48a6bb8f22ca11980e42a7a1f66bea2b582b32988c349824"
+    },
+    {
+      "path": "qwen_asr/mfa_report.py",
+      "exists": true,
+      "size_bytes": 5436,
+      "sha256": "0ed4733efc6e86cbbfeb3fe9e0b4a6c12cc35b297c1d483a688b2ea720bbd6e1"
+    },
+    {
+      "path": "qwen_asr/mfa_runner.py",
+      "exists": true,
+      "size_bytes": 8176,
+      "sha256": "3193c2e2b08dfc9da3f15ebebc467d4b5fa4ffebefc48019960f221f59a99707"
+    },
+    {
+      "path": "qwen_asr/mfa_words.py",
+      "exists": true,
+      "size_bytes": 2548,
+      "sha256": "928624e8824483101031ec5ce6f9b8cb30a4be7284cc345d56474b2b831fa0a4"
+    },
+    {
+      "path": "qwen_asr/mfa_writeback.py",
+      "exists": true,
+      "size_bytes": 6980,
+      "sha256": "bbe6a77ff5e95b338f001715e68e6cd3e804836f326f24dd3516365c8461b213"
+    },
+    {
+      "path": "qwen_asr/proofread_realign.py",
+      "exists": true,
+      "size_bytes": 27593,
+      "sha256": "fac9ebb05c67ff44c2428fb8a96f8d591564fefc6df7c219c5752f3bc4a7e239"
+    },
+    {
+      "path": "qwen_asr/proofread_realign_strategy.py",
+      "exists": true,
+      "size_bytes": 10303,
+      "sha256": "c1c707da50e10d58c211b2eff099e9d3ccf88bf865c7d3916580a8c2d030f6d2"
+    },
+    {
+      "path": "qwen_asr/align_timing_repair.py",
+      "exists": true,
+      "size_bytes": 3948,
+      "sha256": "fbd136f43748726a4641d40933bc416e460af718bb2755d0739a117c9796fce7"
+    },
+    {
+      "path": "qwen_asr/tuning_matrix.py",
+      "exists": true,
+      "size_bytes": 13715,
+      "sha256": "b92cea7b0b1050f522be52a94bf75e3c40acebe6f1ec82027b816477f1316927"
+    },
+    {
+      "path": "qwen_asr/baseline_snapshot.py",
+      "exists": true,
+      "size_bytes": 10884,
+      "sha256": "10dd9a1160d2ed9785594eceb11ebbff901da104794317b9e30d6a1aecdcd75c"
+    },
+    {
+      "path": "qwen_asr/align_diagnose.py",
+      "exists": true,
+      "size_bytes": 29662,
+      "sha256": "c9c049ae7c29d0a18b398df3e7558849b0b25bef04f905fa1ae428924ebe703d"
+    },
+    {
+      "path": "qwen_asr/align_split_audit.py",
+      "exists": true,
+      "size_bytes": 22107,
+      "sha256": "a1b6662e044a1a25a4687a570bc5b66657b8f27c99be8a280cd419a90cadd917"
+    },
+    {
+      "path": "qwen_asr/ass_quality_diff.py",
+      "exists": true,
+      "size_bytes": 15617,
+      "sha256": "8d2d2e546ffca952e8332055a04eadc6c92ed6df5c356d8bdaca9d26aa668588"
+    },
+    {
+      "path": "qwen_asr/cli.py",
+      "exists": true,
+      "size_bytes": 43369,
+      "sha256": "c16002b9374df6180e88f1f2faf832a9b4c6965149f1cd03b0c36200a1489fe6"
+    },
+    {
+      "path": "qwen_asr/web/commands.py",
+      "exists": true,
+      "size_bytes": 26416,
+      "sha256": "275097334407d148aadea312dd61d84d06daa4a77fd806ebc27053df501e94a2"
+    },
+    {
+      "path": "qwen_asr/web/templates/index.html",
+      "exists": true,
+      "size_bytes": 82101,
+      "sha256": "02a79238557b4fad3d43025d075f2815c7aa20101079348413e1da0cd34103a9"
+    }
+  ]
+}

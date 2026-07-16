@@ -8,12 +8,13 @@ KoeAxis 是面向本地音频转写、时间轴、翻译与人工审阅字幕候
 
 - 支持常见音频/视频媒体输入，`ffmpeg` 抽取 16kHz / mono / WAV 音频
 - 可选 `ffmpeg afftdn` 音频降噪，适合背景噪声明显的素材
-- CPU VAD + 保守切片，默认 60s conservative segmentation
+- CPU VAD + 静音优先切片，默认最大 15 秒、最小 2 秒
 - ASR 与 ForcedAligner 分阶段执行，不同时驻留显存
 - 每段结果实时落盘，支持 resume
 - 导出 `JSON / TXT / SRT / VTT`
 - 支持全局时间戳 offset 处理
 - 内置本地 `optimizer/` 断句与翻译逻辑
+- split、correct、translate 与 MiMo API 默认并发数统一为 5
 - 提供本地网页控制台处理全流程与中间继续
 
 ## 推荐环境
@@ -182,7 +183,7 @@ python main.py align --workdir .\work --model Qwen/Qwen3-ForcedAligner-0.6B
 
 默认不会每个 segment 都做一次完整清理，而是按间隔清理并在阶段结束时做一次 full cleanup。
 
-注意：默认部署策略是 `60s conservative segmentation`。不要默认切到 300s 再做 forced alignment，这会提高失败率、显存压力和字幕漂移风险。
+注意：默认部署策略是 `15s silence-first segmentation`。15 秒是找不到合适静音时的切段上限，并不是每 15 秒机械硬切；切段仍优先选择静音位置。每段默认保留 300ms padding，相邻窗口可能覆盖同一小段音频，后续对齐桥接会只删除时间确实重叠且文字完全一致的边界重复，同时保留双方独有内容。长窗口会提高漏识、显存压力和字幕漂移风险，如需改回更长窗口应显式传入 `--max-segment-seconds`。
 
 ### 4. 导出字幕
 
@@ -231,26 +232,20 @@ python main.py batch-run --workdir .\batch-run --manifest tasks.json
 python main.py split --workdir .\work
 ```
 
-LLM 断句：
-
-```bash
-python main.py split ^
-  --workdir .\work ^
-  --llm-model your-model ^
-  --llm-base-url http://127.0.0.1:8000/v1 ^
-  --llm-api-key sk-xxx
-```
+生产 split 仅支持规则实现。历史 LLM split 模式已经完成实验并被否定，相关 CLI、Web、prompt 和运行分支均已退役；翻译 LLM、MiMo 和通用 `llm_client` 不受影响。
 
 翻译：
 
 ```bash
+$env:LLM_API_KEY = "<your-provider-key>"
 python main.py translate ^
   --workdir .\work ^
   --llm-model your-model ^
   --llm-base-url http://127.0.0.1:8000/v1 ^
-  --llm-api-key sk-xxx ^
   --target-language 简体中文
 ```
+
+凭据只从环境变量读取：MiMo 使用 `MIMO_API_KEY`，DeepSeek 官方接口使用 `DEEPSEEK_API_KEY`，其他通用兼容接口使用 `LLM_API_KEY`。Web 页面不会显示、保存或提交凭据。
 
 导出时会优先使用：
 
@@ -296,16 +291,18 @@ http://127.0.0.1:8765
 
 网页支持：
 
-- `prepare / transcribe / align / split / translate / export / run`
-- `normalize` 时间轴后处理
-- 从已有 `workdir` 中间结果继续
-- 查看阶段日志和产物状态
-- `Stop` 终止当前任务
+- `/` 默认进入结构化字幕工作台；旧参数配置页保留在 `/legacy`
+- 查看阶段顺序、输入/输出计数、真实任务耗时、日志与产物，并从工作台直接继续可独立运行阶段
+- Align 使用 `completed_exact / completed_coarse / failed` 三态；OP/ED 使用 `SKIPPED_MUSIC_REGION`，不计入对白失败
+- 所有 failed 对白进入恢复队列，支持 transcript 核验、语言路由、局部 VAD、重试请求与 `completed_coarse` fallback
+- 370 cue 级审校、整集音频定位、只读参考 ASS 对照、独立草稿保存、自动备份、审计与撤销
+- 质量面板可跳恢复项、审校 cue 或受控报告；导出面板支持 UTF-8 预览与 attachment 下载
+- `Stop` 终止当前任务，刷新后从服务端持久化任务状态恢复
 - 媒体路径支持手动输入，也可以通过本机文件选择器回填真实绝对路径
 - 默认工作目录位于 `workspaces/编号-输入源名称/`
 - 默认最终字幕导出到原始媒体文件同级同名路径，也支持自定义导出路径
-- 页面参数修改后自动保存，下次打开默认恢复
-- LLM 线程数可配置（`1+`），用于 split / translate / run 阶段
+- 非敏感页面参数自动保存；API 凭据只从 Web 服务进程环境读取，不进入 HTML、localStorage、payload、命令日志或报告
+- 工作线程数可配置（`1+`）；split 使用规则并发，LLM 参数仅用于 translate、MiMo 和包含这些阶段的 run
 - 通过独立子进程执行各阶段，保持 GPU 阶段之间的显存释放策略
 
 ## 输出目录
@@ -341,7 +338,7 @@ workspaces/0001-source-name/
 
 ## 默认策略
 
-- `batch_size=5`
+- `batch_size` 在 CLI 解析阶段默认为未指定；adaptive 模式按当前片段时长分布自动选择 3、4 或 5，fixed 模式未显式指定时使用 5
 - 默认 `batch_mode=adaptive`
 - 若当前批大小触发显存不足，ASR 会自动降到更小的 batch 重试，并沿用降级后的值继续后续批次
 - 若显存紧张或希望严格贴近逐段结果，可手动改回 `--batch-size 1`
@@ -429,7 +426,7 @@ WebUI：
 
 Optimizer：
 
-- `optimizer/splitter.py`: 本地规则/LLM 断句主逻辑
+- `optimizer/splitter.py`: 本地规则断句兼容入口
 - `optimizer/translator.py`: LLM 翻译
 - `optimizer/llm_client.py`: OpenAI-compatible LLM 客户端
 - `optimizer/llm_config.py`: LLM 配置 dataclass
@@ -440,6 +437,7 @@ Optimizer：
 
 项目辅助：
 
+- `docs/STATUS.md`: 当前规范、进行中计划和历史实验文档的状态入口
 - `docs/ARCHITECTURE.md`: 架构说明
 - `docs/PIPELINE.md`: 阶段与产物说明
 - `docs/WEBUI.md`: WebUI 模块和接口说明
@@ -455,10 +453,30 @@ Optimizer：
 常用回归命令：
 
 ```bat
-python -m compileall main.py webapp.py qwen_asr optimizer tests
-python -m pytest tests
-python main.py --help
-python -c "import webapp; import qwen_asr.cli; print('ok')"
+.venv312\Scripts\python.exe -m compileall main.py webapp.py qwen_asr optimizer tests
+.venv312\Scripts\python.exe -m pytest tests
+.venv312\Scripts\python.exe main.py --help
+.venv312\Scripts\python.exe -c "import webapp; import qwen_asr.cli; import qwen_asr.final_quality; print('ok')"
+```
+
+统一本地检查入口：
+
+```powershell
+.\scripts\local_check.ps1
+```
+
+开发环境依赖固定在 `requirements-dev.txt`。首次配置或依赖版本变化后运行：
+
+```powershell
+.venv312\Scripts\python.exe -m pip install -r requirements-dev.txt
+```
+
+`local_check.ps1` 默认将 Ruff 作为硬门。`-SkipRuff` 只允许用于诊断依赖安装问题，不能作为最终验收结果。
+
+项目整理与归档盘点：
+
+```bat
+.venv312\Scripts\python.exe scripts\project_inventory.py
 ```
 
 构建分发包：

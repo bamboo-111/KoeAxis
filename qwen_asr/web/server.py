@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import mimetypes
 import os
 import subprocess
 import shutil
@@ -10,7 +11,7 @@ import time
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
-from urllib.parse import parse_qs, urlparse
+from urllib.parse import parse_qs, quote, urlparse
 
 from qwen_asr.glossary import write_normalized_glossary_xlsx
 from qwen_asr.web.commands import (
@@ -23,8 +24,29 @@ from qwen_asr.web.commands import (
     resolve_deletable_workspaces,
     suggest_workdir,
 )
-from qwen_asr.web.static_html import INDEX_HTML
+from qwen_asr.web.static_html import INDEX_HTML, WORKBENCH_HTML, load_static_asset
 from qwen_asr.web.status import build_progress, get_status
+from qwen_asr.web.job_state import load_job, persist_job, public_job
+from qwen_asr.web.workspace_api import (
+    WorkspaceApiError,
+    apply_recovery_action,
+    apply_review_edit,
+    apply_review_undo,
+    api_contract,
+    envelope,
+    get_align_state,
+    get_exports,
+    get_export_file_path,
+    get_quality_gate,
+    get_quality_evidence_path,
+    get_recovery_queue,
+    get_review_view,
+    get_stage_view,
+    get_workspace_detail,
+    get_workspace_media_path,
+    list_workspace_summaries,
+    prepare_workspace_stage_start,
+)
 
 JOB_LOCK = threading.Lock()
 ACTIVE_JOB: dict | None = None
@@ -33,7 +55,18 @@ class Handler(BaseHTTPRequestHandler):
     def do_GET(self):  # noqa: N802
         parsed = urlparse(self.path)
         if parsed.path == "/":
+            self._send_html(WORKBENCH_HTML)
+            return
+        if parsed.path == "/legacy":
             self._send_html(INDEX_HTML)
+            return
+        if parsed.path.startswith("/static/"):
+            try:
+                data, content_type = load_static_asset(parsed.path.removeprefix("/static/"))
+            except FileNotFoundError:
+                self.send_error(HTTPStatus.NOT_FOUND)
+                return
+            self._send_bytes(data, content_type)
             return
         if parsed.path == "/favicon.ico":
             self.send_response(204)
@@ -56,14 +89,148 @@ class Handler(BaseHTTPRequestHandler):
         if parsed.path == "/api/workspaces":
             self._send_json({"workspaces": list_workspaces()})
             return
+        if parsed.path == "/api/v1/workspace/media":
+            query = parse_qs(parsed.query)
+            try:
+                path = get_workspace_media_path(
+                    query.get("workdir", [""])[0],
+                    query.get("path", [""])[0],
+                )
+            except WorkspaceApiError as exc:
+                self._send_json(exc.as_payload(), status=exc.status)
+                return
+            self._send_file(path)
+            return
+        if parsed.path == "/api/v1/workspace/export-file":
+            query = parse_qs(parsed.query)
+            try:
+                path = get_export_file_path(
+                    query.get("workdir", [""])[0],
+                    query.get("path", [""])[0],
+                )
+            except WorkspaceApiError as exc:
+                self._send_json(exc.as_payload(), status=exc.status)
+                return
+            download = query.get("download", ["0"])[0] == "1"
+            self._send_file(
+                path,
+                download=download,
+                content_type=None if download else _subtitle_preview_content_type(path),
+            )
+            return
+        if parsed.path == "/api/v1/workspace/quality-evidence":
+            query = parse_qs(parsed.query)
+            try:
+                path = get_quality_evidence_path(
+                    query.get("workdir", [""])[0],
+                    query.get("path", [""])[0],
+                )
+            except WorkspaceApiError as exc:
+                self._send_json(exc.as_payload(), status=exc.status)
+                return
+            self._send_file(path)
+            return
+        if parsed.path.startswith("/api/v1/"):
+            self._handle_v1_get(parsed)
+            return
         self.send_error(HTTPStatus.NOT_FOUND)
+
+    def _handle_v1_get(self, parsed) -> None:
+        query = parse_qs(parsed.query)
+        workdir = query.get("workdir", [""])[0]
+        routes = {
+            "/api/v1/contract": lambda: api_contract(),
+            "/api/v1/job": lambda: get_structured_job(),
+            "/api/v1/workspaces": lambda: list_workspace_summaries(),
+            "/api/v1/workspace": lambda: get_workspace_detail(workdir),
+            "/api/v1/workspace/stages": lambda: get_stage_view(workdir),
+            "/api/v1/workspace/align": lambda: get_align_state(workdir),
+            "/api/v1/workspace/recovery": lambda: get_recovery_queue(workdir),
+            "/api/v1/workspace/review": lambda: get_review_view(workdir),
+            "/api/v1/workspace/quality": lambda: get_quality_gate(workdir),
+            "/api/v1/workspace/exports": lambda: get_exports(workdir),
+        }
+        handler = routes.get(parsed.path)
+        if handler is None:
+            self.send_error(HTTPStatus.NOT_FOUND)
+            return
+        try:
+            self._send_json(handler())
+        except WorkspaceApiError as exc:
+            self._send_json(exc.as_payload(), status=exc.status)
 
     def do_POST(self):  # noqa: N802
         parsed = urlparse(self.path)
+        if parsed.path == "/api/v1/workspace/stage/start":
+            payload = self._read_json()
+            try:
+                command_payload = prepare_workspace_stage_start(
+                    str(payload.get("workdir", "")),
+                    stage=str(payload.get("stage", "")),
+                    settings=payload.get("settings"),
+                )
+                job = start_job(command_payload)
+            except WorkspaceApiError as exc:
+                self._send_json(exc.as_payload(), status=exc.status)
+                return
+            except RuntimeError as exc:
+                self._send_json(envelope(error={"code": "JOB_CONFLICT", "message": str(exc)}), status=409)
+                return
+            self._send_json(envelope(data=job), status=202)
+            return
+        if parsed.path == "/api/v1/workspace/review/edit":
+            payload = self._read_json()
+            try:
+                result = apply_review_edit(
+                    str(payload.get("workdir", "")),
+                    cue_id=str(payload.get("cue_id", "")),
+                    original=str(payload.get("original", "")),
+                    translation=str(payload.get("translation", "")),
+                    start_ms=payload.get("start_ms"),
+                    end_ms=payload.get("end_ms"),
+                    expected_revision=payload.get("expected_revision"),
+                    actor=str(payload.get("actor", "web-local-user")),
+                )
+            except WorkspaceApiError as exc:
+                self._send_json(exc.as_payload(), status=exc.status)
+                return
+            self._send_json(result)
+            return
+        if parsed.path == "/api/v1/workspace/review/undo":
+            payload = self._read_json()
+            try:
+                result = apply_review_undo(
+                    str(payload.get("workdir", "")),
+                    expected_revision=payload.get("expected_revision"),
+                    actor=str(payload.get("actor", "web-local-user")),
+                )
+            except WorkspaceApiError as exc:
+                self._send_json(exc.as_payload(), status=exc.status)
+                return
+            self._send_json(result)
+            return
+        if parsed.path == "/api/v1/workspace/recovery/action":
+            payload = self._read_json()
+            try:
+                result = apply_recovery_action(
+                    str(payload.get("workdir", "")),
+                    segment_id=str(payload.get("segment_id", "")),
+                    action=str(payload.get("action", "")),
+                    payload=payload.get("payload") if isinstance(payload.get("payload"), dict) else {},
+                    actor=str(payload.get("actor", "web-local-user")),
+                )
+            except WorkspaceApiError as exc:
+                self._send_json(exc.as_payload(), status=exc.status)
+                return
+            self._send_json(result)
+            return
         if parsed.path == "/api/start":
             payload = self._read_json()
             try:
                 job = start_job(payload)
+            except (KeyError, TypeError, ValueError) as exc:
+                self._send_json({"error": str(exc)}, status=400)
+                return
             except RuntimeError as exc:
                 self._send_json({"error": str(exc)}, status=409)
                 return
@@ -184,6 +351,69 @@ class Handler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(data)
 
+    def _send_bytes(self, data: bytes, content_type: str) -> None:
+        self.send_response(200)
+        self.send_header("Content-Type", content_type)
+        self.send_header("Cache-Control", "no-store")
+        self.send_header("Content-Length", str(len(data)))
+        self.end_headers()
+        self.wfile.write(data)
+
+    def _send_file(
+        self,
+        path: Path,
+        *,
+        download: bool = False,
+        content_type: str | None = None,
+    ) -> None:
+        size = path.stat().st_size
+        start, end = 0, max(0, size - 1)
+        range_header = self.headers.get("Range", "")
+        partial = False
+        if range_header.startswith("bytes="):
+            try:
+                start_raw, end_raw = range_header.removeprefix("bytes=").split("-", 1)
+                start = int(start_raw) if start_raw else 0
+                end = int(end_raw) if end_raw else end
+                if start < 0 or end < start or start >= size:
+                    raise ValueError
+                end = min(end, size - 1)
+                partial = True
+            except ValueError:
+                self.send_response(416)
+                self.send_header("Content-Range", f"bytes */{size}")
+                self.end_headers()
+                return
+        length = max(0, end - start + 1)
+        self.send_response(206 if partial else 200)
+        self.send_header("Content-Type", content_type or _content_type_for_path(path))
+        self.send_header("Accept-Ranges", "bytes")
+        self.send_header("Content-Length", str(length))
+        if partial:
+            self.send_header("Content-Range", f"bytes {start}-{end}/{size}")
+        if download:
+            self.send_header("Content-Disposition", f"attachment; filename*=UTF-8''{quote(path.name)}")
+        self.send_header("Cache-Control", "no-store")
+        self.end_headers()
+        with path.open("rb") as handle:
+            handle.seek(start)
+            self.wfile.write(handle.read(length))
+
+
+def _content_type_for_path(path: Path) -> str:
+    if path.suffix.lower() == ".srt":
+        return "application/x-subrip; charset=utf-8"
+    if path.suffix.lower() == ".vtt":
+        return "text/vtt; charset=utf-8"
+    guessed = mimetypes.guess_type(path.name)[0] or "application/octet-stream"
+    return f"{guessed}; charset=utf-8" if guessed.startswith("text/") else guessed
+
+
+def _subtitle_preview_content_type(path: Path) -> str:
+    if path.suffix.lower() in {".srt", ".vtt"}:
+        return "text/plain; charset=utf-8"
+    return _content_type_for_path(path)
+
 def start_job(payload: dict) -> dict:
     global ACTIVE_JOB
     with JOB_LOCK:
@@ -209,9 +439,7 @@ def start_job(payload: dict) -> dict:
         }
         thread = threading.Thread(target=_wait_job, args=(process,), daemon=True)
         thread.start()
-        job = ACTIVE_JOB.copy()
-        job.pop("_process", None)
-        return job
+        return persist_job(ACTIVE_JOB)
 
 def _wait_job(process: subprocess.Popen) -> None:
     global ACTIVE_JOB
@@ -225,6 +453,7 @@ def _wait_job(process: subprocess.Popen) -> None:
             ACTIVE_JOB["returncode"] = returncode
             ACTIVE_JOB["finished_at"] = time.time()
             ACTIVE_JOB.pop("_process", None)
+            persist_job(ACTIVE_JOB)
 
 def stop_job() -> dict:
     global ACTIVE_JOB
@@ -251,8 +480,9 @@ def stop_job() -> dict:
                 ACTIVE_JOB["returncode"] = -1
                 ACTIVE_JOB["finished_at"] = time.time()
                 ACTIVE_JOB.pop("_process", None)
-                job = ACTIVE_JOB.copy()
+                job = public_job(ACTIVE_JOB)
                 job["progress"] = build_progress(job)
+                persist_job(job)
             else:
                 job = None
     if job is not None:
@@ -262,11 +492,20 @@ def stop_job() -> dict:
 def get_active_job() -> dict:
     with JOB_LOCK:
         if not ACTIVE_JOB:
-            return {"status": "idle"}
-        job = ACTIVE_JOB.copy()
-        job.pop("_process", None)
+            saved = load_job()
+            if saved is None:
+                return {"status": "idle"}
+            saved["progress"] = build_progress(saved)
+            return saved
+        job = public_job(ACTIVE_JOB)
         job["progress"] = build_progress(job)
         return job
+
+
+def get_structured_job() -> dict:
+    from qwen_asr.web.workspace_api import envelope
+
+    return envelope(data=get_active_job())
 
 
 def pick_media_file() -> dict:

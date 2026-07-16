@@ -1,27 +1,16 @@
-﻿"""字幕智能分割器 — 移植自 VideoCaptioner app/core/split/split.py
+"""字幕智能分割器 — 移植自 VideoCaptioner app/core/split/split.py
 
-支持两种模式:
-  1. LLM 断句 — 并发调用 LLM 进行语义断句，自动验证和修复
-  2. 纯规则断句 — 基于时间间隔、常见词、超长段拆分的降级方案
-
-LLM 调用失败或匹配不完整时自动降级为规则模式。
+生产环境仅支持纯规则断句：基于时间间隔、文本边界、短应答保护和可读性规则进行切分。
 
 关键改动（相对上游）：
 - 导入路径全部改为 backend.*
-- __init__ 新增 base_url / api_key 参数
 - 移除 atexit.register，提供显式 stop()
 - split_subtitle 中字符串输入改为 ASRData.from_srt()
 - 使用 asr_data.to_txt() 替代已删除的 _segments_to_txt()
 - logger 前缀 optimizer.splitter
-- 长度控制统一在 _process_by_llm 层面（匹配回时间戳后），
-  split_by_llm 只负责语义断句和内容一致性验证
-- 匹配时对双方做标点归一化，提高 LLM 删标点场景下的匹配成功率
-- 匹配失败时不偏移 asr_index，避免级联失配；未覆盖区间局部回退到规则分割
 """
 
-import difflib
 import logging
-import re
 from concurrent.futures import (  # pylint: disable=no-name-in-module
     ThreadPoolExecutor,
     as_completed,
@@ -29,8 +18,45 @@ from concurrent.futures import (  # pylint: disable=no-name-in-module
 from typing import List, Union
 
 from optimizer.asr_data import ASRData, ASRDataSeg
-from optimizer.split_by_llm import split_by_llm
-from optimizer.llm_client import DEFAULT_TIMEOUT
+from optimizer.splitter_boundaries import (
+    STRONG_SENTENCE_END as _STRONG_SENTENCE_END,
+    inline_dialogue_parts as _inline_dialogue_parts,
+)
+from optimizer.splitter_display import (
+    MAX_SUBTITLE_DISPLAY_DURATION,
+    ORDINARY_SUBTITLE_MIN_DURATION,
+    PROTECTED_SHORT_MIN_DURATION,
+    cap_long_display_durations as _cap_long_display_durations,
+    extend_protected_short_display_durations as _extend_protected_short_display_durations,
+    extend_segment_display_duration as _extend_segment_display_duration,
+    merge_zero_gap_short_display_fragments as _merge_zero_gap_short_display_fragments,
+    minimum_display_duration as _minimum_display_duration,
+    redistribute_zero_gap_short_display_durations as _redistribute_zero_gap_short_display_durations,
+)
+from optimizer.splitter_readability import (
+    READABILITY_MERGE_MAX_CJK,
+    TAIL_FRAGMENT_MERGE_MAX_GAP,
+    can_merge_filler as _can_merge_filler,
+    can_merge_readability as _can_merge_readability,
+    is_dialogue_standalone_response as _is_dialogue_standalone_response,
+    is_filler_only as _is_filler_only,
+    is_numeric_fragment as _is_numeric_fragment,
+    is_protected_short_display_response as _is_protected_short_display_response,
+    is_protected_short_utterance as _is_protected_short_utterance,
+    is_readability_short as _is_readability_short,
+    is_structural_readability_fragment as _is_structural_readability_fragment,
+    is_tail_fragment as _is_tail_fragment,
+    normalize_filler_text as _normalize_filler_text,
+    prefer_merge_next as _prefer_merge_next,
+    segment_duration as _segment_duration,
+    starts_with_short_filler as _starts_with_short_filler,
+)
+from optimizer.splitter_timing import (
+    INLINE_SHORT_UTTERANCE_MIN_DURATION,
+    extend_inline_short_utterances as _extend_inline_short_utterances,
+    parts_to_timed_segments as _parts_to_timed_segments,
+    split_text_evenly_with_timing as _split_text_evenly_with_timing,
+)
 from optimizer.text_utils import (
     count_words,
     is_mainly_cjk,
@@ -40,197 +66,44 @@ from optimizer.text_utils import (
 
 logger = logging.getLogger("optimizer.splitter")
 
-DIAGNOSTIC_TEXT_LIMIT = 2000
-
-
-def _clip_for_log(text: str, limit: int = DIAGNOSTIC_TEXT_LIMIT) -> str:
-    """Limit diagnostic log payloads while preserving exact text content."""
-    if len(text) <= limit:
-        return text
-    omitted = len(text) - limit
-    return f"{text[:limit]}...<omitted {omitted} chars>"
-
 # ==================== 配置常量 ====================
 
 # 字数限制
-MAX_WORD_COUNT_CJK = 25      # CJK 文本单行最大字数
-MAX_WORD_COUNT_ENGLISH = 18   # 英文文本单行最大单词数
+MAX_WORD_COUNT_CJK = 18  # CJK 文本单行最大字数
+MAX_WORD_COUNT_ENGLISH = 18  # 英文文本单行最大单词数
 
 # 分段阈值
 SEGMENT_WORD_THRESHOLD = 300  # 长文本分段阈值(字数)
 
 # 时间间隔
-MAX_GAP = 1500            # 允许的最大时间间隔(毫秒)
-MERGE_SHORT_GAP = 200     # 短分段合并时间阈值(毫秒)
-MERGE_VERY_SHORT_GAP = 500   # 极短分段合并时间阈值(毫秒)
+MAX_GAP = 1500  # 允许的最大时间间隔(毫秒)
+MERGE_SHORT_GAP = 200  # 短分段合并时间阈值(毫秒)
+MERGE_VERY_SHORT_GAP = 500  # 极短分段合并时间阈值(毫秒)
 
 # 短分段合并阈值
-MERGE_MIN_WORDS = 5           # 短分段最小字数阈值
-MERGE_VERY_SHORT_WORDS = 3    # 极短分段字数阈值
+MERGE_MIN_WORDS = 5  # 短分段最小字数阈值
+MERGE_VERY_SHORT_WORDS = 3  # 极短分段字数阈值
 
 # 分割相关
-SPLIT_SEARCH_RANGE = 30       # 分割点前后搜索范围
-TIME_GAP_WINDOW_SIZE = 5      # 时间间隔窗口大小
-TIME_GAP_MULTIPLIER = 3       # 大间隔判断倍数
-MIN_GROUP_SIZE = 5            # 最小分组大小
+SPLIT_SEARCH_RANGE = 30  # 分割点前后搜索范围
+TIME_GAP_WINDOW_SIZE = 5  # 时间间隔窗口大小
+TIME_GAP_MULTIPLIER = 3  # 大间隔判断倍数
+MIN_GROUP_SIZE = 5  # 最小分组大小
 
 # 规则分割
-RULE_SPLIT_GAP = 500          # 规则分割时间间隔阈值(毫秒)
-RULE_MIN_SEGMENT_SIZE = 4     # 规则分割最小分段大小
+RULE_SPLIT_GAP = 500  # 规则分割时间间隔阈值(毫秒)
+RULE_MIN_SEGMENT_SIZE = 4  # 规则分割最小分段大小
 
 # 常见词分割
-PREFIX_WORD_RATIO = 0.6       # 前缀词分割比例
-SUFFIX_WORD_RATIO = 0.4       # 后缀词分割比例
+PREFIX_WORD_RATIO = 0.6  # 前缀词分割比例
+SUFFIX_WORD_RATIO = 0.4  # 后缀词分割比例
 
-# 匹配相关
-MATCH_SIMILARITY_THRESHOLD = 0.5   # 文本匹配相似度阈值
-MATCH_MAX_SHIFT = 30               # 匹配滑动窗口最大偏移
-MATCH_LARGE_SHIFT = 100            # 未匹配时的大偏移量
-MATCH_NEXT_OVERLAP_PENALTY = 0.35  # 候选窗口侵占下一句时的评分惩罚
-MATCH_LENGTH_PENALTY = 0.04        # 窗口归一化长度偏差惩罚
-MATCH_START_SHIFT_PENALTY = 0.002  # 起点远离当前索引的惩罚
-FILLER_MERGE_MAX_GAP = 220         # 短语气词兜底合并最大间隔(毫秒)
-FILLER_MERGE_MAX_CJK = 24          # 短语气词合并后最大 CJK 字数
-READABILITY_MERGE_MAX_GAP = 260    # 短片段可读性合并最大间隔(毫秒)
-READABILITY_MERGE_MAX_CJK = 32     # 短片段合并后最大 CJK 字数
-READABILITY_MIN_DURATION = 1200    # 低于此时长的短片段优先合并(毫秒)
-READABILITY_ZERO_DURATION = 100    # 近零时长片段强制尝试合并(毫秒)
-
-# 用于匹配时的标点归一化 — LLM 断句常删标点，归一化后比较提高匹配率
-_MATCH_PUNCTUATION = re.compile(r"[。、，！？,.!?;:；：・\s]")
-_FILLER_ONLY_TOKENS = (
-    "あの",
-    "まあ",
-    "ね",
-    "よ",
-    "さ",
-)
-_DIALOGUE_STANDALONE_RESPONSES = {
-    "はい",
-    "はいはい",
-    "うん",
-    "ううん",
-    "ええ",
-    "いや",
-    "いいえ",
-    "そう",
-    "そうそう",
-    "ああ",
-    "え",
-    "あ",
-    "なに",
-    "何",
-    "なんで",
-    "どうして",
-}
-_SHORT_FILLER_PREFIXES = ("ね", "え", "うん")
-_READABILITY_SUFFIXES = (
-    "です",
-    "でした",
-    "ます",
-    "ました",
-    "でした",
-    "けど",
-    "けれど",
-    "けれども",
-    "から",
-    "ので",
-    "のに",
-    "し",
-    "て",
-    "って",
-    "という",
-    "とか",
-    "など",
-    "な",
-    "ね",
-    "よ",
-    "わ",
-    "か",
-    "に",
-    "で",
-    "と",
-    "が",
-    "を",
-    "は",
-    "も",
-    "の",
-    "へ",
-    "から",
-    "ので",
-    "こと",
-)
-_READABILITY_PREFIXES = (
-    "ということで",
-    "そして",
-    "それで",
-    "だから",
-    "あと",
-    "でも",
-    "じゃあ",
-    "ただ",
-    "また",
-    "なので",
-    "すると",
-    "ところで",
-    "ちなみに",
-)
-_READABILITY_STANDALONE_WEAK = (
-    "ございます",
-    "よろしく",
-    "お願いします",
-)
-_NUMERIC_UNIT_FRAGMENTS = {
-    "度",
-    "日",
-    "月",
-    "年",
-    "時",
-    "分",
-    "秒",
-    "個",
-    "回",
-    "人",
-    "枚",
-    "本",
-}
-_READABILITY_TRAILING_FRAGMENTS = (
-    "んです",
-    "んですが",
-    "でしたが",
-    "ますが",
-    "けど",
-    "けれど",
-    "けれども",
-    "から",
-    "ので",
-    "のに",
-    "し",
-    "て",
-    "って",
-    "という",
-    "とか",
-)
-_READABILITY_LEADING_FRAGMENTS = (
-    "そして",
-    "それで",
-    "だから",
-    "でも",
-    "じゃあ",
-    "ただ",
-    "また",
-    "なので",
-    "すると",
-    "ところで",
-    "ちなみに",
-)
-
-
+READABILITY_ZERO_DURATION = 200  # 近零时长片段强制尝试合并(毫秒)
+TAIL_FRAGMENT_MERGE_MAX_CJK = 32  # 句尾残片合并后最大 CJK 字数
 # ==================== 模块级预处理函数 ====================
 
-def preprocess_segments(
-    segments: List[ASRDataSeg], need_lower: bool = True
-) -> List[ASRDataSeg]:
+
+def preprocess_segments(segments: List[ASRDataSeg], need_lower: bool = True) -> List[ASRDataSeg]:
     """预处理 ASR 分段。
 
     1. 移除纯标点符号的分段
@@ -255,219 +128,20 @@ def preprocess_segments(
     return new_segments
 
 
-def _next_sentence_overlap(candidate: str, next_sentence: str) -> int:
-    """Return length of next-sentence prefix consumed at candidate tail."""
-    if not candidate or len(next_sentence) < 3:
-        return 0
-
-    max_size = min(len(candidate), len(next_sentence))
-    for size in range(max_size, 1, -1):
-        if next_sentence[:size] in candidate:
-            return size
-    if candidate.endswith(next_sentence[:1]):
-        return 1
-    return 0
-
-
-def _is_better_match(
-    *,
-    score: float,
-    ratio: float,
-    start: int,
-    window_size: int,
-    next_overlap: int,
-    best_score: float,
-    best_ratio: float,
-    best_start: int | None,
-    best_window_size: int,
-    best_next_overlap: int,
-) -> bool:
-    """Compare candidate matches with deterministic, boundary-aware tie-breaks."""
-    if best_start is None:
-        return True
-
-    epsilon = 1e-9
-    if score > best_score + epsilon:
-        return True
-    if score < best_score - epsilon:
-        return False
-
-    if ratio > best_ratio + epsilon:
-        return True
-    if ratio < best_ratio - epsilon:
-        return False
-
-    if next_overlap != best_next_overlap:
-        return next_overlap < best_next_overlap
-    if start != best_start:
-        return start < best_start
-    return window_size < best_window_size
-
-
-def _normalize_filler_text(text: str) -> str:
-    """Normalize a candidate subtitle fragment for filler-word checks."""
-    return _MATCH_PUNCTUATION.sub("", text.strip())
-
-
-def _is_filler_only(text: str) -> bool:
-    """Return whether text is only short spoken filler particles."""
-    normalized = _normalize_filler_text(text)
-    if _is_dialogue_standalone_response(normalized):
-        return False
-    if not normalized or count_words(normalized) > 6:
-        return False
-
-    remaining = normalized
-    tokens = sorted(_FILLER_ONLY_TOKENS, key=len, reverse=True)
-    while remaining:
-        for token in tokens:
-            if remaining.startswith(token):
-                remaining = remaining[len(token):]
-                break
-        else:
-            return False
-    return True
-
-
-def _is_dialogue_standalone_response(text: str) -> bool:
-    """Return whether a short fragment is likely a separate dialogue turn."""
-    normalized = _normalize_filler_text(text)
-    return normalized in _DIALOGUE_STANDALONE_RESPONSES
-
-
-def _starts_with_short_filler(text: str) -> bool:
-    """Return whether a very short fragment starts with a filler particle."""
-    normalized = _normalize_filler_text(text)
-    if (
-        not normalized
-        or _is_filler_only(normalized)
-        or count_words(normalized) > 4
-    ):
-        return False
-    return any(normalized.startswith(prefix) for prefix in _SHORT_FILLER_PREFIXES)
-
-
-def _can_merge_filler(left: ASRDataSeg, right: ASRDataSeg) -> bool:
-    """Check whether merging adjacent filler-related fragments is conservative."""
-    if (
-        _is_dialogue_standalone_response(left.text)
-        or _is_dialogue_standalone_response(right.text)
-    ):
-        return False
-    gap = max(0, right.start_time - left.end_time)
-    merged_text = f"{left.text}{right.text}"
-    return (
-        gap <= FILLER_MERGE_MAX_GAP
-        and count_words(merged_text) <= FILLER_MERGE_MAX_CJK
-    )
-
-
-def _segment_duration(seg: ASRDataSeg) -> int:
-    """Return non-negative segment duration in milliseconds."""
-    return max(0, seg.end_time - seg.start_time)
-
-
-def _is_numeric_fragment(text: str) -> bool:
-    """Return whether a fragment is part of a compact numeric expression."""
-    normalized = _normalize_filler_text(text)
-    return bool(normalized) and (
-        normalized.isdigit() or normalized in _NUMERIC_UNIT_FRAGMENTS
-    )
-
-
-def _is_readability_short(seg: ASRDataSeg) -> bool:
-    """Return whether a segment is a structural fragment, not merely short."""
-    text = _normalize_filler_text(seg.text)
-    if _is_dialogue_standalone_response(text):
-        return False
-    duration = _segment_duration(seg)
-    return (
-        duration <= READABILITY_ZERO_DURATION
-        or text in _READABILITY_STANDALONE_WEAK
-        or text in _READABILITY_SUFFIXES
-        or text in _READABILITY_PREFIXES
-        or text.endswith(_READABILITY_TRAILING_FRAGMENTS)
-        or text.startswith(_READABILITY_LEADING_FRAGMENTS)
-        or _is_numeric_fragment(text)
-    )
-
-
-def _is_protected_short_utterance(text: str) -> bool:
-    """Protect short complete utterances from readability smoothing."""
-    normalized = _normalize_filler_text(text)
-    if not normalized or count_words(normalized) > 4:
-        return False
-    if _is_numeric_fragment(normalized) or _is_filler_only(normalized):
-        return False
-    if normalized in _READABILITY_STANDALONE_WEAK:
-        return False
-    if normalized in _READABILITY_SUFFIXES or normalized in _READABILITY_PREFIXES:
-        return False
-    if normalized.endswith(_READABILITY_TRAILING_FRAGMENTS):
-        return False
-    if normalized.startswith(_READABILITY_LEADING_FRAGMENTS):
-        return False
-    return True
-
-
-def _can_merge_readability(left: ASRDataSeg, right: ASRDataSeg) -> bool:
-    """Check whether merging short display fragments keeps subtitle size sane."""
-    if (
-        _is_dialogue_standalone_response(left.text)
-        or _is_dialogue_standalone_response(right.text)
-        or _is_protected_short_utterance(left.text)
-        or _is_protected_short_utterance(right.text)
-    ):
-        return False
-    gap = max(0, right.start_time - left.end_time)
-    merged_text = f"{left.text}{right.text}"
-    return (
-        gap <= READABILITY_MERGE_MAX_GAP
-        and count_words(merged_text) <= READABILITY_MERGE_MAX_CJK
-    )
-
-
-def _prefer_merge_next(
-    prev_seg: ASRDataSeg | None,
-    current: ASRDataSeg,
-    next_seg: ASRDataSeg | None,
-) -> bool:
-    """Choose merge direction for a short fragment."""
-    if next_seg is None:
-        return False
-    if prev_seg is None:
-        return True
-
-    current_text = _normalize_filler_text(current.text)
-    next_text = _normalize_filler_text(next_seg.text)
-    if _is_numeric_fragment(current_text) and _is_numeric_fragment(next_text):
-        return True
-    if (
-        current_text in _READABILITY_PREFIXES
-        or current_text.startswith(_READABILITY_LEADING_FRAGMENTS)
-    ):
-        return True
-    if (
-        current_text in _READABILITY_SUFFIXES
-        or current_text.endswith(_READABILITY_TRAILING_FRAGMENTS)
-    ):
-        return False
-
-    prev_gap = max(0, current.start_time - prev_seg.end_time)
-    next_gap = max(0, next_seg.start_time - current.end_time)
-    return next_gap + 100 < prev_gap
+def _split_inline_dialogue_boundaries(segments: List[ASRDataSeg]) -> List[ASRDataSeg]:
+    result: List[ASRDataSeg] = []
+    for segment in segments:
+        parts = _inline_dialogue_parts(segment.text)
+        if len(parts) <= 1:
+            result.append(segment)
+            continue
+        result.extend(_parts_to_timed_segments(segment, parts))
+    return result
 
 
 def _merge_asr_segments(left: ASRDataSeg, right: ASRDataSeg) -> ASRDataSeg:
     """Merge two adjacent ASR segments without changing text content."""
     text = f"{left.text}{right.text}"
-    if left.end_time >= right.start_time:
-        left_text = left.text.strip()
-        right_text = right.text.strip()
-        if right_text and left_text.endswith(right_text):
-            text = left.text
-        elif left_text and right_text.startswith(left_text):
-            text = right.text
 
     translated_text = ""
     if left.translated_text or right.translated_text:
@@ -482,12 +156,9 @@ def _merge_asr_segments(left: ASRDataSeg, right: ASRDataSeg) -> ASRDataSeg:
 
 # ==================== SubtitleSplitter ====================
 
-class SubtitleSplitter:
-    """字幕智能分割器。
 
-    使用 LLM 进行语义分段，支持并发处理和规则降级。
-    长度控制在匹配回时间戳后统一处理，split_by_llm 只负责语义断句。
-    """
+class SubtitleSplitter:
+    """生产规则字幕分割器。"""
 
     def __init__(
         self,
@@ -500,7 +171,7 @@ class SubtitleSplitter:
         prompt_limit_ratio: float = 0.8,
         disable_thinking: bool = False,
         llm_extra_body: dict | None = None,
-        timeout: float = DEFAULT_TIMEOUT,
+        timeout: float = 120.0,
     ) -> None:
         """初始化分割器。
 
@@ -515,20 +186,12 @@ class SubtitleSplitter:
             disable_thinking: 是否注入 /no_think 指令。
             llm_extra_body: 原样透传到 OpenAI 兼容接口 extra_body 的 JSON。
         """
+        del model, base_url, api_key, prompt_limit_ratio, disable_thinking, llm_extra_body, timeout
         self.thread_num = thread_num
-        self.model = model
-        self.base_url = base_url
-        self.api_key = api_key
         self.max_word_count_cjk = max_word_count_cjk
         self.max_word_count_english = max_word_count_english
-        self.prompt_limit_ratio = prompt_limit_ratio
-        self.disable_thinking = disable_thinking
-        self.llm_extra_body = llm_extra_body
         self.is_running = True
-        self.timeout = timeout
-        self.executor: ThreadPoolExecutor | None = ThreadPoolExecutor(
-            max_workers=self.thread_num
-        )
+        self.executor: ThreadPoolExecutor | None = ThreadPoolExecutor(max_workers=self.thread_num)
 
     # ------------------------------------------------------------------
     # 生命周期
@@ -584,16 +247,16 @@ class SubtitleSplitter:
                 asr_data = asr_data.split_to_word_segments()
 
             # 2. 预处理
-            asr_data.segments = preprocess_segments(
-                asr_data.segments, need_lower=False
-            )
+            asr_data.segments = preprocess_segments(asr_data.segments, need_lower=False)
             txt = asr_data.to_txt().replace("\n", "")
 
             # 3. 确定分段数并分割
             total_word_count = count_words(txt)
             num_segments = self._determine_num_segments(total_word_count)
             logger.info(
-                "根据字数 %d, 确定断句分段数: %d", total_word_count, num_segments,
+                "根据字数 %d, 确定断句分段数: %d",
+                total_word_count,
+                num_segments,
             )
 
             asr_data_list = self._split_asr_data(asr_data, num_segments)
@@ -605,6 +268,9 @@ class SubtitleSplitter:
             final_segments = self._merge_processed_segments(processed_segments)
             final_segments = self._smooth_short_fillers(final_segments)
             final_segments = self._smooth_readability_segments(final_segments)
+            final_segments = self._merge_tail_fragments(final_segments)
+            final_segments = self._smooth_readability_segments(final_segments)
+            final_segments = _extend_protected_short_display_durations(final_segments)
 
             return ASRData(final_segments)
 
@@ -618,9 +284,7 @@ class SubtitleSplitter:
     # 分段数计算
     # ------------------------------------------------------------------
 
-    def _determine_num_segments(
-        self, word_count: int, threshold: int = SEGMENT_WORD_THRESHOLD
-    ) -> int:
+    def _determine_num_segments(self, word_count: int, threshold: int = SEGMENT_WORD_THRESHOLD) -> int:
         """根据字数确定分段数。"""
         num_segments = word_count // threshold
         if word_count % threshold > 0:
@@ -631,9 +295,7 @@ class SubtitleSplitter:
     # 长文本拆分
     # ------------------------------------------------------------------
 
-    def _split_asr_data(
-        self, asr_data: ASRData, num_segments: int
-    ) -> List[ASRData]:
+    def _split_asr_data(self, asr_data: ASRData, num_segments: int) -> List[ASRData]:
         """按时间间隔智能分割长文本。
 
         策略:
@@ -664,10 +326,7 @@ class SubtitleSplitter:
             for j in range(start, end):
                 if j + 1 >= total_segs:
                     break
-                gap = (
-                    asr_data.segments[j + 1].start_time
-                    - asr_data.segments[j].end_time
-                )
+                gap = asr_data.segments[j + 1].start_time - asr_data.segments[j].end_time
                 if gap > max_gap:
                     max_gap = gap
                     best_index = j
@@ -695,9 +354,7 @@ class SubtitleSplitter:
     # 并发处理
     # ------------------------------------------------------------------
 
-    def _process_segments(
-        self, asr_data_list: List[ASRData]
-    ) -> List[List[ASRDataSeg]]:
+    def _process_segments(self, asr_data_list: List[ASRData]) -> List[List[ASRDataSeg]]:
         """并发处理所有分段。"""
         if self.executor is None:
             raise ValueError("线程池未初始化")
@@ -720,76 +377,17 @@ class SubtitleSplitter:
 
         return processed_segments
 
-    def _process_single_segment(
-        self, asr_data_part: ASRData
-    ) -> List[ASRDataSeg]:
-        """处理单个分段。
-
-        优先使用 LLM 断句；若调用失败或无法完整匹配回时间戳，
-        则降级到规则分割。
-        """
+    def _process_single_segment(self, asr_data_part: ASRData) -> List[ASRDataSeg]:
+        """使用唯一生产规则实现处理单个分段。"""
         if not asr_data_part.segments:
             return []
-        try:
-            return self._process_by_llm(asr_data_part.segments)
-        except Exception as e:  # pylint: disable=broad-exception-caught
-            logger.warning("LLM 分割失败，回退到规则分割: %s", e)
-            return self._process_by_rules(asr_data_part.segments)
-
-    # ------------------------------------------------------------------
-    # LLM 处理
-    # ------------------------------------------------------------------
-
-    def _process_by_llm(
-        self, segments: List[ASRDataSeg]
-    ) -> List[ASRDataSeg]:
-        """使用 LLM 进行智能分段。
-
-        流程：
-        1. split_by_llm 返回语义断句（只保证内容一致性，不保证长度）
-        2. _merge_segments_based_on_sentences 将句子匹配回词级时间戳
-        3. _enforce_length_limit 对超长段基于时间间隔拆分，确保长度合规
-        """
-        txt = "".join([seg.text for seg in segments])
-        logger.info("开始调用 API 进行分段，文本长度: %d", count_words(txt))
-        logger.info(
-            "断句诊断 | 待断句 ASR 文本 segments=%d text=%s",
-            len(segments),
-            _clip_for_log(txt),
-        )
-
-        sentences = split_by_llm(
-            text=txt,
-            model=self.model,
-            max_word_count_cjk=self.max_word_count_cjk,
-            max_word_count_english=self.max_word_count_english,
-            base_url=self.base_url,
-            api_key=self.api_key,
-            prompt_limit_ratio=self.prompt_limit_ratio,
-            disable_thinking=self.disable_thinking,
-            llm_extra_body=self.llm_extra_body,
-            timeout=self.timeout,
-        )
-        logger.info(
-            "断句诊断 | LLM 返回句子数=%d sentences=%s",
-            len(sentences),
-            _clip_for_log(" | ".join(sentences)),
-        )
-
-        matched_segments = self._merge_segments_based_on_sentences(
-            segments, sentences,
-        )
-
-        # 匹配回时间戳后，对超长段基于时间间隔拆分
-        return self._enforce_length_limit(matched_segments)
+        return self._process_by_rules(asr_data_part.segments)
 
     # ------------------------------------------------------------------
     # 长度合规拆分
     # ------------------------------------------------------------------
 
-    def _enforce_length_limit(
-        self, segments: List[ASRDataSeg]
-    ) -> List[ASRDataSeg]:
+    def _enforce_length_limit(self, segments: List[ASRDataSeg]) -> List[ASRDataSeg]:
         """对超长 ASRDataSeg 进行拆分，确保所有段满足字数限制。
 
         此方法在匹配回时间戳之后调用，利用词级时间信息
@@ -801,11 +399,7 @@ class SubtitleSplitter:
         result: List[ASRDataSeg] = []
         for seg in segments:
             wc = count_words(seg.text)
-            max_wc = (
-                self.max_word_count_cjk
-                if is_mainly_cjk(seg.text)
-                else self.max_word_count_english
-            )
+            max_wc = self.max_word_count_cjk if is_mainly_cjk(seg.text) else self.max_word_count_english
             if wc <= max_wc:
                 result.append(seg)
             else:
@@ -815,7 +409,9 @@ class SubtitleSplitter:
         return result
 
     def _split_oversized_seg(
-        self, seg: ASRDataSeg, max_wc: int,
+        self,
+        seg: ASRDataSeg,
+        max_wc: int,
     ) -> List[ASRDataSeg]:
         """将超长 ASRDataSeg 拆分为多个合规段。
 
@@ -842,36 +438,13 @@ class SubtitleSplitter:
         if num_parts <= 1:
             return [seg]
 
-        duration = seg.end_time - seg.start_time
-        part_len = len(text) // num_parts
-        parts: List[ASRDataSeg] = []
-
-        for i in range(num_parts):
-            if i < num_parts - 1:
-                part_text = text[i * part_len : (i + 1) * part_len].strip()
-            else:
-                part_text = text[i * part_len :].strip()
-
-            if not part_text:
-                continue
-
-            # 按比例分配时间
-            ratio_start = i / num_parts
-            ratio_end = (i + 1) / num_parts
-            part_start = seg.start_time + int(duration * ratio_start)
-            part_end = seg.start_time + int(duration * ratio_end)
-
-            parts.append(ASRDataSeg(part_text, part_start, part_end))
-
-        return parts if parts else [seg]
+        return _split_text_evenly_with_timing(seg, num_parts)
 
     # ------------------------------------------------------------------
     # 规则处理（降级方案）
     # ------------------------------------------------------------------
 
-    def _process_by_rules(
-        self, segments: List[ASRDataSeg]
-    ) -> List[ASRDataSeg]:
+    def _process_by_rules(self, segments: List[ASRDataSeg]) -> List[ASRDataSeg]:
         """使用规则进行基础分割（LLM 降级方案）。
 
         规则:
@@ -882,9 +455,10 @@ class SubtitleSplitter:
         logger.info("规则分割 — 输入分段数: %d", len(segments))
 
         # 1. 按时间间隔分组
-        segment_groups = self._group_by_time_gaps(
-            segments, max_gap=RULE_SPLIT_GAP, check_large_gaps=True
-        )
+        segment_groups = self._group_by_time_gaps(segments, max_gap=RULE_SPLIT_GAP, check_large_gaps=True)
+        segment_groups = [
+            sentence_group for group in segment_groups for sentence_group in self._split_at_sentence_boundaries(group)
+        ]
         logger.info("按时间间隔分组: %d", len(segment_groups))
 
         # 2. 按常见词分割长句
@@ -906,7 +480,23 @@ class SubtitleSplitter:
         for group in common_result_groups:
             result_segments.extend(self._split_long_segment(group))
 
-        return result_segments
+        return _split_inline_dialogue_boundaries(result_segments)
+
+    @staticmethod
+    def _split_at_sentence_boundaries(
+        segments: List[ASRDataSeg],
+    ) -> List[List[ASRDataSeg]]:
+        """Split short time groups at explicit strong sentence endings."""
+        groups: List[List[ASRDataSeg]] = []
+        current: List[ASRDataSeg] = []
+        for segment in segments:
+            current.append(segment)
+            if _STRONG_SENTENCE_END.search(segment.text):
+                groups.append(current)
+                current = []
+        if current:
+            groups.append(current)
+        return groups
 
     # ------------------------------------------------------------------
     # 时间间隔分组
@@ -936,10 +526,7 @@ class SubtitleSplitter:
                     recent_gaps.pop(0)
                 if len(recent_gaps) == TIME_GAP_WINDOW_SIZE:
                     avg_gap = sum(recent_gaps) / len(recent_gaps)
-                    if (
-                        time_gap > avg_gap * TIME_GAP_MULTIPLIER
-                        and len(current_group) > MIN_GROUP_SIZE
-                    ):
+                    if time_gap > avg_gap * TIME_GAP_MULTIPLIER and len(current_group) > MIN_GROUP_SIZE:
                         result.append(current_group)
                         current_group = []
                         recent_gaps = []
@@ -961,28 +548,76 @@ class SubtitleSplitter:
     # 常见词分割
     # ------------------------------------------------------------------
 
-    def _split_by_common_words(
-        self, segments: List[ASRDataSeg]
-    ) -> List[List[ASRDataSeg]]:
+    def _split_by_common_words(self, segments: List[ASRDataSeg]) -> List[List[ASRDataSeg]]:
         """在常见连接词处分割。"""
 
         prefix_split_words = {
             # 英文
-            "and", "or", "but", "if", "then", "because", "as", "until",
-            "while", "what", "when", "where", "nor", "yet", "so", "for",
-            "however", "moreover",
+            "and",
+            "or",
+            "but",
+            "if",
+            "then",
+            "because",
+            "as",
+            "until",
+            "while",
+            "what",
+            "when",
+            "where",
+            "nor",
+            "yet",
+            "so",
+            "for",
+            "however",
+            "moreover",
             # 中文
-            "和", "或", "与", "但", "而", "因", "你", "他",
-            "她", "它", "您", "这", "那", "哪",
+            "和",
+            "或",
+            "与",
+            "但",
+            "而",
+            "因",
+            "你",
+            "他",
+            "她",
+            "它",
+            "您",
+            "这",
+            "那",
+            "哪",
         }
 
         suffix_split_words = {
             # 标点
-            ".", ",", "!", "?", "。", "，", "！", "？",
+            ".",
+            ",",
+            "!",
+            "?",
+            "。",
+            "，",
+            "！",
+            "？",
             # 中文语气词
-            "的", "了", "着", "过", "吗", "呢", "吧", "啊", "呀", "嘛", "啦",
+            "的",
+            "了",
+            "着",
+            "过",
+            "吗",
+            "呢",
+            "吧",
+            "啊",
+            "呀",
+            "嘛",
+            "啦",
             # 英文代词
-            "mine", "yours", "hers", "its", "ours", "theirs", "either",
+            "mine",
+            "yours",
+            "hers",
+            "its",
+            "ours",
+            "theirs",
+            "either",
             "neither",
         }
 
@@ -990,16 +625,11 @@ class SubtitleSplitter:
         current_group: List[ASRDataSeg] = []
 
         for i, seg in enumerate(segments):
-            max_wc = (
-                self.max_word_count_cjk
-                if is_mainly_cjk(seg.text)
-                else self.max_word_count_english
-            )
+            max_wc = self.max_word_count_cjk if is_mainly_cjk(seg.text) else self.max_word_count_english
 
             # 前缀词分割
-            if (
-                any(seg.text.lower().startswith(word) for word in prefix_split_words)
-                and len(current_group) >= int(max_wc * PREFIX_WORD_RATIO)
+            if any(seg.text.lower().startswith(word) for word in prefix_split_words) and len(current_group) >= int(
+                max_wc * PREFIX_WORD_RATIO
             ):
                 result.append(current_group)
                 logger.debug("在前缀词 %s 前分割", seg.text)
@@ -1008,10 +638,7 @@ class SubtitleSplitter:
             # 后缀词分割
             if (
                 i > 0
-                and any(
-                    segments[i - 1].text.lower().endswith(word)
-                    for word in suffix_split_words
-                )
+                and any(segments[i - 1].text.lower().endswith(word) for word in suffix_split_words)
                 and len(current_group) >= int(max_wc * SUFFIX_WORD_RATIO)
             ):
                 result.append(current_group)
@@ -1029,9 +656,7 @@ class SubtitleSplitter:
     # 超长段拆分
     # ------------------------------------------------------------------
 
-    def _split_long_segment(
-        self, segments: List[ASRDataSeg]
-    ) -> List[ASRDataSeg]:
+    def _split_long_segment(self, segments: List[ASRDataSeg]) -> List[ASRDataSeg]:
         """拆分超长分段 — 寻找最大时间间隔点进行拆分。"""
         result_segs: List[ASRDataSeg] = []
         segments_to_process: List[List[ASRDataSeg]] = [segments]
@@ -1043,11 +668,7 @@ class SubtitleSplitter:
                 continue
 
             merged_text = "".join(seg.text for seg in current_segments)
-            max_wc = (
-                self.max_word_count_cjk
-                if is_mainly_cjk(merged_text)
-                else self.max_word_count_english
-            )
+            max_wc = self.max_word_count_cjk if is_mainly_cjk(merged_text) else self.max_word_count_english
             n = len(current_segments)
 
             # 分段足够短或无法继续拆分
@@ -1061,10 +682,7 @@ class SubtitleSplitter:
                 continue
 
             # 检查时间间隔
-            gaps = [
-                current_segments[j + 1].start_time - current_segments[j].end_time
-                for j in range(n - 1)
-            ]
+            gaps = [current_segments[j + 1].start_time - current_segments[j].end_time for j in range(n - 1)]
             all_equal = all(abs(gap - gaps[0]) < 1e-6 for gap in gaps)
 
             if all_equal:
@@ -1074,10 +692,7 @@ class SubtitleSplitter:
                 end_idx = min((5 * n) // 6, n - 2)
                 split_index = max(
                     range(start_idx, end_idx),
-                    key=lambda idx: (
-                        current_segments[idx + 1].start_time
-                        - current_segments[idx].end_time
-                    ),
+                    key=lambda idx: current_segments[idx + 1].start_time - current_segments[idx].end_time,
                     default=n // 2,
                 )
                 if split_index == 0 or split_index == n - 1:
@@ -1091,204 +706,10 @@ class SubtitleSplitter:
         return result_segs
 
     # ------------------------------------------------------------------
-    # 滑动窗口匹配合并
-    # ------------------------------------------------------------------
-
-    def _merge_segments_based_on_sentences(
-        self,
-        segments: List[ASRDataSeg],
-        sentences: List[str],
-    ) -> List[ASRDataSeg]:
-        """基于 LLM 返回的句子列表合并 ASR 分段。
-
-        使用滑动窗口匹配算法：
-        1. 对每个 LLM 句子，查找最佳匹配的 ASR 分段序列
-        2. 使用相似度算法进行匹配（匹配前对双方做标点归一化）
-        3. 合并匹配的分段为单个 ASRDataSeg（保留完整语义单元）
-
-        长度拆分不在此处进行，由调用方 _process_by_llm 统一处理。
-
-        若部分句子无法匹配，则保留已成功匹配的 LLM 句子，
-        未覆盖的 ASR token 区间用规则分割补齐。
-        """
-
-        def normalize_for_match(s: str) -> str:
-            """移除标点和空白后转小写，用于匹配比较。"""
-            return _MATCH_PUNCTUATION.sub("", s).lower()
-
-        asr_texts = [seg.text for seg in segments]
-        # 预计算归一化后的 ASR 文本，避免重复计算
-        asr_texts_normalized = [normalize_for_match(t) for t in asr_texts]
-        asr_len = len(asr_texts)
-        asr_index = 0
-        threshold = MATCH_SIMILARITY_THRESHOLD
-        max_shift = MATCH_MAX_SHIFT
-        unmatched_sentences: list[str] = []
-
-        new_segments: List[ASRDataSeg] = []
-        emitted_until = 0
-
-        for sentence_index, sentence in enumerate(sentences):
-            logger.debug("处理句子: %s", sentence)
-            logger.debug(
-                "后续句子: %s", "".join(asr_texts[asr_index : asr_index + 10]),
-            )
-
-            sentence_normalized = normalize_for_match(sentence)
-            next_sentence_normalized = ""
-            if sentence_index + 1 < len(sentences):
-                next_sentence_normalized = normalize_for_match(
-                    sentences[sentence_index + 1]
-                )
-            wc = max(len(sentence_normalized), 1)
-            best_ratio = 0.0
-            best_score = float("-inf")
-            best_pos: int | None = None
-            best_window_size = 0
-            best_text = ""
-            best_normalized = ""
-            best_next_overlap = 0
-
-            # 滑动窗口大小 — 提前绑定 wc 避免 cell-var-from-loop
-            max_window_size = min(wc * 2, asr_len - asr_index)
-            min_window_size = 1
-            _wc = wc  # 绑定到局部变量
-            window_sizes = sorted(
-                range(min_window_size, max_window_size + 1),
-                key=lambda x, _w=_wc: abs(x - _w),
-            )
-
-            # 滑动窗口匹配
-            for window_size in window_sizes:
-                max_start = min(
-                    asr_index + max_shift + 1, asr_len - window_size + 1
-                )
-                for start in range(asr_index, max_start):
-                    # 使用归一化后的文本拼接比较
-                    substr_normalized = "".join(
-                        asr_texts_normalized[start : start + window_size]
-                    )
-                    ratio = difflib.SequenceMatcher(
-                        None, sentence_normalized, substr_normalized
-                    ).ratio()
-                    next_overlap = _next_sentence_overlap(
-                        substr_normalized,
-                        next_sentence_normalized,
-                    )
-                    length_penalty = (
-                        abs(len(substr_normalized) - wc)
-                        / max(wc, len(substr_normalized), 1)
-                    ) * MATCH_LENGTH_PENALTY
-                    start_penalty = (
-                        max(0, start - asr_index) * MATCH_START_SHIFT_PENALTY
-                    )
-                    next_penalty = next_overlap * MATCH_NEXT_OVERLAP_PENALTY
-                    score = ratio - length_penalty - start_penalty - next_penalty
-
-                    if _is_better_match(
-                        score=score,
-                        ratio=ratio,
-                        start=start,
-                        window_size=window_size,
-                        next_overlap=next_overlap,
-                        best_score=best_score,
-                        best_ratio=best_ratio,
-                        best_start=best_pos,
-                        best_window_size=best_window_size,
-                        best_next_overlap=best_next_overlap,
-                    ):
-                        best_score = score
-                        best_ratio = ratio
-                        best_pos = start
-                        best_window_size = window_size
-                        best_text = "".join(asr_texts[start : start + window_size])
-                        best_normalized = substr_normalized
-                        best_next_overlap = next_overlap
-
-            # 处理匹配结果
-            if best_ratio >= threshold and best_pos is not None:
-                start_seg_index = best_pos
-                end_seg_index = best_pos + best_window_size - 1
-
-                if start_seg_index > emitted_until:
-                    gap_segments = segments[emitted_until:start_seg_index]
-                    logger.info(
-                        "断句诊断 | 局部规则补齐 gap_start=%d gap_end=%d gap_tokens=%d",
-                        emitted_until,
-                        start_seg_index - 1,
-                        len(gap_segments),
-                    )
-                    new_segments.extend(self._process_by_rules(gap_segments))
-
-                segs_to_merge = segments[start_seg_index : end_seg_index + 1]
-
-                # 按时间切分避免跨度过大
-                seg_groups = self._group_by_time_gaps(
-                    segs_to_merge, max_gap=MAX_GAP
-                )
-
-                for group in seg_groups:
-                    # 合并组内所有词级段为一个 ASRDataSeg
-                    merged_text = "".join(seg.text for seg in group).strip()
-                    if merged_text:
-                        merged_seg = ASRDataSeg(
-                            merged_text,
-                            group[0].start_time,
-                            group[-1].end_time,
-                        )
-                        new_segments.append(merged_seg)
-
-                max_shift = MATCH_MAX_SHIFT
-                asr_index = end_seg_index + 1
-                emitted_until = end_seg_index + 1
-            else:
-                context_text = "".join(asr_texts[asr_index : asr_index + 40])
-                logger.warning("无法匹配句子: %s", sentence)
-                logger.warning(
-                    "断句诊断 | 匹配失败 sentence_norm=%s best_ratio=%.3f "
-                    "best_score=%.3f best_pos=%s best_window_size=%d "
-                    "next_overlap=%d best_text=%s best_norm=%s asr_index=%d "
-                    "context=%s",
-                    _clip_for_log(sentence_normalized),
-                    best_ratio,
-                    best_score,
-                    best_pos,
-                    best_window_size,
-                    best_next_overlap,
-                    _clip_for_log(best_text),
-                    _clip_for_log(best_normalized),
-                    asr_index,
-                    _clip_for_log(context_text),
-                )
-                unmatched_sentences.append(sentence)
-                # 不移动 asr_index — 跳过此 sentence，
-                # 让后续 sentence 从同一位置继续匹配，避免级联失配
-                max_shift = MATCH_LARGE_SHIFT
-
-        if emitted_until < asr_len:
-            remaining_segments = segments[emitted_until:]
-            logger.info(
-                "断句诊断 | 局部规则补齐 tail_start=%d tail_tokens=%d",
-                emitted_until,
-                len(remaining_segments),
-            )
-            new_segments.extend(self._process_by_rules(remaining_segments))
-
-        if unmatched_sentences:
-            logger.warning(
-                "LLM 分句部分未匹配，已用规则补齐未覆盖区间: %d",
-                len(unmatched_sentences),
-            )
-
-        return new_segments
-
-    # ------------------------------------------------------------------
     # 合并处理后的分段
     # ------------------------------------------------------------------
 
-    def _merge_processed_segments(
-        self, processed_segments: List[List[ASRDataSeg]]
-    ) -> List[ASRDataSeg]:
+    def _merge_processed_segments(self, processed_segments: List[List[ASRDataSeg]]) -> List[ASRDataSeg]:
         """合并所有处理后的分段并排序。"""
         final_segments: List[ASRDataSeg] = []
         for segs in processed_segments:
@@ -1296,9 +717,7 @@ class SubtitleSplitter:
         final_segments.sort(key=lambda seg: seg.start_time)
         return final_segments
 
-    def _smooth_short_fillers(
-        self, segments: List[ASRDataSeg]
-    ) -> List[ASRDataSeg]:
+    def _smooth_short_fillers(self, segments: List[ASRDataSeg]) -> List[ASRDataSeg]:
         """Conservatively merge standalone short filler fragments."""
         if not segments:
             return []
@@ -1308,11 +727,7 @@ class SubtitleSplitter:
 
         for seg in segments:
             text = seg.text.strip()
-            should_merge_left = (
-                bool(smoothed)
-                and _is_filler_only(text)
-                and _can_merge_filler(smoothed[-1], seg)
-            )
+            should_merge_left = bool(smoothed) and _is_filler_only(text) and _can_merge_filler(smoothed[-1], seg)
             if should_merge_left:
                 logger.info(
                     "断句诊断 | 短语气词后处理合并到前句: text=%s",
@@ -1348,9 +763,7 @@ class SubtitleSplitter:
             logger.info("断句诊断 | 短语气词后处理合并数: %d", merge_count)
         return result
 
-    def _smooth_readability_segments(
-        self, segments: List[ASRDataSeg]
-    ) -> List[ASRDataSeg]:
+    def _smooth_readability_segments(self, segments: List[ASRDataSeg]) -> List[ASRDataSeg]:
         """Merge very short subtitle fragments into nearby readable segments."""
         if not segments:
             return []
@@ -1369,14 +782,8 @@ class SubtitleSplitter:
                 index += 1
                 continue
 
-            can_merge_prev = (
-                prev_seg is not None
-                and _can_merge_readability(prev_seg, current)
-            )
-            can_merge_next = (
-                next_seg is not None
-                and _can_merge_readability(current, next_seg)
-            )
+            can_merge_prev = prev_seg is not None and _can_merge_readability(prev_seg, current)
+            can_merge_next = next_seg is not None and _can_merge_readability(current, next_seg)
 
             if not can_merge_prev and not can_merge_next:
                 result.append(current)
@@ -1413,4 +820,35 @@ class SubtitleSplitter:
 
         if merge_count:
             logger.info("断句诊断 | 短片段可读性合并数: %d", merge_count)
+        return result
+
+    def _merge_tail_fragments(self, segments: List[ASRDataSeg]) -> List[ASRDataSeg]:
+        """Merge dangling suffix fragments back into the preceding subtitle."""
+        if not segments:
+            return []
+
+        result: List[ASRDataSeg] = []
+        merge_count = 0
+        for seg in segments:
+            if not result or not _is_tail_fragment(seg.text):
+                result.append(seg)
+                continue
+
+            previous = result[-1]
+            gap = max(0, seg.start_time - previous.end_time)
+            merged_text = f"{previous.text}{seg.text}"
+            if gap <= TAIL_FRAGMENT_MERGE_MAX_GAP and count_words(merged_text) <= TAIL_FRAGMENT_MERGE_MAX_CJK:
+                logger.info(
+                    "断句诊断 | 句尾残片合并到前句: text=%s gap=%d",
+                    seg.text.strip(),
+                    gap,
+                )
+                result[-1] = _merge_asr_segments(previous, seg)
+                merge_count += 1
+                continue
+
+            result.append(seg)
+
+        if merge_count:
+            logger.info("断句诊断 | 句尾残片合并数: %d", merge_count)
         return result

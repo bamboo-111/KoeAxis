@@ -41,8 +41,8 @@ def import_qwen_asr_distribution() -> ModuleType:
 
 
 def get_qwen3_asr_model_class() -> type:
-    return getattr(import_qwen_asr_distribution(), "Qwen3ASRModel")
+    return import_qwen_asr_distribution().Qwen3ASRModel
 
 
 def get_qwen3_forced_aligner_class() -> type:
-    return getattr(import_qwen_asr_distribution(), "Qwen3ForcedAligner")
+    return import_qwen_asr_distribution().Qwen3ForcedAligner

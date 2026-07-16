@@ -1,13 +1,11 @@
 ﻿from __future__ import annotations
 
-import sys
 import re
+import sys
 from pathlib import Path
 
 from qwen_asr.defaults import (
-    DEFAULT_LLM_BASE_URL,
-    DEFAULT_LLM_EXTRA_BODY_JSON,
-    DEFAULT_LLM_MODEL,
+    DEFAULT_LLM_CONCURRENCY,
     DEFAULT_MAX_SEGMENT_SECONDS,
     DEFAULT_MIN_SEGMENT_SECONDS,
     DEFAULT_MODEL_CACHE_DIR,
@@ -19,6 +17,15 @@ ROOT = Path(__file__).resolve().parents[2]
 WORKSPACES_DIR = ROOT / "workspaces"
 PROJECT_PYTHON = ROOT / ".venv312" / "Scripts" / "python.exe"
 DEFAULT_ASR_BATCH_SIZE = 5
+SENSITIVE_PAYLOAD_FIELDS = frozenset(
+    {
+        "api_key",
+        "authorization",
+        "deepseek_api_key",
+        "llm_api_key",
+        "mimo_api_key",
+    }
+)
 SUPPORTED_ASR_LANGUAGES = (
     "",
     "Chinese",
@@ -99,12 +106,13 @@ def _prepare_audio_args(payload: dict) -> list[str]:
     return args
 
 def build_command(payload: dict) -> list[str]:
+    if SENSITIVE_PAYLOAD_FIELDS.intersection(payload):
+        raise ValueError("API credentials must be configured through process environment variables.")
     stage = payload["stage"]
     workdir = payload["workdir"]
-    thread_num = str(max(1, int(payload.get("thread_num", 4))))
+    thread_num = str(max(1, int(payload.get("thread_num", DEFAULT_LLM_CONCURRENCY))))
     disable_thinking = bool(payload.get("disable_thinking", True))
     llm_extra_body_json = str(payload.get("llm_extra_body_json", "") or "").strip()
-    proofread_kind = str(payload.get("proofread_kind", "normal") or "normal").strip()
     segment_args = [
         "--max-segment-seconds",
         str(max(1.0, float(payload.get("max_segment_seconds", DEFAULT_MAX_SEGMENT_SECONDS)))),
@@ -171,6 +179,19 @@ def build_command(payload: dict) -> list[str]:
                 str(max(1, int(payload.get("align_cleanup_interval", 4)))),
             ]
         )
+        if payload.get("align_diagnostics_mode") == "capture-failed":
+            command.extend(["--align-diagnostics-mode", "capture-failed"])
+        if payload.get("align_fallback") == "asr-short-window":
+            command.extend(
+                [
+                    "--align-fallback",
+                    "asr-short-window",
+                    "--align-fallback-window-seconds",
+                    str(max(0.5, float(payload.get("align_fallback_window_seconds", 3.0)))),
+                    "--asr-reference-model",
+                    payload["asr_model"],
+                ]
+            )
         command.append("--local-files-only" if payload.get("local_files_only", True) else "--no-local-files-only")
     elif stage == "normalize":
         command.extend(
@@ -185,35 +206,22 @@ def build_command(payload: dict) -> list[str]:
                 str(max(0, int(payload.get("normalize_min_blank_ms", 300)))),
             ]
         )
+    elif stage == "quality-gate":
+        if payload.get("quality_gate_include_export"):
+            command.append("--include-export")
+        if payload.get("quality_gate_require_srt"):
+            command.append("--require-srt")
     elif stage == "split":
         command.extend(
             [
                 "--thread-num",
                 thread_num,
                 "--max-word-count-cjk",
-                str(max(1, int(payload.get("split_max_word_count_cjk", 25)))),
+                str(max(1, int(payload.get("split_max_word_count_cjk", 18)))),
                 "--max-word-count-english",
                 str(max(1, int(payload.get("split_max_word_count_english", 18)))),
-                "--prompt-limit-ratio",
-                str(max(0.1, float(payload.get("split_prompt_limit_ratio", 0.8)))),
-                "--split-mode",
-                str(payload.get("split_mode", "token-counts") or "token-counts"),
-                "--timeout",
-                str(max(1.0, float(payload.get("llm_timeout", 120)))),
             ]
         )
-        command.append("--disable-thinking" if disable_thinking else "--no-disable-thinking")
-        if llm_extra_body_json:
-            command.extend(["--llm-extra-body-json", llm_extra_body_json])
-        if payload.get("llm_model") and payload.get("llm_base_url") and payload.get("llm_api_key"):
-            command.extend(
-                [
-                    "--llm-model",
-                    payload["llm_model"],
-                    "--llm-base-url",
-                    payload["llm_base_url"],
-                ]
-            )
     elif stage == "translate":
         command.extend(
             [
@@ -230,8 +238,6 @@ def build_command(payload: dict) -> list[str]:
                 payload["llm_model"],
                 "--llm-base-url",
                 payload["llm_base_url"],
-                "--llm-api-key",
-                payload["llm_api_key"],
                 "--target-language",
                 payload["target_language"],
             ]
@@ -254,8 +260,6 @@ def build_command(payload: dict) -> list[str]:
                 payload["llm_model"],
                 "--llm-base-url",
                 payload["llm_base_url"],
-                "--llm-api-key",
-                payload["llm_api_key"],
             ]
         )
         if llm_extra_body_json:
@@ -311,18 +315,25 @@ def build_command(payload: dict) -> list[str]:
                 "--custom-prompt",
                 str(payload.get("translate_custom_prompt", "")),
                 "--max-word-count-cjk",
-                str(max(1, int(payload.get("split_max_word_count_cjk", 25)))),
+                str(max(1, int(payload.get("split_max_word_count_cjk", 18)))),
                 "--max-word-count-english",
                 str(max(1, int(payload.get("split_max_word_count_english", 18)))),
-                "--prompt-limit-ratio",
-                str(max(0.1, float(payload.get("split_prompt_limit_ratio", 0.8)))),
-                "--split-mode",
-                str(payload.get("split_mode", "token-counts") or "token-counts"),
                 "--timeout",
                 str(max(1.0, float(payload.get("llm_timeout", 120)))),
                 "--disable-thinking" if disable_thinking else "--no-disable-thinking",
             ]
         )
+        if payload.get("align_diagnostics_mode") == "capture-failed":
+            command.extend(["--align-diagnostics-mode", "capture-failed"])
+        if payload.get("align_fallback") == "asr-short-window":
+            command.extend(
+                [
+                    "--align-fallback",
+                    "asr-short-window",
+                    "--align-fallback-window-seconds",
+                    str(max(0.5, float(payload.get("align_fallback_window_seconds", 3.0)))),
+                ]
+            )
         if payload.get("asr_batch_size") is not None:
             command.extend(["--batch-size", str(max(1, int(payload["asr_batch_size"])))])
         if payload.get("single_long_segment_threshold") is not None:
@@ -396,19 +407,26 @@ def build_command(payload: dict) -> list[str]:
                 "--correct-batch-num",
                 str(max(1, int(payload.get("correct_batch_num", 8)))),
                 "--max-word-count-cjk",
-                str(max(1, int(payload.get("split_max_word_count_cjk", 25)))),
+                str(max(1, int(payload.get("split_max_word_count_cjk", 18)))),
                 "--max-word-count-english",
                 str(max(1, int(payload.get("split_max_word_count_english", 18)))),
-                "--prompt-limit-ratio",
-                str(max(0.1, float(payload.get("split_prompt_limit_ratio", 0.8)))),
                 "--timeout",
                 str(max(1.0, float(payload.get("llm_timeout", 120)))),
-                "--split-mode",
-                str(payload.get("split_mode", "token-counts") or "token-counts"),
                 "--align-cleanup-interval",
                 str(max(1, int(payload.get("align_cleanup_interval", 4)))),
             ]
         )
+        if payload.get("align_diagnostics_mode") == "capture-failed":
+            command.extend(["--align-diagnostics-mode", "capture-failed"])
+        if payload.get("align_fallback") == "asr-short-window":
+            command.extend(
+                [
+                    "--align-fallback",
+                    "asr-short-window",
+                    "--align-fallback-window-seconds",
+                    str(max(0.5, float(payload.get("align_fallback_window_seconds", 3.0)))),
+                ]
+            )
         command.append("--local-files-only" if payload.get("local_files_only", True) else "--no-local-files-only")
         command.append("--disable-thinking" if disable_thinking else "--no-disable-thinking")
         if payload.get("denoise"):
@@ -465,18 +483,24 @@ def build_command(payload: dict) -> list[str]:
 
 
 def _mimo_proofread_args(payload: dict) -> list[str]:
+    scope = str(payload.get("mimo_audio_review_scope", "suspects"))
     args = [
         "--mimo-proofread-mode", str(payload.get("mimo_proofread_mode", "segment-audio")),
-        "--mimo-proofread-workers", str(max(1, int(payload.get("mimo_proofread_workers", 1)))),
+        "--mimo-audio-review-scope", scope,
+        "--mimo-proofread-workers",
+        str(max(1, int(payload.get("mimo_proofread_workers", DEFAULT_LLM_CONCURRENCY)))),
         "--mimo-nearby-batch-size", str(max(1, int(payload.get("mimo_nearby_batch_size", 1)))),
         "--mimo-nearby-batch-max-gap-s", str(max(0.0, float(payload.get("mimo_nearby_batch_max_gap_s", 8.0)))),
         "--mimo-nearby-padding-s", str(max(0.0, float(payload.get("mimo_nearby_padding_s", 1.5)))),
         "--mimo-nearby-context-subtitles", str(max(0, int(payload.get("mimo_nearby_context_subtitles", 1)))),
-        "--mimo-nearby-audio-workers", str(max(1, int(payload.get("mimo_nearby_audio_workers", 1)))),
+        "--mimo-nearby-audio-workers",
+        str(max(1, int(payload.get("mimo_nearby_audio_workers", DEFAULT_LLM_CONCURRENCY)))),
         "--mimo-proofread-max-tokens", str(max(512, int(payload.get("mimo_proofread_max_tokens", 4096)))),
     ]
     if payload.get("mimo_compact_output"):
         args.append("--mimo-compact-output")
+    if scope == "all":
+        args.append("--mimo-diagnostic-all")
     if payload.get("resume") is False:
         args.append("--no-resume")
     if str(payload.get("glossary_xlsx", "")).strip():
