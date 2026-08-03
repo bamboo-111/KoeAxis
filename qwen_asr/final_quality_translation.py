@@ -1,11 +1,15 @@
 from __future__ import annotations
 
+import re
 from collections.abc import Callable
 from typing import Any
 
 from qwen_asr.final_quality_common import fail, passed, skip
 from qwen_asr.models import WorkPaths
 from qwen_asr.storage import read_json
+
+
+JAPANESE_KANA_RE = re.compile(r"[\u3040-\u30ff]")
 
 
 def translation_structure_check(work_paths: WorkPaths) -> dict[str, Any]:
@@ -39,6 +43,28 @@ def translation_structure_check(work_paths: WorkPaths) -> dict[str, Any]:
             f"翻译结构异常：缺译 {missing_translation} 条，疑点字段异常 {invalid_suspect_fields} 条",
             missing_translation=missing_translation,
             invalid_suspect_fields=invalid_suspect_fields,
+        )
+    effective_path = (
+        work_paths.mimo_proofread_manifest
+        if work_paths.mimo_proofread_manifest.exists()
+        else work_paths.translated_manifest
+    )
+    effective_payload = read_json(effective_path, default={})
+    kana_keys = []
+    if isinstance(effective_payload, dict):
+        kana_keys = [
+            str(key)
+            for key, item in effective_payload.items()
+            if isinstance(item, dict)
+            and JAPANESE_KANA_RE.search(str(item.get("translated_subtitle", "")))
+        ]
+    if kana_keys:
+        return fail(
+            "translation_structure",
+            f"简中译文仍含日语假名：{len(kana_keys)} 条",
+            source_manifest=str(effective_path),
+            source_language_residual_count=len(kana_keys),
+            source_language_residual_keys=kana_keys[:20],
         )
     if structured_count == 0:
         return fail("translation_structure", "translation artifact has no structured suspect fields")

@@ -3,6 +3,7 @@ from __future__ import annotations
 from qwen_asr.artifact_state import ArtifactState
 from qwen_asr.final_quality_common import fail, passed, warn
 from qwen_asr.models import WorkPaths
+from qwen_asr.storage import read_json
 
 
 def stage_checkpoint_check(work_paths: WorkPaths) -> dict[str, object]:
@@ -19,7 +20,7 @@ def stage_checkpoint_check(work_paths: WorkPaths) -> dict[str, object]:
         "normalize",
         "export",
     ):
-        definition_complete = state.is_complete(stage)
+        definition_complete = stage_definition_complete(work_paths, state, stage)
         if has_checkpoint_artifact(work_paths, stage) and not definition_complete:
             failed.append(stage)
         elif state.is_outdated(stage) and definition_complete:
@@ -29,6 +30,15 @@ def stage_checkpoint_check(work_paths: WorkPaths) -> dict[str, object]:
     if warned:
         return warn("stage_checkpoint", f"存在可能过期的阶段产物：{', '.join(warned)}", stages=warned)
     return passed("stage_checkpoint", "阶段 checkpoint 完整性通过")
+
+
+def stage_definition_complete(work_paths: WorkPaths, state: ArtifactState, stage: str) -> bool:
+    if stage == "normalize":
+        payload = read_json(work_paths.normalized_manifest, default={})
+        return isinstance(payload, dict) and bool(payload)
+    if stage == "export":
+        return work_paths.subtitles_srt.exists() or work_paths.subtitles_vtt.exists()
+    return state.is_complete(stage)
 
 
 def has_checkpoint_artifact(work_paths: WorkPaths, stage: str) -> bool:

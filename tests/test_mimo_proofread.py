@@ -136,6 +136,17 @@ def test_original_content_deletion_guard_rejects_unique_text_without_ass_referen
     assert decision["reason"] == "original-content-dropped-without-ass-reference"
 
 
+def test_original_content_deletion_guard_matches_post_proofread_retention_for_latin_prefix() -> None:
+    decision = _original_content_deletion_guard(
+        current_original="J.P.\u307e\u3067",
+        suggested_original="\u307e\u3067",
+        ass_guard={"accepted": True, "reason": "no-ass-reference"},
+    )
+
+    assert decision["accepted"] is False
+    assert decision["reason"] == "original-content-dropped-without-ass-reference"
+
+
 def test_original_content_deletion_guard_allows_ass_backed_improvement() -> None:
     decision = _original_content_deletion_guard(
         current_original="\u305d\u3093\u306a\u30ba\u30e0\u30eb\u30c9",

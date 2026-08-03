@@ -360,6 +360,7 @@ def _clear_split_outputs(work_paths: WorkPaths) -> None:
 
 def _clear_translate_outputs(work_paths: WorkPaths) -> None:
     _clear_stage_outputs(work_paths, "translate")
+    ArtifactState(work_paths).delete_downstream_outputs("translate")
 
 
 def _clear_normalize_outputs(work_paths: WorkPaths) -> None:

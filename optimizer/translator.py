@@ -87,6 +87,16 @@ _FRAGMENT_NORMALIZED = {
 }
 
 
+def _is_simplified_chinese_target(value: str) -> bool:
+    normalized = str(value or "").strip().lower().replace("_", "-")
+    return normalized in {
+        "\u7b80\u4f53\u4e2d\u6587",
+        "simplified chinese",
+        "zh-cn",
+        "zh-hans",
+    }
+
+
 class SubtitleTranslator:
     """字幕翻译器
 
@@ -464,7 +474,9 @@ class SubtitleTranslator:
 
             # 验证：检查键匹配
             is_valid, error_message = self._validate_translation_result(
-                subtitle_dict, result_dict,
+                subtitle_dict,
+                result_dict,
+                target_language=self.target_language,
             )
 
             if is_valid:
@@ -498,6 +510,17 @@ class SubtitleTranslator:
 
         # 达到最大步数
         if last_result:
+            is_valid, error_message = self._validate_translation_result(
+                subtitle_dict,
+                last_result,
+                target_language=self.target_language,
+            )
+            if not is_valid:
+                logger.error(
+                    "Reached maximum translation attempts with an invalid result: %s",
+                    error_message,
+                )
+                return None
             logger.warning(
                 "达到最大尝试次数 (%d)，返回最后结果", MAX_STEPS,
             )
@@ -520,6 +543,8 @@ class SubtitleTranslator:
     def _validate_translation_result(
         original_dict: Dict[str, str],
         translated_dict: Dict[str, Any],
+        *,
+        target_language: str = "",
     ) -> tuple[bool, str]:
         """验证翻译结果。
 
@@ -555,6 +580,11 @@ class SubtitleTranslator:
             translated, _ = _normalize_translation_payload(translated_dict.get(key))
             if translated is None or not translated.strip():
                 error_parts.append(f"{key} is missing translation")
+            elif _is_simplified_chinese_target(target_language) and _HIRAGANA_KATAKANA_RE.search(translated):
+                error_parts.append(
+                    f"{key} translation contains Japanese kana; translate it into "
+                    "Simplified Chinese or use Latin transliteration"
+                )
 
         return (not error_parts), "; ".join(error_parts)
 

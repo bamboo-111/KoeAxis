@@ -7,6 +7,8 @@ import time
 from pathlib import Path
 from typing import Any, Callable
 
+from qwen_asr.performance import record_network_request, usage_tokens
+
 
 def maybe_disable_thinking_text(text: str, config: Any) -> str:
     if not config.disable_thinking:
@@ -28,13 +30,95 @@ def chat_completion_create(
     }
     if config.extra_body is not None:
         kwargs["extra_body"] = config.extra_body
+    started = time.perf_counter()
+    attempts = 1
+    extra_body_sent = "extra_body" in kwargs
+    no_think_sent = _messages_contain_no_think(messages)
     try:
-        return client.chat.completions.create(**kwargs)
-    except Exception:
+        response = client.chat.completions.create(**kwargs)
+    except Exception as first_error:
         if "extra_body" not in kwargs:
+            _record_mimo_request(
+                config=config,
+                duration_s=time.perf_counter() - started,
+                success=False,
+                attempts=attempts,
+                usage=None,
+                no_think_sent=no_think_sent,
+                extra_body_sent=extra_body_sent,
+                error=first_error,
+            )
             raise
         kwargs.pop("extra_body", None)
-        return client.chat.completions.create(**kwargs)
+        attempts += 1
+        try:
+            response = client.chat.completions.create(**kwargs)
+        except Exception as fallback_error:
+            _record_mimo_request(
+                config=config,
+                duration_s=time.perf_counter() - started,
+                success=False,
+                attempts=attempts,
+                usage=None,
+                no_think_sent=no_think_sent,
+                extra_body_sent=extra_body_sent,
+                error=fallback_error,
+            )
+            raise
+    _record_mimo_request(
+        config=config,
+        duration_s=time.perf_counter() - started,
+        success=True,
+        attempts=attempts,
+        usage=getattr(response, "usage", None),
+        no_think_sent=no_think_sent,
+        extra_body_sent=extra_body_sent,
+        error=None,
+    )
+    return response
+
+
+def _record_mimo_request(
+    *,
+    config: Any,
+    duration_s: float,
+    success: bool,
+    attempts: int,
+    usage: Any,
+    no_think_sent: bool,
+    extra_body_sent: bool,
+    error: Exception | None,
+) -> None:
+    input_tokens, output_tokens, reasoning_tokens = usage_tokens(usage)
+    message = str(error).lower() if error is not None else ""
+    record_network_request(
+        provider="xiaomi-mimo",
+        model=str(config.model),
+        duration_s=duration_s,
+        success=success,
+        attempts=attempts,
+        timeout="timeout" in message or "timed out" in message or "超时" in str(error or ""),
+        input_tokens=input_tokens,
+        output_tokens=output_tokens,
+        reasoning_tokens=reasoning_tokens,
+        thinking_disabled=bool(getattr(config, "disable_thinking", False)),
+        no_think_sent=no_think_sent,
+        extra_body_sent=extra_body_sent,
+        error_type=type(error).__name__ if error is not None else None,
+    )
+
+
+def _messages_contain_no_think(messages: list[dict[str, Any]]) -> bool:
+    def contains(value: Any) -> bool:
+        if isinstance(value, str):
+            return "/no_think" in value
+        if isinstance(value, dict):
+            return any(contains(item) for item in value.values())
+        if isinstance(value, list):
+            return any(contains(item) for item in value)
+        return False
+
+    return contains(messages)
 
 
 def compact_schema_prompt(config: Any) -> str:
@@ -111,6 +195,9 @@ def call_mimo_text_stage1(
         "You do NOT have audio.\n"
         "Inputs: Japanese ASR subtitle text, Chinese translation, subtitle timing and neighboring context, and glossary.\n"
         "Task 1: correct Chinese translation errors that are strongly supported by the provided text and context.\n"
+        "Treat any Japanese Hiragana or Katakana left in the Chinese translation as a translation error, including "
+        "song titles, listener handles, organizations, and proper nouns. Replace it with a natural Simplified Chinese "
+        "translation or Latin transliteration. suggested_translation must not contain Japanese kana.\n"
         "Task 2: flag Japanese ASR text as suspicious only when there is concrete textual evidence: "
         "the Japanese is grammatically broken or semantically impossible; the Chinese translation cannot reasonably "
         "follow from the Japanese text; a proper noun, number, date, venue, player name, work title, or technical term "
@@ -156,6 +243,9 @@ def call_mimo_nearby_audio(
         "If it is incomplete or misheard and the audio is clear, put the complete corrected Japanese in suggested_original.\n"
         "3. Pay special attention to proper nouns: player names, place names, venue or stadium names, work titles, "
         "band or member names, dates, and numbers.\n"
+        "The translation is Simplified Chinese. Japanese Hiragana or Katakana in a translated subtitle is an error, "
+        "even inside a song title, listener handle, organization, or proper noun. Return a Chinese translation or "
+        "Latin transliteration in suggested_translation; never put Japanese kana in suggested_translation.\n"
         "4. Use nearby subtitle text only as context. Do not rewrite non-target IDs.\n"
         "5. If the target is singing, music, or a nonverbal sound, do not rewrite it merely to force dialogue.\n"
         "6. If the target phrase is unclear in this clip, set needs_audio_review to true and do not invent wording.\n"
