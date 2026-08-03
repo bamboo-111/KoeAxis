@@ -215,6 +215,15 @@ def original_content_deletion_guard(
         return {"accepted": True, "reason": "no-original-change"}
     if str(ass_guard.get("reason", "")) not in {"no-ass-reference", "no-original-change"}:
         return {"accepted": True, "reason": "ass-reference-accepted"}
+    from qwen_asr.final_quality_postproofread import post_proofread_content_regressed
+
+    if post_proofread_content_regressed(current_original, suggested_original):
+        return {
+            "accepted": False,
+            "reason": "original-content-dropped-without-ass-reference",
+            "current_signal": japanese_signal(current_original),
+            "suggested_signal": japanese_signal(suggested_original),
+        }
     current_signal = japanese_signal(current_original)
     suggested_signal = japanese_signal(suggested_original)
     if len(current_signal) < min_current_units or not suggested_signal:

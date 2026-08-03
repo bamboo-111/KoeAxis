@@ -94,6 +94,32 @@ def test_normalize_export_content_check_fails_changed_normalize_text(tmp_path: P
     assert any(item["name"] == "normalize_content" and item["status"] == "FAIL" for item in check["checks"])
 
 
+def test_normalize_export_content_check_allows_spoken_email_at_normalization(tmp_path: Path) -> None:
+    paths = WorkPaths.from_workdir(tmp_path)
+    write_json_atomic(
+        paths.split_manifest,
+        {"1": {"original_subtitle": "T O G I R A G E at interfm.jp\u3002"}},
+    )
+    write_json_atomic(
+        paths.normalized_manifest,
+        {"1": {"original_subtitle": "TOGIRAGE@interfm.jp\u3002"}},
+    )
+
+    check = normalize_export_content_check(paths)
+
+    assert check["status"] == "PASS"
+
+
+def test_normalize_export_content_check_does_not_ignore_non_email_at_text(tmp_path: Path) -> None:
+    paths = WorkPaths.from_workdir(tmp_path)
+    write_json_atomic(paths.split_manifest, {"1": {"original_subtitle": "look at me"}})
+    write_json_atomic(paths.normalized_manifest, {"1": {"original_subtitle": "look @ me"}})
+
+    check = normalize_export_content_check(paths)
+
+    assert check["status"] == "FAIL"
+
+
 def test_normalize_export_content_check_fails_changed_export_text(tmp_path: Path) -> None:
     paths = WorkPaths.from_workdir(tmp_path)
     write_json_atomic(paths.split_manifest, {"1": {"original_subtitle": "\u306f\u3044"}})

@@ -1,6 +1,7 @@
 ﻿from __future__ import annotations
 
 import argparse
+import copy
 import os
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -346,9 +347,9 @@ def _run_two_stage_nearby(
     clips_dir = output_dir / "nearby-audio-clips"
     ensure_directory(clips_dir)
 
-    branch = _load_existing_branch(manifest_path, translated)
-    stage1_report = _load_existing_report(stage1_report_path)
-    stage2_report = _load_existing_report(stage2_report_path)
+    branch = _load_existing_branch(manifest_path, translated) if args.resume else copy.deepcopy(translated)
+    stage1_report = _load_existing_report(stage1_report_path) if args.resume else []
+    stage2_report = _load_existing_report(stage2_report_path) if args.resume else []
     started = time.monotonic()
 
     segment_limit = args.segment_limit if args.segment_limit and args.segment_limit > 0 else None

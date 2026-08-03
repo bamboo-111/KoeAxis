@@ -59,3 +59,14 @@ def test_stage_checkpoint_fails_for_incomplete_translate_artifact(tmp_path: Path
 
     assert check["status"] == "FAIL"
     assert "translate" in check["stages"]
+
+
+def test_stage_checkpoint_does_not_reuse_previous_quality_failure_for_formal_outputs(tmp_path: Path) -> None:
+    paths = WorkPaths.from_workdir(tmp_path)
+    write_json_atomic(paths.final_quality_report, {"status": "FAIL"})
+    write_json_atomic(paths.normalized_manifest, {"1": {"original_subtitle": "source"}})
+    paths.subtitles_srt.write_text("1\n", encoding="utf-8")
+
+    check = stage_checkpoint_check(paths)
+
+    assert check["status"] != "FAIL"

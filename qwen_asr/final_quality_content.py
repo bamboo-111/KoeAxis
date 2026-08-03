@@ -104,7 +104,17 @@ def normalized_stage_text(path: Path) -> str | None:
         parts = [manifest_item_text("subtitle", item) for item in payload.values() if isinstance(item, dict)]
     else:
         return None
-    return "".join(normalize_japanese(part) for part in parts)
+    return "".join(normalize_content_equivalence(part) for part in parts)
+
+
+def normalize_content_equivalence(text: str) -> str:
+    email_normalized = re.sub(
+        r"\s+at\s+(?=[A-Za-z0-9.-]+\.[A-Za-z]{2,})",
+        "@",
+        str(text or ""),
+        flags=re.IGNORECASE,
+    )
+    return normalize_japanese(email_normalized)
 
 
 def manifest_item_text(kind: str, item: dict[str, Any]) -> str:
@@ -124,4 +134,4 @@ def srt_stage_text(path: Path) -> str | None:
         lines = [line.strip() for line in block.splitlines() if line.strip()]
         if len(lines) >= 3 and "-->" in lines[1]:
             parts.append(lines[2])
-    return "".join(normalize_japanese(part) for part in parts)
+    return "".join(normalize_content_equivalence(part) for part in parts)

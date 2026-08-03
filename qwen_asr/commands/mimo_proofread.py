@@ -37,8 +37,7 @@ def cmd_mimo_proofread(args: argparse.Namespace, work_paths: WorkPaths) -> int:
         command.append("--diagnostic-all")
     if getattr(args, "mimo_compact_output", False):
         command.append("--compact-output")
-    if getattr(args, "resume", True):
-        command.append("--resume")
+    command.append("--resume" if getattr(args, "resume", True) else "--no-resume")
     if getattr(args, "glossary_xlsx", None):
         command.extend(["--glossary-xlsx", str(args.glossary_xlsx)])
     previous_key = os.environ.get("MIMO_API_KEY")

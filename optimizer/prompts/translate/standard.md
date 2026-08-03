@@ -9,7 +9,8 @@ ABSOLUTE REQUIREMENTS:
 
 <rules>
 - Translate naturally following ${target_language} linguistic conventions and grammar
-- Keep proper nouns or technical terms as-is or transliterate them appropriately for ${target_language} readers
+- Render proper nouns and technical terms in the target language's writing system or transliterate them into Latin script; never preserve source-language script merely because the text is a name, handle, organization, or work title
+- When ${target_language} is Simplified Chinese, translated text must not contain Japanese Hiragana or Katakana. Translate Japanese titles into Chinese and render Japanese names/handles with an established Chinese form or Latin transliteration
 - Maintain one-to-one correspondence: same keys, same count
 - If a sentence is incomplete, translate as-is without adding ellipsis
 - NEVER output subtitles in any language other than ${target_language}
