@@ -95,20 +95,59 @@ def resolve_transcribe_batch_defaults(args: argparse.Namespace, segments: list[A
             "auto_selection": auto_selection,
         }
 
+    vram_scaling: dict[str, object] | None = None
     if not batch_size_explicit:
         args.batch_size = int(auto_selection["batch_size"])
+        if auto_selection["profile"] == "short_form":
+            free_mb = query_free_vram_mb(getattr(args, "device", None))
+            scaled = scale_batch_size_for_free_vram(args.batch_size, free_mb)
+            vram_scaling = {"free_vram_mb": free_mb, "base_batch_size": args.batch_size, "batch_size": scaled}
+            args.batch_size = scaled
     if not target_explicit:
         args.target_batch_audio_seconds = float(auto_selection["target_batch_audio_seconds"])
     if not threshold_explicit:
         args.single_long_segment_threshold = float(auto_selection["single_long_segment_threshold"])
 
-    return {
+    resolved: dict[str, object] = {
         "profile": str(auto_selection["profile"]),
         "batch_size_source": "explicit" if batch_size_explicit else "auto",
         "target_audio_seconds_source": "explicit" if target_explicit else "auto",
         "single_long_segment_threshold_source": "explicit" if threshold_explicit else "auto",
         "auto_selection": auto_selection,
     }
+    if vram_scaling is not None:
+        resolved["vram_scaling"] = vram_scaling
+    return resolved
+
+
+# Measured on 刺刺广播 25 (172 short segments, RTX 12GB, fp16, duration-sorted batches,
+# 220s audio cap per batch): peak reserved 5.0GB @5, 5.2GB @8, 5.5GB @12, 6.0GB @16;
+# inference 135s @5 -> 94s @8 -> 68s @12 -> 57s @16. Thresholds keep ~3GB headroom.
+_FREE_VRAM_BATCH_STEPS = ((9000.0, 16), (7500.0, 12), (6000.0, 8))
+
+
+def scale_batch_size_for_free_vram(base_batch_size: int, free_mb: float | None) -> int:
+    if free_mb is None:
+        return base_batch_size
+    for threshold, size in _FREE_VRAM_BATCH_STEPS:
+        if free_mb >= threshold:
+            return max(base_batch_size, size)
+    return base_batch_size
+
+
+def query_free_vram_mb(device: str | None) -> float | None:
+    if not device or not str(device).startswith("cuda"):
+        return None
+    try:
+        import torch
+
+        if not torch.cuda.is_available():
+            return None
+        index = int(str(device).split(":", 1)[1]) if ":" in str(device) else 0
+        free_bytes, _total = torch.cuda.mem_get_info(index)
+    except Exception:  # noqa: BLE001 - optional probe, fall back to static defaults
+        return None
+    return round(free_bytes / (1024 * 1024), 1)
 
 
 def resolve_model_cache_dir(args: argparse.Namespace, default_model_cache_dir: Path | str = DEFAULT_MODEL_CACHE_DIR) -> str:
@@ -166,6 +205,7 @@ def write_transcribe_profile(
     profile_payload = {
         "stage": "transcribe",
         "batch_mode": getattr(args, "batch_mode", "adaptive"),
+        "batch_order": getattr(args, "batch_order", "duration"),
         "configured_batch_size": args.batch_size,
         "configured_target_batch_audio_seconds": getattr(args, "target_batch_audio_seconds", None),
         "configured_single_long_segment_threshold": getattr(args, "single_long_segment_threshold", 90.0),

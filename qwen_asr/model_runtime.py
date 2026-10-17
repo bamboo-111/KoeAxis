@@ -2,11 +2,16 @@ from __future__ import annotations
 
 import gc
 import os
+import sys
 from collections.abc import Iterator
 from contextlib import contextmanager
 from typing import Any
 
 OFFLINE_ENV_KEYS = ("HF_HUB_OFFLINE", "TRANSFORMERS_OFFLINE", "HF_DATASETS_OFFLINE")
+OFFLINE_MODULE_FLAGS = (
+    ("huggingface_hub.constants", "HF_HUB_OFFLINE"),
+    ("transformers.utils.hub", "_is_offline_mode"),
+)
 
 
 def sanitize_raw_output(raw_output: Any) -> Any:
@@ -46,9 +51,20 @@ def offline_model_loading(enabled: bool) -> Iterator[None]:
         return
 
     previous = {key: os.environ.get(key) for key in OFFLINE_ENV_KEYS}
+    # huggingface_hub and transformers read the offline env vars once at import time, so for libraries
+    # that are already imported the env vars alone change nothing (transformers' tokenizer loading then
+    # still calls the Hub's model_info API and fails when the proxy is down). Flip their cached flags too.
+    flags = [
+        (module, attr)
+        for module_name, attr in OFFLINE_MODULE_FLAGS
+        if (module := sys.modules.get(module_name)) is not None and hasattr(module, attr)
+    ]
+    previous_flags = [(module, attr, getattr(module, attr)) for module, attr in flags]
     try:
         for key in OFFLINE_ENV_KEYS:
             os.environ[key] = "1"
+        for module, attr in flags:
+            setattr(module, attr, True)
         yield
     finally:
         for key, value in previous.items():
@@ -56,3 +72,5 @@ def offline_model_loading(enabled: bool) -> Iterator[None]:
                 os.environ.pop(key, None)
             else:
                 os.environ[key] = value
+        for module, attr, value in previous_flags:
+            setattr(module, attr, value)

@@ -144,3 +144,18 @@ def test_mimo_checkpoint_fails_failed_non_two_stage_report(tmp_path: Path) -> No
 
     assert check["status"] == "FAIL"
     assert check["failed_count"] == 2
+
+
+def test_pending_audio_review_excludes_low_yield_only_lines_like_the_mimo_router(tmp_path: Path) -> None:
+    paths = WorkPaths.from_workdir(tmp_path)
+    write_json_atomic(
+        paths.translated_manifest,
+        {
+            "1": {"asr_suspect": True, "suspect_types": ["short_response"]},
+            "2": {"needs_audio_review": True, "suspect_types": ["fragment", "semantic"]},
+            "3": {"asr_suspect": True, "suspect_types": ["fragment", "name"]},
+            "4": {"asr_suspect": True},
+        },
+    )
+
+    assert pending_audio_review_count(paths) == 2

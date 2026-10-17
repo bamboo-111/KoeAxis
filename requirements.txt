@@ -13,3 +13,5 @@ orjson
 typing-extensions
 json-repair
 openai
+fugashi
+unidic-lite

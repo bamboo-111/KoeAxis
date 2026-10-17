@@ -34,6 +34,21 @@ def suspect_types_need_audio_review(suspect_types: Any) -> bool:
         return False
     return bool(clean)
 
+# Rule-level suspect types whose nearby-audio review almost never changes anything: on radio episodes 45/46/47/50,
+# candidates carrying only these types were 464 of 1822 audio calls and yielded 4 trivial (punctuation) edits.
+# Such lines stay in the report as suspects but are not sent to the paid audio stage.
+# Tried and rejected (10 runs, 4603 audio targets, 285 applied): also skipping confidence <= 0.5 lines with only these
+# weak types (+ context_linkage/question) saves just ~7% of audio requests (batching) but loses 2.8% of applied edits,
+# including real ASR fixes such as 「赤色の共催」; a bare confidence <= 0.5 cut loses 10.5%.
+LOW_YIELD_AUDIO_TYPES = frozenset({"short_response", "fragment", "semantic"})
+
+
+def only_low_yield_types(suspect_types: Any) -> bool:
+    if not isinstance(suspect_types, list):
+        return False
+    clean = {str(value).strip() for value in suspect_types if str(value).strip()}
+    return bool(clean) and clean <= LOW_YIELD_AUDIO_TYPES
+
 
 def build_manifest_suspect_report(
     translated: dict[str, Any],
@@ -52,7 +67,7 @@ def build_manifest_suspect_report(
         suspect_types = item.get("suspect_types", [])
         has_audio_review_types = suspect_types_need_audio_review(suspect_types)
         is_suspect = asr_suspect or needs_audio_review or has_audio_review_types or confidence < confidence_threshold
-        if is_suspect:
+        if is_suspect and not only_low_yield_types(suspect_types):
             suspect_ids.append(subtitle_id)
         suggestions.append(
             {

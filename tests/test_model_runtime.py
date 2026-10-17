@@ -33,6 +33,23 @@ def test_offline_model_loading_restores_environment(monkeypatch) -> None:
     assert "HF_DATASETS_OFFLINE" not in model_runtime.os.environ
 
 
+def test_offline_model_loading_flips_flags_cached_by_imported_libraries(monkeypatch) -> None:
+    hub_constants = SimpleNamespace(HF_HUB_OFFLINE=False)
+    transformers_hub = SimpleNamespace(_is_offline_mode=False)
+    monkeypatch.setitem(sys.modules, "huggingface_hub.constants", hub_constants)
+    monkeypatch.setitem(sys.modules, "transformers.utils.hub", transformers_hub)
+
+    with model_runtime.offline_model_loading(True):
+        assert hub_constants.HF_HUB_OFFLINE is True
+        assert transformers_hub._is_offline_mode is True
+
+    assert hub_constants.HF_HUB_OFFLINE is False
+    assert transformers_hub._is_offline_mode is False
+
+    with model_runtime.offline_model_loading(False):
+        assert transformers_hub._is_offline_mode is False
+
+
 def test_offline_model_loading_disabled_leaves_environment_unchanged(monkeypatch) -> None:
     monkeypatch.setenv("HF_HUB_OFFLINE", "current")
 

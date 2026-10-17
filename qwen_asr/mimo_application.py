@@ -8,8 +8,10 @@ from qwen_asr.mimo_guards import (
     ass_acceptance_guard,
     original_content_deletion_guard,
     original_high_risk_replacement_guard,
+    original_neighbor_duplication_guard,
     original_no_ass_substantial_rewrite_guard,
     safe_suggestion_value,
+    translation_kana_introduction_guard,
     translation_shortening_guard,
 )
 
@@ -27,6 +29,8 @@ def evaluate_stage2_suggestion(
     normalized: dict[str, Any],
     current_item: dict[str, Any],
     apply_confidence_threshold: float,
+    previous_item: dict[str, Any] | None = None,
+    next_item: dict[str, Any] | None = None,
 ) -> SuggestionApplication:
     reviewed_id = str(normalized.get("id", "")).strip()
     if reviewed_id != subtitle_id:
@@ -85,6 +89,24 @@ def evaluate_stage2_suggestion(
             }
         )
 
+    neighbor_guard = original_neighbor_duplication_guard(
+        current_original=current_original,
+        suggested_original=suggested_original,
+        previous_original=str((previous_item or {}).get("original_subtitle", "")),
+        next_original=str((next_item or {}).get("original_subtitle", "")),
+    )
+    if not neighbor_guard["accepted"]:
+        return SuggestionApplication(
+            rejection={
+                "id": reviewed_id,
+                "field": "original_subtitle",
+                "reason": neighbor_guard["reason"],
+                "duplicated_text": neighbor_guard.get("duplicated_text", ""),
+                "neighbor_original": neighbor_guard.get("neighbor_original", ""),
+                "suggested_original": suggested_original,
+            }
+        )
+
     high_risk_guard = original_high_risk_replacement_guard(
         current_original=current_original,
         suggested_original=suggested_original,
@@ -136,6 +158,20 @@ def evaluate_stage2_suggestion(
                 "reason": shortening_guard["reason"],
                 "current_units": shortening_guard.get("current_units", 0),
                 "suggested_units": shortening_guard.get("suggested_units", 0),
+                "suggested_translation": suggested,
+            }
+        )
+
+    kana_guard = translation_kana_introduction_guard(
+        current_translation=current,
+        suggested_translation=suggested,
+    )
+    if not kana_guard["accepted"]:
+        return SuggestionApplication(
+            rejection={
+                "id": reviewed_id,
+                "field": "translated_subtitle",
+                "reason": kana_guard["reason"],
                 "suggested_translation": suggested,
             }
         )

@@ -17,7 +17,7 @@ def normalize_export_content_check(work_paths: WorkPaths) -> dict[str, Any]:
         source_name, source_text = best_pre_normalize_stage_text(work_paths)
         if source_text is None:
             checks.append(warn("normalize_content", "存在 normalized 产物，但找不到可比较的上游字幕源"))
-        elif source_text != normalized:
+        elif source_text != normalized_text_before_program_memory(work_paths):
             checks.append(
                 fail(
                     "normalize_content",
@@ -92,6 +92,29 @@ def best_pre_normalize_stage_text(work_paths: WorkPaths) -> tuple[str, str | Non
         if text is not None:
             return name, text
     return "", None
+
+
+def normalized_text_before_program_memory(work_paths: WorkPaths) -> str | None:
+    """Normalized text with program-memory cue fixes undone (see qwen_asr.program_memory)."""
+    from qwen_asr.program_memory import source_reverts
+
+    path = work_paths.normalized_manifest
+    reverts = source_reverts(work_paths)
+    if not reverts or not path.exists():
+        return normalized_stage_text(path)
+    payload = read_json(path, default={})
+    if not isinstance(payload, dict):
+        return normalized_stage_text(path)
+    parts = []
+    for key, item in payload.items():
+        if not isinstance(item, dict):
+            continue
+        text = manifest_item_text("subtitle", item)
+        revert = reverts.get(str(key))
+        if revert is not None and text == revert["after"]:
+            text = revert["before"]
+        parts.append(normalize_content_equivalence(text))
+    return "".join(parts)
 
 
 def normalized_stage_text(path: Path) -> str | None:

@@ -4,14 +4,15 @@ import argparse
 import copy
 import os
 import time
-from concurrent.futures import ThreadPoolExecutor, as_completed
-from dataclasses import dataclass
+from concurrent.futures import Future, ThreadPoolExecutor, as_completed, wait
+from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Any, Callable
 
 from openai import OpenAI
 
-from qwen_asr.defaults import DEFAULT_LLM_EXTRA_BODY_JSON
+from qwen_asr.credentials import resolve_llm_base_url
+from qwen_asr.defaults import DEFAULT_LLM_EXTRA_BODY_JSON, DEFAULT_MIMO_BASE_URL, DEFAULT_MIMO_MODEL
 from qwen_asr import mimo_audio as _mimo_audio
 from qwen_asr import mimo_inputs as _mimo_inputs
 from qwen_asr.storage import ensure_directory
@@ -77,6 +78,9 @@ def main(argv: list[str] | None = None) -> int:
         extra_body=_parse_extra_body(args.llm_extra_body_json),
         compact_output=args.compact_output,
     )
+    text_config = replace(config, model=str(args.text_model or args.model))
+    audio_config = replace(config, model=str(args.audio_model or args.model))
+    print(f"mimo models: text={text_config.model} audio={audio_config.model}", flush=True)
 
     manifest_path = output_dir / "mimo_proofread_segments.json"
     report_path = output_dir / "mimo_proofread_report.json"
@@ -85,7 +89,8 @@ def main(argv: list[str] | None = None) -> int:
         return _run_two_stage_nearby(
             args=args,
             client=client,
-            config=config,
+            config=text_config,
+            audio_config=audio_config,
             segments=segments,
             translated=translated,
             glossary=glossary,
@@ -147,7 +152,7 @@ def main(argv: list[str] | None = None) -> int:
                     _process_segment_task,
                     task=task,
                     client=client,
-                    config=config,
+                    config=audio_config,
                     max_retries=args.max_retries,
                     base_delay=args.retry_base_delay,
                     max_delay=args.retry_max_delay,
@@ -188,9 +193,15 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Create an independent MiMo audio proofread branch.")
     parser.add_argument("--workdir", required=True)
     parser.add_argument("--output-dir", default="")
-    parser.add_argument("--base-url", default="https://api.xiaomimimo.com/v1")
+    parser.add_argument("--base-url", default=DEFAULT_MIMO_BASE_URL)
     parser.add_argument("--api-key", default=os.environ.get("MIMO_API_KEY", ""))
-    parser.add_argument("--model", default="mimo-v2.5")
+    parser.add_argument("--model", default=DEFAULT_MIMO_MODEL, help="Default MiMo model for every proofread request.")
+    parser.add_argument("--text-model", default="", help="Model for stage1 text suspect screening; defaults to --model.")
+    parser.add_argument(
+        "--audio-model",
+        default="",
+        help="Model for audio review (stage2 nearby audio or segment-audio); defaults to --model.",
+    )
     parser.add_argument("--glossary-xlsx", default="")
     parser.add_argument("--timeout", type=float, default=240.0)
     parser.add_argument("--max-tokens", type=int, default=8192)
@@ -244,6 +255,7 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     args = parser.parse_args(argv)
     if not args.api_key:
         parser.error("MiMo audio proofread requires --api-key or MIMO_API_KEY")
+    args.base_url = resolve_llm_base_url(args.base_url, args.api_key)
     if args.audio_review_scope == "all" and not args.diagnostic_all:
         parser.error("--audio-review-scope all is diagnostic-only; pass --diagnostic-all explicitly")
     return args
@@ -334,6 +346,7 @@ def _run_two_stage_nearby(
     args: argparse.Namespace,
     client: OpenAI,
     config: MiMoConfig,
+    audio_config: MiMoConfig | None = None,
     segments: list[dict[str, Any]],
     translated: dict[str, Any],
     glossary: list[dict[str, str]],
@@ -417,8 +430,9 @@ def _run_two_stage_nearby(
 
         if stage1_tasks:
             with ThreadPoolExecutor(max_workers=max(1, args.workers)) as executor:
-                future_to_task = {
-                    executor.submit(
+                future_to_task = _submit_with_cache_prewarm(
+                    stage1_tasks,
+                    lambda task: executor.submit(
                         _process_stage1_text_task,
                         task=task,
                         client=client,
@@ -429,9 +443,8 @@ def _run_two_stage_nearby(
                         keep_raw=args.keep_raw,
                         suspect_confidence_threshold=args.stage1_confidence_threshold,
                         apply_confidence_threshold=args.stage1_apply_threshold,
-                    ): task
-                    for task in stage1_tasks
-                }
+                    ),
+                )
                 for future in as_completed(future_to_task):
                     result = future.result()
                     stage1_report = _replace_report_item(stage1_report, result.segment_id, result.report_item)
@@ -474,12 +487,13 @@ def _run_two_stage_nearby(
             max_gap_s=max(0.0, args.nearby_batch_max_gap_s),
         )
         with ThreadPoolExecutor(max_workers=max(1, args.nearby_audio_workers)) as executor:
-            future_to_batch = {
-                executor.submit(
+            future_to_batch = _submit_with_cache_prewarm(
+                review_batches,
+                lambda target_ids: executor.submit(
                     _process_stage2_nearby_audio_batch_task,
                     target_ids=target_ids,
                     client=client,
-                    config=config,
+                    config=audio_config or config,
                     segments=selected_segments,
                     translated=translated,
                     glossary=glossary,
@@ -492,9 +506,8 @@ def _run_two_stage_nearby(
                     max_delay=args.retry_max_delay,
                     keep_raw=args.keep_raw,
                     apply_confidence_threshold=args.stage2_apply_threshold,
-                ): target_ids
-                for target_ids in review_batches
-            }
+                ),
+            )
             for future in as_completed(future_to_batch):
                 target_ids = future_to_batch[future]
                 results = future.result()
@@ -802,6 +815,8 @@ def _process_stage2_nearby_audio_batch_task(
                 normalized=normalized,
                 current_item=translated[reviewed_id],
                 apply_confidence_threshold=apply_confidence_threshold,
+                previous_item=_neighbor_item(translated, reviewed_id, -1, suggestions_by_id),
+                next_item=_neighbor_item(translated, reviewed_id, 1, suggestions_by_id),
             )
             if application.rejection is not None:
                 rejections.append(application.rejection)
@@ -996,6 +1011,26 @@ def _translated_duration_ms(translated: dict[str, Any]) -> int:
 
 def _normalize_base_url(base_url: str) -> str:
     return _mimo_inputs.normalize_base_url(base_url)
+
+
+# Requests share a long fixed prefix (instructions + standing glossary). The provider's prompt cache only
+# becomes usable 1-3s after the first request with that prefix completes, so a cold concurrent burst misses
+# entirely. Run the first request alone, pause briefly, then fan out.
+CACHE_PREWARM_DELAY_S = 2.0
+
+
+def _submit_with_cache_prewarm(items: list[Any], submit: Callable[[Any], Future]) -> dict[Future, Any]:
+    futures: dict[Future, Any] = {}
+    remaining = list(items)
+    if len(remaining) > 1:
+        first = remaining.pop(0)
+        future = submit(first)
+        futures[future] = first
+        wait([future])
+        time.sleep(CACHE_PREWARM_DELAY_S)
+    for item in remaining:
+        futures[submit(item)] = item
+    return futures
 
 
 def _load_glossary(path: Path | None) -> list[dict[str, str]]:
@@ -1212,6 +1247,8 @@ def _evaluate_stage2_suggestion(
     normalized: dict[str, Any],
     current_item: dict[str, Any],
     apply_confidence_threshold: float,
+    previous_item: dict[str, Any] | None = None,
+    next_item: dict[str, Any] | None = None,
 ):
     from qwen_asr.mimo_application import evaluate_stage2_suggestion
 
@@ -1220,7 +1257,30 @@ def _evaluate_stage2_suggestion(
         normalized=normalized,
         current_item=current_item,
         apply_confidence_threshold=apply_confidence_threshold,
+        previous_item=previous_item,
+        next_item=next_item,
     )
+
+
+def _neighbor_item(
+    translated: dict[str, Any],
+    subtitle_id: str,
+    offset: int,
+    suggestions_by_id: dict[str, list[dict[str, Any]]] | None = None,
+) -> dict[str, Any] | None:
+    """Neighbour cue as it will look after this batch: when the same response also rewrites the neighbour's
+    original (a boundary move such as "&" | "DVD..." -> "&DVD" | "..."), judge against that rewrite."""
+    if not subtitle_id.isdigit():
+        return None
+    neighbor_id = str(int(subtitle_id) + offset)
+    item = translated.get(neighbor_id)
+    if not isinstance(item, dict):
+        return None
+    for suggestion in (suggestions_by_id or {}).get(neighbor_id, []):
+        rewritten = str(suggestion.get("suggested_original", "") or "").strip()
+        if rewritten:
+            return {**item, "original_subtitle": rewritten}
+    return item
 
 
 def _translation_shortening_guard(

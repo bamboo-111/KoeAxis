@@ -66,6 +66,11 @@ def cmd_prepare(args: argparse.Namespace, work_paths: WorkPaths) -> int:
         padding_ms=args.padding_ms,
         overlap_ms=args.overlap_ms,
     )
+    try:
+        energy_profile = stage_helpers.compute_energy_profile(audio_path)
+    except Exception as exc:  # optional refinement; never block prepare
+        LOGGER.warning("Energy profile unavailable, hard cuts stay at the max length: %s", exc)
+        energy_profile = None
     segments = stage_helpers.build_segments(
         speech_regions=speech_regions,
         silence_regions=silence_regions,
@@ -73,6 +78,7 @@ def cmd_prepare(args: argparse.Namespace, work_paths: WorkPaths) -> int:
         source_audio_path=audio_path,
         segments_dir=work_paths.segments_dir,
         config=config,
+        energy_profile=energy_profile,
     )
     eager_segment_export = bool(getattr(args, "eager_segment_export", False))
     for segment in segments:

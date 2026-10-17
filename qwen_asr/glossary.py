@@ -125,7 +125,9 @@ def read_xlsx_glossary(xlsx_path: str | Path) -> list[GlossaryEntry]:
                 seen.add(key)
                 entries.append(GlossaryEntry(group=group, source=source, target=target, note=note))
             continue
-        for source_col, target_col in _detect_column_pairs(headers):
+        pairs = _detect_column_pairs(headers)
+        used_columns = {col for pair in pairs for col in pair}
+        for source_col, target_col in pairs:
             note_cols = _detect_note_columns(headers, source_col, target_col)
             group = headers[source_col] or sheet_name
             for row in rows[1:]:
@@ -150,7 +152,56 @@ def read_xlsx_glossary(xlsx_path: str | Path) -> list[GlossaryEntry]:
                         note=note,
                     )
                 )
+        entries.extend(_reading_entries(sheet_name, headers, rows, used_columns, seen))
     return entries
+
+
+_NAME_WITH_READING = re.compile(r"^(?P<name>[^()（）]+?)\s*[（(]\s*(?P<reading>[ぁ-ゖァ-ヺー・]+)\s*[)）]$")
+
+
+def _reading_entries(
+    sheet_name: str,
+    headers: list[str],
+    rows: list[list[str]],
+    used_columns: set[int],
+    seen: set[tuple[str, str, str]],
+) -> list[GlossaryEntry]:
+    """Turn unpaired Chinese name columns written as ``理名(りな)`` into reading => name entries.
+
+    Such columns (e.g. cast or musician names) have no Japanese source column, so without this
+    the kana reading heard in audio never reaches the prompt and names get transliterated freely.
+    """
+    entries: list[GlossaryEntry] = []
+    for col, header in enumerate(headers):
+        if col in used_columns or "名" not in header or not _is_target_header(header):
+            continue
+        note_cols = []
+        for next_col in range(col + 1, len(headers)):
+            if not any(keyword in headers[next_col] for keyword in NOTE_HEADER_KEYWORDS):
+                break  # stop at the blank separator so a neighbouring table's notes are not borrowed
+            note_cols.append(next_col)
+        for row in rows[1:]:
+            match = _NAME_WITH_READING.match(_get_cell(row, col))
+            if not match:
+                continue
+            name = match.group("name").strip()
+            reading = match.group("reading")
+            note = "；".join(value for value in (_get_cell(row, c) for c in note_cols) if value)
+            for source in dict.fromkeys((_to_hiragana(reading), _to_katakana(reading))):
+                key = (header, source, name)
+                if key in seen:
+                    continue
+                seen.add(key)
+                entries.append(GlossaryEntry(group=header, source=source, target=name, note=note))
+    return entries
+
+
+def _to_katakana(text: str) -> str:
+    return "".join(chr(ord(char) + 0x60) if "ぁ" <= char <= "ゖ" else char for char in text)
+
+
+def _to_hiragana(text: str) -> str:
+    return "".join(chr(ord(char) - 0x60) if "ァ" <= char <= "ヶ" else char for char in text)
 
 
 def write_normalized_glossary_xlsx(

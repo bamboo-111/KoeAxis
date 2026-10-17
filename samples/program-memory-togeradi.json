@@ -1,0 +1,135 @@
+{
+  "description": "トゲラジ（刺刺广播）节目记忆：每期反复出现的固定误写。规则只在单条字幕内替换，不改时间轴和条数；flags 只列出需人工处理的条目。",
+  "rules": [
+    {
+      "id": "station-name-source",
+      "field": "source",
+      "pattern": "(?<!アット)(?<![@A-Za-z0-9.])(?:interfm\\.jp|インター?フ[ェー]?ー?ム|インタ\\s?FM|インターFM)[\\s、]*(?=トゲ|とげ|や)",
+      "replace": "InterFM"
+    },
+    {
+      "id": "station-name-source-alone",
+      "field": "source",
+      "pattern": "^(?:インター?フ[ェー]?ー?ム|インタ\\s?FM|インターFM)$",
+      "replace": "InterFM"
+    },
+    {
+      "id": "station-name-translation",
+      "field": "translation",
+      "pattern": "(?<![@A-Za-z0-9.])(?i:interfm\\.jp|inter\\s?fm)(?=\\s*(?:无刺|以及|带来|的|刺刺|$))",
+      "replace": "InterFM",
+      "when_source": "InterFM"
+    },
+    {
+      "id": "live-title-source",
+      "field": "source",
+      "pattern": "赤色の\\s*(?:共済|共催|競賽|共鳴|狂祭|教祭|共祭)",
+      "replace": "赤色の響祭"
+    },
+    {
+      "id": "live-title-translation",
+      "field": "translation",
+      "pattern": "(?<!《)(?:红色的?|赤色的?)\\s*[“「]?(?:共济|竞赛|响祭|共鸣|共同主办(?:的演出)?)[”」]?",
+      "replace": "《赤色响祭》",
+      "when_source": "赤色の響祭"
+    },
+    {
+      "id": "venue-source",
+      "field": "source",
+      "pattern": "ピア[ーア]?(?:アールイー|アー?リー?|リー?)ナ\\s*[MＭ]\\s*[MＭ]",
+      "replace": "ぴあアリーナMM"
+    },
+    {
+      "id": "venue-translation",
+      "field": "translation",
+      "pattern": "(?i:pia\\s*arena|皮亚(?:竞技场|体育馆))\\s*M\\s*M",
+      "replace": "PIA ARENA MM"
+    },
+    {
+      "id": "email-source",
+      "field": "source",
+      "pattern": "(?i:toge?ra(?:ji|ti|di)\\s*@\\s*int[a-z]*\\.jp)",
+      "replace": "togeradi@interfm.jp"
+    },
+    {
+      "id": "email-translation",
+      "field": "translation",
+      "pattern": "(?i:toge?ra(?:ji|ti|di|dio)\\s*@\\s*int[a-z]*\\.jp)",
+      "replace": "togeradi@interfm.jp"
+    },
+    {
+      "id": "email-translation-program-name",
+      "field": "translation",
+      "pattern": "刺刺广播\\s*interfm\\.jp",
+      "replace": "togeradi@interfm.jp"
+    },
+    {
+      "id": "email-translation-garbled",
+      "field": "translation",
+      "pattern": "(?i:togeradio\\s+interface)",
+      "replace": "togeradi@interfm.jp"
+    },
+    {
+      "id": "email-garbage-tail-source",
+      "field": "source",
+      "pattern": "(?<=togeradi@interfm\\.jp)\\s?(?i:[tpd]oge[a-z]*?(?:interfm\\.jp)?)(?=[^A-Za-z.]|$)",
+      "replace": ""
+    },
+    {
+      "id": "email-garbage-tail-translation",
+      "field": "translation",
+      "pattern": "(?<=togeradi@interfm\\.jp)\\s?(?i:[tpd]oge[a-z]*?(?:interfm\\.jp)?)(?=[^A-Za-z.]|$)",
+      "replace": ""
+    },
+    {
+      "id": "budokan-title-source",
+      "field": "source",
+      "pattern": "(?:奏|総|衝|相|走)(?:撃|劇|檄|激)の叫び?(?=\\s*の?\\s*ライブ)",
+      "replace": "奏檄の叫"
+    },
+    {
+      "id": "budokan-title-translation",
+      "field": "translation",
+      "pattern": "(?<!《)(?:奏剧|奏击|冲击|总击|奏檄)的?\\s*(?:呐喊|叫喊|叫声|之叫)",
+      "replace": "《奏檄之叫》",
+      "when_source": "奏檄の叫"
+    },
+    {
+      "id": "canna-lily-source",
+      "field": "source",
+      "pattern": "カナリリー",
+      "replace": "Canna Lily"
+    },
+    {
+      "id": "canna-lily-translation",
+      "field": "translation",
+      "pattern": "(?i:kanariri)",
+      "replace": "Canna Lily",
+      "when_source": "Canna Lily"
+    }
+  ],
+  "flags": [
+    {
+      "id": "venue-fragment",
+      "message": "场馆名 ぴあアリーナMM 可能被拆成多条，需人工合并",
+      "source": "ピア(?:エ|ー?アール)$|^PRE$|^なM ?M$|ピア\\S*[ナな]\\s*[MＭ]$|^[MＭ](?:\\s*[MＭ])?(?:\\s*です)?$"
+    },
+    {
+      "id": "email-missing-in-translation",
+      "message": "原文在念邮箱，译文里没有地址",
+      "source": "アット\\s*インタ|(?i:\\bat\\b\\s*(?:interfm|インタ))",
+      "translation_not": "@|(?i:interfm)"
+    },
+    {
+      "id": "live-title-unresolved",
+      "message": "演出名可能误写（应为 赤色の響祭）",
+      "source": "赤色の(?!響祭)[一-龥]{2}"
+    },
+    {
+      "id": "live-title-translation",
+      "message": "译文未统一为《赤色响祭》",
+      "source": "赤色の響祭",
+      "translation_not": "赤色响祭"
+    }
+  ]
+}

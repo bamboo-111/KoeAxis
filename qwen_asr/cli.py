@@ -26,7 +26,7 @@ from qwen_asr.commands import (
     cmd_translate,
 )
 from qwen_asr.commands.recover_align import cmd_recover_align
-from qwen_asr.credentials import resolve_llm_api_key
+from qwen_asr.credentials import resolve_llm_api_key, resolve_llm_base_url
 from qwen_asr.defaults import (
     DEFAULT_ALIGN_MODEL,
     DEFAULT_ASR_MODEL,
@@ -36,6 +36,7 @@ from qwen_asr.defaults import (
     DEFAULT_LLM_MODEL,
     DEFAULT_LLM_TIMEOUT,
     DEFAULT_MAX_SEGMENT_SECONDS,
+    DEFAULT_MIMO_CONCURRENCY,
     DEFAULT_MIN_SEGMENT_SECONDS,
     DEFAULT_MODEL_CACHE_DIR,
 )
@@ -45,6 +46,7 @@ from qwen_asr.logging_utils import setup_logging
 from qwen_asr.mfa_experiment import cmd_mfa_align_experiment
 from qwen_asr.models import WorkPaths
 from qwen_asr.optimizer_bridge import DEFAULT_OPTIMIZER_ROOT
+from qwen_asr.performance import PipelinePerformanceRecorder, collect_workload_snapshot, measure_operation
 from qwen_asr.progress import read_progress, write_progress
 from qwen_asr.quality_suspects import cmd_apply_quality_suspects
 
@@ -55,6 +57,8 @@ def main() -> int:
     args = parser.parse_args()
     if hasattr(args, "llm_api_key"):
         args.llm_api_key = resolve_llm_api_key(args.llm_api_key, getattr(args, "llm_base_url", None)) or None
+        if getattr(args, "llm_base_url", None):
+            args.llm_base_url = resolve_llm_base_url(args.llm_base_url, args.llm_api_key)
 
     if not getattr(args, "command", None):
         parser.print_help()
@@ -134,18 +138,39 @@ def _run_stage_with_progress(
     args: argparse.Namespace,
     work_paths: WorkPaths,
 ) -> int:
-    write_progress(work_paths, stage=stage, status="running", current="", summary=f"{stage} started")
-    status = handler(args, work_paths)
-    existing = read_progress(work_paths) or {}
-    write_progress(
-        work_paths,
-        stage=stage,
-        status="completed" if status == 0 else "failed",
-        done=existing.get("done"),
-        total=existing.get("total"),
-        current=existing.get("current", ""),
-        summary=existing.get("summary") or f"{stage} {'completed' if status == 0 else 'failed'}",
+    performance_output = Path(
+        str(getattr(args, "performance_output", "") or "")
+        or work_paths.workdir / "reports" / f"{stage}.performance.json"
     )
+    recorder = PipelinePerformanceRecorder(
+        performance_output,
+        enabled=bool(getattr(args, "performance_profile", False)) and stage != "run",
+        sample_interval_s=float(getattr(args, "performance_sample_interval", 0.2) or 0.2),
+    )
+    with recorder.stage(stage) as span:
+        write_progress(work_paths, stage=stage, status="running", current="", summary=f"{stage} started")
+        status = handler(args, work_paths)
+        existing = read_progress(work_paths) or {}
+        result_status = (
+            "failed"
+            if status != 0
+            else "skipped"
+            if existing.get("status") == "skipped"
+            else "completed"
+        )
+        summary = existing.get("summary") or f"{stage} {result_status}"
+        write_progress(
+            work_paths,
+            stage=stage,
+            status=result_status,
+            done=existing.get("done"),
+            total=existing.get("total"),
+            current=existing.get("current", ""),
+            summary=summary,
+        )
+        with measure_operation("instrumentation_workload_snapshot"):
+            span.set_workload(collect_workload_snapshot(work_paths))
+        span.set_result(result_status, summary)
     return status
 
 
@@ -159,6 +184,9 @@ def build_parser() -> argparse.ArgumentParser:
     common.add_argument("--resume", action=argparse.BooleanOptionalAction, default=True)
     common.add_argument("--force", action="store_true")
     common.add_argument("--skip-preflight", action="store_true")
+    common.add_argument("--performance-profile", action="store_true")
+    common.add_argument("--performance-output", default="")
+    common.add_argument("--performance-sample-interval", type=float, default=0.2)
     common.add_argument("--dry-run-check", action="store_true")
 
     model_common = argparse.ArgumentParser(add_help=False)
@@ -195,11 +223,13 @@ def build_parser() -> argparse.ArgumentParser:
     transcribe.add_argument("--model", default=DEFAULT_ASR_MODEL)
     transcribe.add_argument("--batch-size", type=int, default=None)
     transcribe.add_argument("--batch-mode", choices=["fixed", "adaptive"], default="adaptive")
+    transcribe.add_argument("--batch-order", choices=["original", "duration"], default="duration")
     transcribe.add_argument("--target-batch-audio-seconds", type=float, default=None)
     transcribe.add_argument("--single-long-segment-threshold", type=float, default=None)
     transcribe.add_argument("--profile-batches", action="store_true")
     transcribe.add_argument("--max-new-tokens", type=int, default=512)
     transcribe.add_argument("--language", default=None)
+    _add_asr_context_arguments(transcribe)
     transcribe.set_defaults(func=cmd_transcribe)
 
     align = subparsers.add_parser("align", parents=[common, model_common])
@@ -251,6 +281,11 @@ def build_parser() -> argparse.ArgumentParser:
     normalize.add_argument("--extend-ms", type=int, default=350)
     normalize.add_argument("--snap-gap-ms", type=int, default=200)
     normalize.add_argument("--min-blank-ms", type=int, default=300)
+    normalize.add_argument(
+        "--program-memory-file",
+        default=None,
+        help="JSON rules for per-show recurring misrecognitions, applied cue by cue to the normalized subtitles (see samples/program-memory-togeradi.json); report in reports/program_memory.json.",
+    )
     normalize.set_defaults(func=cmd_normalize)
 
     glossary_normalize = subparsers.add_parser("glossary-normalize")
@@ -329,6 +364,17 @@ def build_parser() -> argparse.ArgumentParser:
     split.add_argument("--thread-num", type=int, default=DEFAULT_LLM_CONCURRENCY)
     split.add_argument("--max-word-count-cjk", type=int, default=18)
     split.add_argument("--max-word-count-english", type=int, default=18)
+    split.add_argument(
+        "--split-boundaries",
+        choices=["bunsetsu", "off"],
+        default="bunsetsu",
+        help="Japanese: only cut subtitles at bunsetsu boundaries (needs fugashi + unidic-lite).",
+    )
+    split.add_argument(
+        "--split-llm-model",
+        default=None,
+        help="Model for the split semantic-merge requests; defaults to mimo-v2.6-flash when --llm-model is a MiMo model, else --llm-model.",
+    )
     split.set_defaults(
         split_mode="rule",
         prompt_limit_ratio=0.8,
@@ -440,11 +486,13 @@ def build_parser() -> argparse.ArgumentParser:
     run.add_argument("--proofread-realign-report-output", default="")
     run.add_argument("--batch-size", type=int, default=None)
     run.add_argument("--batch-mode", choices=["fixed", "adaptive"], default="adaptive")
+    run.add_argument("--batch-order", choices=["original", "duration"], default="duration")
     run.add_argument("--target-batch-audio-seconds", type=float, default=None)
     run.add_argument("--single-long-segment-threshold", type=float, default=None)
     run.add_argument("--profile-batches", action="store_true")
     run.add_argument("--max-new-tokens", type=int, default=512)
     run.add_argument("--language", default=None)
+    _add_asr_context_arguments(run)
     run.add_argument("--with-align", action="store_true")
     run.add_argument("--with-correct", action="store_true")
     run.add_argument("--with-split", action="store_true")
@@ -479,9 +527,25 @@ def build_parser() -> argparse.ArgumentParser:
     run.add_argument("--glossary-xlsx", default=None)
     run.add_argument("--max-word-count-cjk", type=int, default=18)
     run.add_argument("--max-word-count-english", type=int, default=18)
+    run.add_argument(
+        "--split-boundaries",
+        choices=["bunsetsu", "off"],
+        default="bunsetsu",
+        help="Japanese: only cut subtitles at bunsetsu boundaries (needs fugashi + unidic-lite).",
+    )
+    run.add_argument(
+        "--split-llm-model",
+        default=None,
+        help="Model for the split semantic-merge requests; defaults to mimo-v2.6-flash when --llm-model is a MiMo model, else --llm-model.",
+    )
     run.add_argument("--extend-ms", type=int, default=350)
     run.add_argument("--snap-gap-ms", type=int, default=200)
     run.add_argument("--min-blank-ms", type=int, default=300)
+    run.add_argument(
+        "--program-memory-file",
+        default=None,
+        help="JSON rules for per-show recurring misrecognitions, applied cue by cue to the normalized subtitles (see samples/program-memory-togeradi.json); report in reports/program_memory.json.",
+    )
     _add_quality_suspect_arguments(run)
     _add_llm_arguments(run, required=False, disable_thinking_default=True)
     _add_mimo_proofread_arguments(run)
@@ -522,11 +586,13 @@ def build_parser() -> argparse.ArgumentParser:
     batch.add_argument("--proofread-realign-report-output", default="")
     batch.add_argument("--batch-size", type=int, default=None)
     batch.add_argument("--batch-mode", choices=["fixed", "adaptive"], default="adaptive")
+    batch.add_argument("--batch-order", choices=["original", "duration"], default="duration")
     batch.add_argument("--target-batch-audio-seconds", type=float, default=None)
     batch.add_argument("--single-long-segment-threshold", type=float, default=None)
     batch.add_argument("--profile-batches", action="store_true")
     batch.add_argument("--max-new-tokens", type=int, default=512)
     batch.add_argument("--language", default=None)
+    _add_asr_context_arguments(batch)
     batch.add_argument("--with-align", action="store_true")
     batch.add_argument("--with-correct", action="store_true")
     batch.add_argument("--with-split", action="store_true")
@@ -561,9 +627,25 @@ def build_parser() -> argparse.ArgumentParser:
     batch.add_argument("--glossary-xlsx", default=None)
     batch.add_argument("--max-word-count-cjk", type=int, default=18)
     batch.add_argument("--max-word-count-english", type=int, default=18)
+    batch.add_argument(
+        "--split-boundaries",
+        choices=["bunsetsu", "off"],
+        default="bunsetsu",
+        help="Japanese: only cut subtitles at bunsetsu boundaries (needs fugashi + unidic-lite).",
+    )
+    batch.add_argument(
+        "--split-llm-model",
+        default=None,
+        help="Model for the split semantic-merge requests; defaults to mimo-v2.6-flash when --llm-model is a MiMo model, else --llm-model.",
+    )
     batch.add_argument("--extend-ms", type=int, default=350)
     batch.add_argument("--snap-gap-ms", type=int, default=200)
     batch.add_argument("--min-blank-ms", type=int, default=300)
+    batch.add_argument(
+        "--program-memory-file",
+        default=None,
+        help="JSON rules for per-show recurring misrecognitions, applied cue by cue to the normalized subtitles (see samples/program-memory-togeradi.json); report in reports/program_memory.json.",
+    )
     _add_quality_suspect_arguments(batch)
     _add_llm_arguments(batch, required=False, disable_thinking_default=True)
     _add_mimo_proofread_arguments(batch)
@@ -669,8 +751,45 @@ def _add_align_timing_arguments(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--align-local-collapse-max-tokens", type=int, default=12)
 
 
+def _add_asr_context_arguments(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument(
+        "--asr-context-terms",
+        default=None,
+        help="Optional comma separated term list passed to Qwen3-ASR as context (off by default). "
+        "Use fixed-reading names only; segments that copy the list are re-transcribed without context.",
+    )
+    parser.add_argument(
+        "--asr-context-file",
+        default=None,
+        help="UTF-8 file with ASR context terms (comma or newline separated, # comments).",
+    )
+    parser.add_argument(
+        "--asr-context-mode",
+        choices=["merge", "full"],
+        default="merge",
+        help="merge (default): transcribe with and without context and keep only the edits on context terms; "
+        "full: use the context transcript as is (also changes unrelated words).",
+    )
+
+
 def _add_mimo_proofread_arguments(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--mimo-api-key", default=None, help="Optional override; otherwise MIMO_API_KEY is used.")
+    parser.add_argument(
+        "--mimo-model",
+        default=None,
+        help="Default model for MiMo proofread requests; falls back to --llm-model when that is a MiMo model, "
+        "else mimo-v2.6-pro.",
+    )
+    parser.add_argument(
+        "--mimo-text-model",
+        default=None,
+        help="Model for stage1 text suspect screening; defaults to --mimo-model.",
+    )
+    parser.add_argument(
+        "--mimo-audio-model",
+        default=None,
+        help="Model for audio review requests (the bulk of proofread tokens); defaults to --mimo-model.",
+    )
     parser.add_argument("--mimo-proofread-mode", choices=["segment-audio", "two-stage-nearby"], default="segment-audio")
     parser.add_argument("--mimo-audio-review-scope", choices=["suspects", "all"], default="suspects")
     parser.add_argument(
@@ -678,12 +797,12 @@ def _add_mimo_proofread_arguments(parser: argparse.ArgumentParser) -> None:
         action="store_true",
         help="Allow --mimo-audio-review-scope all for explicit diagnostic experiments only.",
     )
-    parser.add_argument("--mimo-proofread-workers", type=int, default=DEFAULT_LLM_CONCURRENCY)
+    parser.add_argument("--mimo-proofread-workers", type=int, default=DEFAULT_MIMO_CONCURRENCY)
     parser.add_argument("--mimo-nearby-batch-size", type=int, default=1)
     parser.add_argument("--mimo-nearby-batch-max-gap-s", type=float, default=8.0)
     parser.add_argument("--mimo-nearby-padding-s", type=float, default=1.5)
     parser.add_argument("--mimo-nearby-context-subtitles", type=int, default=1)
-    parser.add_argument("--mimo-nearby-audio-workers", type=int, default=DEFAULT_LLM_CONCURRENCY)
+    parser.add_argument("--mimo-nearby-audio-workers", type=int, default=DEFAULT_MIMO_CONCURRENCY)
     parser.add_argument("--mimo-proofread-max-tokens", type=int, default=4096)
     parser.add_argument("--mimo-stage2-apply-threshold", type=float, default=0.9)
     parser.add_argument("--mimo-llm-extra-body-json", default=DEFAULT_LLM_EXTRA_BODY_JSON)

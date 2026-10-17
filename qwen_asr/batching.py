@@ -30,16 +30,27 @@ class BatchPlanner:
         max_batch_items: int,
         target_audio_seconds: float | None = None,
         single_long_segment_threshold: float = 90.0,
+        order: str = "original",
     ) -> None:
         if mode not in {"fixed", "adaptive"}:
             raise ValueError(f"Unsupported batch mode: {mode}")
+        if order not in {"original", "duration"}:
+            raise ValueError(f"Unsupported batch order: {order}")
         if max_batch_items < 1:
             raise ValueError("max_batch_items must be >= 1")
 
         self.mode = mode
+        self.order = order
         self.max_batch_items = max_batch_items
         self.current_max_batch_items = max_batch_items
-        self.remaining_segments = list(segments)
+        # "duration": longest first, so similar lengths share a batch (less padding)
+        # and an OOM shows up on the first batches. Results are keyed by segment_id,
+        # so callers still write them back in original order.
+        self.remaining_segments = (
+            sorted(segments, key=lambda segment: segment.duration, reverse=True)
+            if order == "duration"
+            else list(segments)
+        )
         self.single_long_segment_threshold = max(1.0, float(single_long_segment_threshold))
         self.current_target_audio_seconds = (
             float(target_audio_seconds)

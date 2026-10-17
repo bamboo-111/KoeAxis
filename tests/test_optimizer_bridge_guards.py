@@ -80,3 +80,46 @@ def test_segments_normalized_text_and_distance_keep_legacy_aliases() -> None:
     assert segment_range_distance_ms(0, 100, 50, 150) == 0
     assert segment_range_distance_ms(0, 100, 150, 200) == 50
     assert legacy_segment_range_distance_ms(0, 100, 150, 200) == 50
+
+
+def test_extract_protected_reply_at_cue_end_uses_last_occurrence() -> None:
+    # Episode 51: "え？" also matches the え inside 抱えて; taking the first match dropped text.
+    source = [
+        ASRDataSeg("みやき抱えて持って帰ってきてさ、", 376650, 377900),
+        ASRDataSeg("え？", 378010, 378410),
+        ASRDataSeg("次の話", 380000, 381000),
+    ]
+    result = [ASRDataSeg("みやき抱えて持って帰ってきてさ、え？", 376650, 378410), ASRDataSeg("次の話", 380000, 381000)]
+
+    extracted = extract_protected_short_responses(
+        source,
+        result,
+        normalize_content=_normalize_content,
+        new_asr_data_seg=_new_asr_data_seg,
+    )
+
+    assert [(item.text, item.start_time, item.end_time) for item in extracted[:2]] == [
+        ("みやき抱えて持って帰ってきてさ、", 376650, 378010),
+        ("え？", 378010, 378410),
+    ]
+
+
+def test_extract_protected_keeps_only_the_bad_cue_whole() -> None:
+    # The reply's time span starts at the cue start but its text is not at the start: that cue
+    # stays whole, while the other cue is still split.
+    source = [
+        ASRDataSeg("はい", 0, 300),
+        ASRDataSeg("前です", 1000, 1600),
+        ASRDataSeg("うん", 2000, 2300),
+        ASRDataSeg("次です", 2900, 3500),
+    ]
+    result = [ASRDataSeg("前ですはい", 0, 1600), ASRDataSeg("前ですうん次です", 1000, 3500)]
+
+    extracted = extract_protected_short_responses(
+        source,
+        result,
+        normalize_content=_normalize_content,
+        new_asr_data_seg=_new_asr_data_seg,
+    )
+
+    assert [item.text for item in extracted] == ["前ですはい", "前です", "うん", "次です"]

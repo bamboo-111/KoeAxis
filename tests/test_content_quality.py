@@ -179,3 +179,9 @@ def test_gate_compares_split_against_actual_aligned_split_source(tmp_path: Path)
         item["type"] == "missing_short_response" and item.get("text") == "\u306f\u3044"
         for item in report["issues"]
     )
+
+
+def test_normalize_japanese_treats_middle_dot_as_punctuation() -> None:
+    # normalize strips the middle dot from display text; the content check must not call that a change
+    assert normalize_japanese("リナ・ジマ") == normalize_japanese("リナジマ") == "リナジマ"
+    assert normalize_japanese("ラーメン") == "ラーメン"

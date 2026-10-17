@@ -3,8 +3,10 @@ from __future__ import annotations
 import json
 import os
 import shutil
+import threading
 import time
 import unicodedata
+from concurrent.futures import Future
 from contextlib import contextmanager
 from dataclasses import asdict, replace
 from datetime import datetime, timezone
@@ -16,7 +18,7 @@ from qwen_asr.alignment_state import derive_alignment_state
 from qwen_asr.defaults import DEFAULT_ALIGN_MODEL, DEFAULT_MODEL_CACHE_DIR
 from qwen_asr.mfa_environment import detect_mfa_environment
 from qwen_asr.mfa_guards import local_ass_match_score
-from qwen_asr.mfa_runner import run_local_mfa_alignment_experiments
+from qwen_asr.mfa_runner import prefetch_local_mfa_alignments, run_local_mfa_alignment_experiments
 from qwen_asr.models import AlignedSegment, AlignedToken, TranscriptSegment, WorkPaths
 from qwen_asr.storage import append_jsonl, read_json, write_json_atomic
 
@@ -24,6 +26,9 @@ from qwen_asr.storage import append_jsonl, read_json, write_json_atomic
 RECOVERY_STRATEGIES = ("auto", "qwen", "mfa-local")
 SUPPORTED_QWEN_LANGUAGES = {"auto", "japanese", "english", "chinese"}
 LOCK_STALE_SECONDS = 2 * 60 * 60
+MFA_BACKGROUND_PREFETCH_ENV = "QWEN_ASR_MFA_BACKGROUND_PREFETCH"
+_PENDING_PREFETCH: dict[str, Future[dict[str, Any]]] = {}
+_PENDING_PREFETCH_LOCK = threading.Lock()
 
 
 class RecoveryExecutionError(RuntimeError):
@@ -247,7 +252,11 @@ def _execute_qwen(
             local_files_only=bool(settings.get("local_files_only", True)),
             timing_validation_config=AlignTimingValidationConfig(),
         )
-        result_value = aligner.run_segment(segment, cleanup=True)
+        aligner.load()
+        try:
+            result_value = aligner.run_segment(segment, cleanup=False)
+        finally:
+            aligner.close()
     else:
         result_value = runner(segment)
     result = asdict(result_value) if isinstance(result_value, AlignedSegment) else dict(result_value)
@@ -315,6 +324,7 @@ def _execute_mfa_local(
             "error_code": "MFA_SOURCE_AUDIO_MISSING",
             "error": "source audio for mfa-local could not be resolved",
         }
+    wait_for_alignment_recovery_mfa_prefetch(work_paths)
     environment = detect_mfa_environment(run_version_check=True)
     if not environment.get("available"):
         return {
@@ -324,16 +334,7 @@ def _execute_mfa_local(
             "error": str(environment.get("reason") or "MFA environment is unavailable"),
             "backend_evidence": {"environment": environment},
         }
-    candidate = {
-        "source": "align-recovery",
-        "reason": "initial-align-failed",
-        "severity": "WARN",
-        "subtitle_id": str(target["segment_id"]),
-        "start_ms": round(float(target["global_start_time"]) * 1000),
-        "end_ms": round(float(target["global_end_time"]) * 1000),
-        "text": selected_text,
-        "details": {"original_error": target.get("error")},
-    }
+    candidate = _mfa_recovery_candidate(target, selected_text)
     active_runner = runner or run_local_mfa_alignment_experiments
     run_paths = replace(work_paths, audio_path=source_audio)
     results = active_runner(
@@ -412,6 +413,166 @@ def _execute_mfa_local(
         },
         "aligned_segment": replacement,
     }
+
+
+def _mfa_recovery_candidate(target: dict[str, Any], selected_text: str) -> dict[str, Any]:
+    return {
+        "source": "align-recovery",
+        "reason": "initial-align-failed",
+        "severity": "WARN",
+        "subtitle_id": str(target["segment_id"]),
+        "start_ms": round(float(target["global_start_time"]) * 1000),
+        "end_ms": round(float(target["global_end_time"]) * 1000),
+        "text": selected_text,
+        "details": {"original_error": target.get("error")},
+    }
+
+
+def _alignment_recovery_mfa_groups(
+    work_paths: WorkPaths,
+    *,
+    segment_ids: list[str] | None,
+    language_route: str | None,
+) -> dict[Path, list[dict[str, Any]]]:
+    aligned = _read_list(work_paths.aligned_manifest, "aligned manifest")
+    transcripts = {
+        str(item.get("segment_id")): item for item in _read_list(work_paths.transcript_manifest, "transcript manifest")
+    }
+    wanted = {str(value) for value in segment_ids} if segment_ids is not None else None
+    groups: dict[Path, list[dict[str, Any]]] = {}
+    for target in aligned:
+        segment_id = str(target.get("segment_id"))
+        if (wanted is not None and segment_id not in wanted) or derive_alignment_state(target) != "failed":
+            continue
+        transcript = transcripts.get(segment_id)
+        if transcript is None:
+            continue
+        route = _normalize_language(language_route or transcript.get("language") or target.get("language") or "auto")
+        if route != "japanese":
+            continue
+        source_audio = _resolve_source_audio(work_paths, target)
+        text = str(transcript.get("text", target.get("text", "")))
+        if source_audio is None or not text.strip():
+            continue
+        groups.setdefault(source_audio, []).append(_mfa_recovery_candidate(target, text))
+    return groups
+
+
+def _run_alignment_recovery_mfa_groups(
+    work_paths: WorkPaths,
+    groups: dict[Path, list[dict[str, Any]]],
+    *,
+    settings: dict[str, Any],
+    prefetcher: Callable[..., dict[str, Any]] | None,
+) -> dict[str, Any]:
+    if not groups:
+        return {"status": "skipped", "reason": "no-failed-japanese-segments", "aligned_count": 0}
+    environment = detect_mfa_environment(run_version_check=True)
+    if not environment.get("available"):
+        return {"status": "skipped", "reason": "mfa-unavailable", "aligned_count": 0}
+    active = prefetcher or prefetch_local_mfa_alignments
+    padding_ms = max(0, int(settings.get("mfa_padding_ms", 700)))
+    results = [
+        active(replace(work_paths, audio_path=audio), candidates, environment=environment, padding_ms=padding_ms)
+        for audio, candidates in groups.items()
+    ]
+    return {
+        "status": "completed" if all(row.get("status") != "failed" for row in results) else "failed",
+        "candidate_count": sum(len(rows) for rows in groups.values()),
+        "aligned_count": sum(int(row.get("aligned_count") or 0) for row in results),
+        "batches": results,
+    }
+
+
+def prefetch_alignment_recovery_mfa(
+    work_paths: WorkPaths,
+    *,
+    segment_ids: list[str] | None = None,
+    language_route: str | None = None,
+    settings: dict[str, Any] | None = None,
+    prefetcher: Callable[..., dict[str, Any]] | None = None,
+) -> dict[str, Any]:
+    """Run mfa-local for every currently failed Japanese segment in ONE MFA call (original transcripts).
+
+    Nothing is written back here: a later `execute_alignment_recovery(strategy="mfa-local")` for each segment
+    reads the cached words, so every guard and the per-segment backup/writeback behave exactly as before,
+    but the MFA start-up is paid once per episode instead of once per failed segment.
+    """
+    settings = settings if isinstance(settings, dict) else {}
+    groups = _alignment_recovery_mfa_groups(work_paths, segment_ids=segment_ids, language_route=language_route)
+    return _run_alignment_recovery_mfa_groups(work_paths, groups, settings=settings, prefetcher=prefetcher)
+
+
+def mfa_background_prefetch_enabled(value: Any = None) -> bool:
+    if value is None:
+        value = os.environ.get(MFA_BACKGROUND_PREFETCH_ENV, "0")
+    if isinstance(value, bool):
+        return value
+    return str(value).strip().lower() in {"1", "true", "on", "yes"}
+
+
+def start_alignment_recovery_mfa_prefetch(
+    work_paths: WorkPaths,
+    *,
+    background: bool | None = None,
+    segment_ids: list[str] | None = None,
+    language_route: str | None = None,
+    settings: dict[str, Any] | None = None,
+    prefetcher: Callable[..., dict[str, Any]] | None = None,
+) -> Future[dict[str, Any]]:
+    """Like `prefetch_alignment_recovery_mfa`, optionally on a background thread (CPU-only MFA).
+
+    The failed-segment list is read before returning, so Qwen retries started afterwards cannot change which
+    clips are prefetched. With `background` (default: QWEN_ASR_MFA_BACKGROUND_PREFETCH=1) the caller can run
+    the GPU Qwen retries meanwhile; `execute_alignment_recovery(strategy="mfa-local")` for the same workdir
+    waits for the in-flight prefetch, so it never starts a second MFA process or misses the cache.
+    """
+    settings = settings if isinstance(settings, dict) else {}
+    future: Future[dict[str, Any]] = Future()
+    try:
+        groups = _alignment_recovery_mfa_groups(work_paths, segment_ids=segment_ids, language_route=language_route)
+    except BaseException as exc:  # pylint: disable=broad-exception-caught
+        future.set_exception(exc)
+        return future
+
+    def run() -> None:
+        try:
+            future.set_result(
+                _run_alignment_recovery_mfa_groups(work_paths, groups, settings=settings, prefetcher=prefetcher)
+            )
+        except BaseException as exc:  # pylint: disable=broad-exception-caught
+            future.set_exception(exc)
+
+    if not mfa_background_prefetch_enabled(background):
+        run()
+        return future
+    key = _prefetch_key(work_paths)
+    with _PENDING_PREFETCH_LOCK:
+        _PENDING_PREFETCH[key] = future
+    future.add_done_callback(lambda done: _forget_prefetch(key, done))
+    threading.Thread(target=run, name="mfa-recovery-prefetch", daemon=True).start()
+    return future
+
+
+def wait_for_alignment_recovery_mfa_prefetch(work_paths: WorkPaths, timeout: float | None = None) -> None:
+    with _PENDING_PREFETCH_LOCK:
+        future = _PENDING_PREFETCH.get(_prefetch_key(work_paths))
+    if future is None:
+        return
+    try:
+        future.result(timeout=timeout)
+    except Exception:  # pylint: disable=broad-exception-caught
+        pass  # a failed prefetch only means mfa-local runs uncached, exactly as without prefetch
+
+
+def _prefetch_key(work_paths: WorkPaths) -> str:
+    return str(Path(work_paths.workdir).resolve())
+
+
+def _forget_prefetch(key: str, future: Future[dict[str, Any]]) -> None:
+    with _PENDING_PREFETCH_LOCK:
+        if _PENDING_PREFETCH.get(key) is future:
+            del _PENDING_PREFETCH[key]
 
 
 def _exact_result_guard(

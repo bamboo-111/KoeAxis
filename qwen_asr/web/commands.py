@@ -7,6 +7,7 @@ from pathlib import Path
 from qwen_asr.defaults import (
     DEFAULT_LLM_CONCURRENCY,
     DEFAULT_MAX_SEGMENT_SECONDS,
+    DEFAULT_MIMO_CONCURRENCY,
     DEFAULT_MIN_SEGMENT_SECONDS,
     DEFAULT_MODEL_CACHE_DIR,
 )
@@ -155,6 +156,7 @@ def build_command(payload: dict) -> list[str]:
         command.extend(["--batch-mode", str(payload.get("batch_mode", "adaptive"))])
         if payload.get("asr_batch_size") is not None:
             command.extend(["--batch-size", str(max(1, int(payload["asr_batch_size"])))])
+        command.extend(_asr_context_args(payload))
         if payload.get("single_long_segment_threshold") is not None:
             command.extend(["--single-long-segment-threshold", str(max(1.0, float(payload["single_long_segment_threshold"])))])
         if payload.get("target_batch_audio_seconds") is not None:
@@ -336,6 +338,7 @@ def build_command(payload: dict) -> list[str]:
             )
         if payload.get("asr_batch_size") is not None:
             command.extend(["--batch-size", str(max(1, int(payload["asr_batch_size"])))])
+        command.extend(_asr_context_args(payload))
         if payload.get("single_long_segment_threshold") is not None:
             command.extend(["--single-long-segment-threshold", str(max(1.0, float(payload["single_long_segment_threshold"])))])
         if payload.get("target_batch_audio_seconds") is not None:
@@ -448,6 +451,7 @@ def build_command(payload: dict) -> list[str]:
             command.append("--profile-batches")
         if payload.get("asr_batch_size") is not None:
             command.extend(["--batch-size", str(max(1, int(payload["asr_batch_size"])))])
+        command.extend(_asr_context_args(payload))
         if payload.get("single_long_segment_threshold") is not None:
             command.extend(["--single-long-segment-threshold", str(max(1.0, float(payload["single_long_segment_threshold"])))])
         if payload.get("target_batch_audio_seconds") is not None:
@@ -482,21 +486,45 @@ def build_command(payload: dict) -> list[str]:
     return command
 
 
+def _asr_context_args(payload: dict) -> list[str]:
+    args: list[str] = []
+    for key, flag in (
+        ("asr_context_terms", "--asr-context-terms"),
+        ("asr_context_file", "--asr-context-file"),
+        ("asr_context_mode", "--asr-context-mode"),
+    ):
+        value = str(payload.get(key) or "").strip()
+        if value:
+            args.extend([flag, value])
+    return args
+
+
 def _mimo_proofread_args(payload: dict) -> list[str]:
     scope = str(payload.get("mimo_audio_review_scope", "suspects"))
     args = [
         "--mimo-proofread-mode", str(payload.get("mimo_proofread_mode", "segment-audio")),
         "--mimo-audio-review-scope", scope,
         "--mimo-proofread-workers",
-        str(max(1, int(payload.get("mimo_proofread_workers", DEFAULT_LLM_CONCURRENCY)))),
+        str(max(1, int(payload.get("mimo_proofread_workers", DEFAULT_MIMO_CONCURRENCY)))),
         "--mimo-nearby-batch-size", str(max(1, int(payload.get("mimo_nearby_batch_size", 1)))),
         "--mimo-nearby-batch-max-gap-s", str(max(0.0, float(payload.get("mimo_nearby_batch_max_gap_s", 8.0)))),
         "--mimo-nearby-padding-s", str(max(0.0, float(payload.get("mimo_nearby_padding_s", 1.5)))),
         "--mimo-nearby-context-subtitles", str(max(0, int(payload.get("mimo_nearby_context_subtitles", 1)))),
         "--mimo-nearby-audio-workers",
-        str(max(1, int(payload.get("mimo_nearby_audio_workers", DEFAULT_LLM_CONCURRENCY)))),
+        str(max(1, int(payload.get("mimo_nearby_audio_workers", DEFAULT_MIMO_CONCURRENCY)))),
         "--mimo-proofread-max-tokens", str(max(512, int(payload.get("mimo_proofread_max_tokens", 4096)))),
     ]
+    mimo_model = str(payload.get("mimo_model") or "").strip()
+    llm_model = str(payload.get("llm_model") or "").strip()
+    if not mimo_model and llm_model.lower().startswith("mimo-"):
+        # Only a MiMo text model may double as the proofread model; Gemini names would hit the MiMo API.
+        mimo_model = llm_model
+    if mimo_model:
+        args.extend(["--mimo-model", mimo_model])
+    for key, flag in (("mimo_text_model", "--mimo-text-model"), ("mimo_audio_model", "--mimo-audio-model")):
+        value = str(payload.get(key) or "").strip()
+        if value:
+            args.extend([flag, value])
     if payload.get("mimo_compact_output"):
         args.append("--mimo-compact-output")
     if scope == "all":

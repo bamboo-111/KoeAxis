@@ -95,3 +95,32 @@ def test_mfa_experiment_keeps_environment_compatibility_aliases() -> None:
     assert callable(_project_mfa_command)
     assert callable(_project_mfa_executable)
     assert callable(_project_mfa_root)
+
+
+def test_detect_mfa_environment_caches_successful_version_check_for_default_runner(monkeypatch) -> None:  # noqa: ANN001
+    import qwen_asr.mfa_environment as module
+
+    calls: list[list[str]] = []
+
+    class Completed:
+        returncode = 0
+        stdout = "3.4.0\n"
+        stderr = ""
+
+    def fake_run(command, **kwargs):  # noqa: ANN001, ANN202
+        calls.append(list(command))
+        return Completed()
+
+    monkeypatch.setattr(module, "_VERSION_CACHE", {})
+    monkeypatch.setattr(module.subprocess, "run", fake_run)
+    kwargs = {
+        "project_mfa_command": lambda: (["mfa-cache-test"], "mfa-cache-test", "path"),
+        "project_mfa_root": lambda: None,
+        "package_version_lookup": lambda _name: "",
+    }
+
+    first = detect_mfa_environment(**kwargs)
+    second = detect_mfa_environment(**kwargs)
+
+    assert first["version_output"] == second["version_output"] == "3.4.0"
+    assert len(calls) == 1

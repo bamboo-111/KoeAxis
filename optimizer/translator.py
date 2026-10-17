@@ -50,6 +50,10 @@ BACKOFF_FACTOR = 2.0             # 指数退避因子
 # 全局冷却参数
 GLOBAL_COOLDOWN_SECONDS = 10.0   # 收到 429 后全局冷却秒数
 SUBMIT_INTERVAL = 0.5            # 批次提交间隔秒数（避免瞬时并发）
+# 缓存预热：并发前先发一个只含 system prompt（模板 + 术语表）的极小请求，让服务端缓存这段公共前缀，
+# 再并发提交全部批次。实测 MiMo 缓存在请求完成后 1-3 秒可用；预热请求即使返回空内容也能建立缓存。
+PREWARM_DELAY = 2.0
+PREWARM_MAX_TOKENS = 16
 
 _HIRAGANA_KATAKANA_RE = re.compile(r"[\u3040-\u30ff]")
 _CJK_RE = re.compile(r"[\u3400-\u9fff]")
@@ -156,6 +160,7 @@ class SubtitleTranslator:
         self.progress_callback = progress_callback
 
         self.is_running = True
+        self.prewarm_cache = True
         self.executor: Optional[ThreadPoolExecutor] = None
 
         # 全局冷却：收到 429 时所有线程暂停
@@ -263,6 +268,10 @@ class SubtitleTranslator:
             raise ValueError("线程池未初始化")
 
         future_to_chunk = {}
+        if self.prewarm_cache and len(chunks) > 1 and self.is_running:
+            self._prewarm_prompt_cache()
+            if self.is_running:
+                time.sleep(PREWARM_DELAY)
         for idx, chunk in enumerate(chunks):
             if not self.is_running:
                 break
@@ -293,6 +302,34 @@ class SubtitleTranslator:
                 )
 
         return success_count
+
+    def _system_prompt(self) -> str:
+        return get_prompt(
+            "translate/standard",
+            target_language=self.target_language,
+            custom_prompt=self.custom_prompt,
+        )
+
+    def _prewarm_prompt_cache(self) -> None:
+        """发送与正式批次相同前缀的极小请求；失败不影响翻译。"""
+        try:
+            call_llm(
+                messages=[
+                    {"role": "system", "content": self._system_prompt()},
+                    {"role": "user", "content": "<input_subtitle>{}</input_subtitle>"},
+                ],
+                model=self.llm_config.model,
+                temperature=0.3,
+                base_url=self.llm_config.base_url,
+                api_key=self.llm_config.api_key,
+                disable_thinking=self.llm_config.disable_thinking,
+                require_json=True,
+                llm_extra_body=self.llm_config.llm_extra_body,
+                timeout=min(self.llm_config.timeout, 60),
+                max_tokens=PREWARM_MAX_TOKENS,
+            )
+        except Exception as e:  # pylint: disable=broad-exception-caught
+            logger.debug("翻译缓存预热请求未返回有效内容（可忽略）：%s", e)
 
     def _emit_progress(self, done: int, total: int, current: str) -> None:
         if self.progress_callback is None:
@@ -328,11 +365,7 @@ class SubtitleTranslator:
         )
 
         # 获取翻译 prompt
-        system_prompt = get_prompt(
-            "translate/standard",
-            target_language=self.target_language,
-            custom_prompt=self.custom_prompt,
-        )
+        system_prompt = self._system_prompt()
 
         # Agent loop
         result_dict = self._agent_loop(system_prompt, subtitle_dict)
@@ -516,6 +549,14 @@ class SubtitleTranslator:
                 target_language=self.target_language,
             )
             if not is_valid:
+                if self._is_structurally_complete(subtitle_dict, last_result):
+                    # Only residual kana remains (e.g. an ASR mishearing the model keeps verbatim). Keep the
+                    # batch: dropping 20 good lines for one is worse; the item is flagged as a suspect downstream.
+                    logger.warning(
+                        "达到最大尝试次数，保留结构完整的结果并将残留假名条目标为疑点: %s",
+                        error_message,
+                    )
+                    return last_result
                 logger.error(
                     "Reached maximum translation attempts with an invalid result: %s",
                     error_message,
@@ -538,6 +579,17 @@ class SubtitleTranslator:
             if remaining <= 0:
                 return
             time.sleep(min(remaining, 1.0))
+
+    @staticmethod
+    def _is_structurally_complete(original_dict: Dict[str, str], translated_dict: Dict[str, Any]) -> bool:
+        """All keys present, no extras, every item has a non-empty translation."""
+        if set(original_dict) != set(translated_dict):
+            return False
+        for key in original_dict:
+            translated, _ = _normalize_translation_payload(translated_dict.get(key))
+            if translated is None or not translated.strip():
+                return False
+        return True
 
     @staticmethod
     def _validate_translation_result(
@@ -607,6 +659,15 @@ class SubtitleTranslator:
                 self.executor = None
 
 
+# Some batches come back with every line prefixed by an echo of the instruction ("翻译为：...").
+_INSTRUCTION_ECHO_PREFIX_RE = re.compile(r"^\s*(?:翻译为|译文|翻译结果|翻译)\s*[:：]\s*")
+
+
+def _strip_instruction_echo(text: str) -> str:
+    stripped = _INSTRUCTION_ECHO_PREFIX_RE.sub("", text, count=1)
+    return stripped if stripped.strip() else text
+
+
 def _normalize_translation_payload(value: Any) -> tuple[str | None, dict[str, Any]]:
     if isinstance(value, dict):
         translated = value.get("translation")
@@ -621,10 +682,10 @@ def _normalize_translation_payload(value: Any) -> tuple[str | None, dict[str, An
             "suspect_reason": str(value.get("reason", "")).strip(),
             "suspect_confidence": _coerce_confidence(value.get("confidence")),
         }
-        return (str(translated).strip() if translated is not None else None), meta
+        return (_strip_instruction_echo(str(translated).strip()) if translated is not None else None), meta
     if value is None:
         return None, {}
-    return str(value).strip(), {}
+    return _strip_instruction_echo(str(value).strip()), {}
 
 
 def _augment_translation_suspects(

@@ -142,3 +142,36 @@ def test_build_transcribe_recommendation_without_reports_keeps_configured_values
 
     assert recommendation["next_run"]["batch_size"] == 4
     assert recommendation["next_run"]["target_batch_audio_seconds"] is None
+
+
+def test_scale_batch_size_for_free_vram_steps() -> None:
+    from qwen_asr.commands.transcribe_profile import scale_batch_size_for_free_vram
+
+    assert scale_batch_size_for_free_vram(5, None) == 5
+    assert scale_batch_size_for_free_vram(5, 4000.0) == 5
+    assert scale_batch_size_for_free_vram(5, 6500.0) == 8
+    assert scale_batch_size_for_free_vram(5, 8000.0) == 12
+    assert scale_batch_size_for_free_vram(5, 11000.0) == 16
+
+
+def test_resolve_batch_defaults_scales_short_form_with_free_vram(monkeypatch) -> None:
+    from qwen_asr.commands import transcribe_profile
+
+    monkeypatch.setattr(transcribe_profile, "query_free_vram_mb", lambda device: 11000.0)
+    args = argparse.Namespace(batch_size=None, target_batch_audio_seconds=None, single_long_segment_threshold=None,
+                              batch_mode="adaptive", device="cuda:0")
+    resolved = resolve_transcribe_batch_defaults(args, [_segment(f"s{i}", 10.0) for i in range(10)])
+    assert args.batch_size == 16
+    assert resolved["vram_scaling"] == {"free_vram_mb": 11000.0, "base_batch_size": 5, "batch_size": 16}
+
+    explicit = argparse.Namespace(batch_size=5, target_batch_audio_seconds=None, single_long_segment_threshold=None,
+                                  batch_mode="adaptive", device="cuda:0")
+    resolve_transcribe_batch_defaults(explicit, [_segment(f"s{i}", 10.0) for i in range(10)])
+    assert explicit.batch_size == 5
+
+
+def test_query_free_vram_mb_skips_cpu() -> None:
+    from qwen_asr.commands.transcribe_profile import query_free_vram_mb
+
+    assert query_free_vram_mb("cpu") is None
+    assert query_free_vram_mb(None) is None

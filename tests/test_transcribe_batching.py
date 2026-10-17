@@ -264,6 +264,8 @@ def test_cmd_transcribe_writes_profile_report_when_enabled(tmp_path: Path, monke
     assert profile["summary"]["completed_batch_count"] == 1
     assert profile["summary"]["oom_retry_count"] == 0
     assert profile["batches"][0]["memory_probes"][0]["phase"] == "before_inference"
+    assert profile["batches"][0]["padded_audio_seconds"] == 0.0
+    assert profile["batches"][0]["padding_ratio"] == 0.0
     assert profile["recommendation"]["next_run"]["batch_mode"] == "adaptive"
     assert profile["recommendation"]["next_run"]["batch_size"] == 2
     assert profile["recommendation"]["signals"]["oom_retry_count"] == 0
@@ -503,3 +505,22 @@ def _segment(segment_id: str, duration: float):
         duration=duration,
         status="prepared",
     )
+
+
+def test_adaptive_batch_planner_duration_order_groups_similar_lengths() -> None:
+    durations = [2.0, 14.0, 3.0, 13.0, 2.5, 12.0]
+    segments = [_segment(f"segment_{index:06d}", value) for index, value in enumerate(durations, start=1)]
+    planner = BatchPlanner(segments, mode="adaptive", max_batch_items=3, target_audio_seconds=100.0, order="duration")
+
+    batch1 = planner.next_batch()
+    assert batch1 is not None
+    assert [item.duration for item in batch1.segments] == [14.0, 13.0, 12.0]
+    planner.mark_success(batch1)
+    batch2 = planner.next_batch()
+    assert batch2 is not None
+    assert [item.duration for item in batch2.segments] == [3.0, 2.5, 2.0]
+
+    original = BatchPlanner(segments, mode="adaptive", max_batch_items=3, target_audio_seconds=100.0)
+    first = original.next_batch()
+    assert first is not None
+    assert [item.duration for item in first.segments] == [2.0, 14.0, 3.0]

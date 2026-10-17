@@ -4,6 +4,7 @@ import argparse
 import logging
 from time import perf_counter
 
+from qwen_asr.asr_context import load_context_terms
 from qwen_asr.models import WorkPaths
 from qwen_asr.progress import write_progress
 
@@ -60,6 +61,18 @@ def cmd_transcribe(args: argparse.Namespace, work_paths: WorkPaths) -> int:
     manifest = list(existing.values())
     batch_reports: list[dict[str, object]] = []
 
+    context_terms = load_context_terms(
+        getattr(args, "asr_context_terms", None),
+        getattr(args, "asr_context_file", None),
+    )
+    if context_terms:
+        LOGGER.info(
+            "ASR context prompt enabled (mode=%s) with %d terms: %s",
+            getattr(args, "asr_context_mode", "merge"),
+            len(context_terms),
+            ", ".join(context_terms),
+        )
+
     transcriber = stage_helpers.QwenASRTranscriber(
         model_name=args.model,
         dtype=args.dtype,
@@ -72,6 +85,11 @@ def cmd_transcribe(args: argparse.Namespace, work_paths: WorkPaths) -> int:
         local_files_only=args.local_files_only,
         batch_size=args.batch_size,
         profile_batches=getattr(args, "profile_batches", False),
+        **(
+            {"context_terms": context_terms, "context_mode": getattr(args, "asr_context_mode", "merge")}
+            if context_terms
+            else {}
+        ),
     )
     transcriber.load()
     try:
@@ -91,6 +109,7 @@ def cmd_transcribe(args: argparse.Namespace, work_paths: WorkPaths) -> int:
             max_batch_items=args.batch_size,
             target_audio_seconds=getattr(args, "target_batch_audio_seconds", None),
             single_long_segment_threshold=getattr(args, "single_long_segment_threshold", 90.0),
+            order=getattr(args, "batch_order", "duration"),
         )
         LOGGER.info("ASR batch planner initialized: %s", planner.describe_limits())
 
@@ -100,6 +119,11 @@ def cmd_transcribe(args: argparse.Namespace, work_paths: WorkPaths) -> int:
                 break
             batch = planned_batch.segments
             batch_begin = perf_counter()
+            padded_audio_seconds = max(
+                0.0,
+                (planned_batch.max_duration * len(batch)) - planned_batch.total_duration,
+            )
+            padded_capacity_seconds = max(0.0, planned_batch.max_duration * len(batch))
             batch_report: dict[str, object] = {
                 "mode": planned_batch.mode,
                 "bucket_label": planned_batch.bucket_label,
@@ -108,6 +132,11 @@ def cmd_transcribe(args: argparse.Namespace, work_paths: WorkPaths) -> int:
                 "min_duration": planned_batch.min_duration,
                 "max_duration": planned_batch.max_duration,
                 "duration_spread_ratio": planned_batch.duration_spread_ratio,
+                "padded_audio_seconds": round(padded_audio_seconds, 3),
+                "padding_ratio": round(
+                    padded_audio_seconds / padded_capacity_seconds if padded_capacity_seconds > 0 else 0.0,
+                    6,
+                ),
                 "singleton_reason": planned_batch.singleton_reason,
                 "segment_ids": [segment.segment_id for segment in batch],
                 "planner_limits_before": planner.describe_limits(),
@@ -134,12 +163,22 @@ def cmd_transcribe(args: argparse.Namespace, work_paths: WorkPaths) -> int:
             batch_report["status"] = "completed"
             batch_report["elapsed_s"] = round(perf_counter() - batch_begin, 3)
             batch_report["memory_probes"] = stage_helpers._consume_batch_memory_probes(transcriber)
+            consume_leaks = getattr(transcriber, "consume_context_leak_segments", None)
+            context_leaks = consume_leaks() if callable(consume_leaks) else []
+            if context_leaks:
+                batch_report["context_leak_retranscribed"] = context_leaks
+            consume_edits = getattr(transcriber, "consume_context_term_edit_segments", None)
+            context_edits = consume_edits() if callable(consume_edits) else []
+            if context_edits:
+                batch_report["context_term_edits"] = context_edits
             LOGGER.info(
-                "ASR batch completed: mode=%s bucket=%s size=%d audio_s=%.2f min_segment_s=%.2f max_segment_s=%.2f spread=%.3f singleton_reason=%s elapsed_s=%.3f first_segment=%s last_segment=%s",
+                "ASR batch completed: mode=%s bucket=%s size=%d audio_s=%.2f padding_s=%.2f padding_ratio=%.3f min_segment_s=%.2f max_segment_s=%.2f spread=%.3f singleton_reason=%s elapsed_s=%.3f first_segment=%s last_segment=%s",
                 planned_batch.mode,
                 planned_batch.bucket_label,
                 len(batch),
                 planned_batch.total_duration,
+                padded_audio_seconds,
+                padded_audio_seconds / padded_capacity_seconds if padded_capacity_seconds > 0 else 0.0,
                 planned_batch.min_duration,
                 planned_batch.max_duration,
                 planned_batch.duration_spread_ratio,

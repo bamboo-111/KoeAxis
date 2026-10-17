@@ -14,13 +14,58 @@ from qwen_asr.defaults import (
     DEFAULT_MIN_SEGMENT_SECONDS,
     DEFAULT_MODEL_CACHE_DIR,
 )
-from qwen_asr.cli import build_parser
+from qwen_asr.cli import _run_stage_with_progress, build_parser
+from qwen_asr.models import WorkPaths
+from qwen_asr.progress import read_progress, write_progress
+from qwen_asr.storage import read_json, write_json_atomic
 from qwen_asr.mimo_proofread import _parse_args as parse_mimo_proofread_args
 
 
 def _subparser(name: str):
     parser = build_parser()
     return parser._subparsers._group_actions[0].choices[name]  # noqa: SLF001
+
+
+def test_standalone_stage_can_write_performance_profile(tmp_path) -> None:
+    work_paths = WorkPaths.from_workdir(tmp_path)
+    args = Namespace(
+        performance_profile=True,
+        performance_output="",
+        performance_sample_interval=0.05,
+    )
+
+    def handler(stage_args, paths):
+        del stage_args
+        write_json_atomic(paths.translated_manifest, {"1": {"translated_subtitle": "ok"}})
+        return 0
+
+    assert _run_stage_with_progress("translate", handler, args, work_paths) == 0
+    report = read_json(tmp_path / "reports" / "translate.performance.json")
+    assert report["stages"][0]["stage"] == "translate"
+    assert report["stages"][0]["status"] == "completed"
+    assert report["stages"][0]["instrumented_io"]["manifest_write"]["count"] == 1
+    assert report["stages"][0]["workload"]["translated_cue_count"] == 1
+    assert report["stages"][0]["workload"]["read_errors"] == {}
+
+
+def test_standalone_stage_preserves_handler_skip_status(tmp_path) -> None:
+    work_paths = WorkPaths.from_workdir(tmp_path)
+    args = Namespace(
+        performance_profile=True,
+        performance_output="",
+        performance_sample_interval=0.05,
+    )
+
+    def handler(stage_args, paths):
+        del stage_args
+        write_progress(paths, stage="align", status="skipped", done=2, total=2, summary="resume hit")
+        return 0
+
+    assert _run_stage_with_progress("align", handler, args, work_paths) == 0
+    assert read_progress(work_paths)["status"] == "skipped"
+    report = read_json(tmp_path / "reports" / "align.performance.json")
+    assert report["stages"][0]["status"] == "skipped"
+    assert report["stages"][0]["workload"]["progress"]["status"] == "skipped"
 
 
 def test_mimo_can_be_selected_as_normalize_and_export_source() -> None:
@@ -79,6 +124,27 @@ def test_mimo_proofread_uses_disabled_thinking_extra_body_by_default() -> None:
 
     assert args.mimo_llm_extra_body_json == DEFAULT_LLM_EXTRA_BODY_JSON
     assert override.mimo_llm_extra_body_json == '{"thinking":{"type":"enabled"}}'
+
+
+def test_translate_defaults_to_gemini_38_flash_and_allows_model_override() -> None:
+    parser = build_parser()
+    arguments = ["translate", "--workdir", "work", "--target-language", "简体中文"]
+    args = parser.parse_args(arguments)
+    override = parser.parse_args([*arguments, "--llm-model", "custom-model"])
+
+    assert args.llm_model == "gemini-3.8-flash"
+    assert args.llm_base_url == DEFAULT_LLM_BASE_URL
+    assert args.thread_num == 4
+    assert override.llm_model == "custom-model"
+
+
+def test_default_gemini_base_url_uses_env_relay_or_google() -> None:
+    from qwen_asr.defaults import GOOGLE_GEMINI_BASE_URL, default_gemini_base_url
+
+    assert default_gemini_base_url("") == GOOGLE_GEMINI_BASE_URL
+    assert default_gemini_base_url("https://relay.example/") == "https://relay.example/v1beta"
+    assert default_gemini_base_url("https://relay.example/v1") == "https://relay.example/v1beta"
+    assert default_gemini_base_url("https://relay.example/v1beta") == "https://relay.example/v1beta"
 
 
 def test_correct_command_no_longer_requires_llm_arguments() -> None:

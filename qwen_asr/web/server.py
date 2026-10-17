@@ -568,7 +568,7 @@ def pick_model_cache_dir() -> dict:
 def pick_export_file() -> dict:
     selected = _run_tk_save_file_picker(
         title="Select export file",
-        filetypes="[('Subtitle files', '*.srt *.vtt'), ('All files', '*.*')]",
+        filetypes="[('SRT subtitle files', '*.srt')]",
         defaultextension=".srt",
     )
     if not selected:

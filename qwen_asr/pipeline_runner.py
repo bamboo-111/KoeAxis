@@ -9,6 +9,7 @@ from qwen_asr.artifact_state import ArtifactState
 from qwen_asr.content_quality import evaluate_content_conservation
 from qwen_asr.final_quality import evaluate_final_quality
 from qwen_asr.models import WorkPaths
+from qwen_asr.performance import PipelinePerformanceRecorder, collect_workload_snapshot, measure_operation
 from qwen_asr.progress import read_progress, write_progress
 from qwen_asr.quality_suspects import apply_quality_diff_suspects_to_translated, apply_quality_suspects_to_translated
 from qwen_asr.stages import stage_names_for_run
@@ -58,51 +59,74 @@ class PipelineRunner:
         return invocations
 
     def run(self, args: argparse.Namespace) -> int:
+        performance_output = Path(
+            str(getattr(args, "performance_output", "") or "")
+            or self.work_paths.workdir / "reports" / "pipeline_performance.json"
+        )
+        recorder = PipelinePerformanceRecorder(
+            performance_output,
+            enabled=bool(getattr(args, "performance_profile", False)),
+            sample_interval_s=float(getattr(args, "performance_sample_interval", 0.2) or 0.2),
+        )
         for invocation in self.build_invocations(args):
             if invocation.name == "prepare" and not args.force and self.state.is_complete("prepare"):
-                write_progress(
-                    self.work_paths,
-                    stage="prepare",
-                    status="skipped",
-                    summary="prepare artifacts already complete",
-                )
+                with recorder.stage("prepare") as span:
+                    write_progress(
+                        self.work_paths,
+                        stage="prepare",
+                        status="skipped",
+                        summary="prepare artifacts already complete",
+                    )
+                    span.set_result("skipped", "prepare artifacts already complete")
                 continue
-            write_progress(
-                self.work_paths,
-                stage=invocation.name,
-                status="running",
-                summary=f"{invocation.name} started",
-            )
-            if invocation.name == "quality-gate":
-                status = self._run_final_gate(include_export=False, require_srt=False)
-            else:
-                handler = self.handlers[invocation.name]
-                status = handler(invocation.args, self.work_paths)
-            if status == 0 and invocation.name == "translate":
-                status = self._apply_quality_suspects_if_requested(args)
-            if status == 0 and invocation.name == "mimo-proofread" and not self.state.is_complete("mimo-proofread"):
-                status = 1
+            with recorder.stage(invocation.name) as span:
                 write_progress(
                     self.work_paths,
                     stage=invocation.name,
-                    status="failed",
-                    summary="mimo-proofread quality gate failed",
+                    status="running",
+                    summary=f"{invocation.name} started",
                 )
-            if status == 0 and invocation.name == "export":
-                status = self._run_final_gate(
-                    include_export=True,
-                    require_srt=str(getattr(args, "format", "srt")) in {"srt", "both"},
+                if invocation.name == "quality-gate":
+                    status = self._run_final_gate(include_export=False, require_srt=False)
+                else:
+                    handler = self.handlers[invocation.name]
+                    status = handler(invocation.args, self.work_paths)
+                if status == 0 and invocation.name == "translate":
+                    status = self._apply_quality_suspects_if_requested(args)
+                if status == 0 and invocation.name == "mimo-proofread" and not self.state.is_complete("mimo-proofread"):
+                    status = 1
+                    write_progress(
+                        self.work_paths,
+                        stage=invocation.name,
+                        status="failed",
+                        summary="mimo-proofread quality gate failed",
+                    )
+                if status == 0 and invocation.name == "export":
+                    status = self._run_final_gate(
+                        include_export=True,
+                        require_srt=str(getattr(args, "format", "srt")) in {"srt", "both"},
+                    )
+                existing = read_progress(self.work_paths) or {}
+                result_status = (
+                    "failed"
+                    if status != 0
+                    else "skipped"
+                    if existing.get("status") == "skipped"
+                    else "completed"
                 )
-            existing = read_progress(self.work_paths) or {}
-            write_progress(
-                self.work_paths,
-                stage=invocation.name,
-                status="completed" if status == 0 else "failed",
-                done=existing.get("done"),
-                total=existing.get("total"),
-                current=existing.get("current", ""),
-                summary=existing.get("summary") or f"{invocation.name} {'completed' if status == 0 else 'failed'}",
-            )
+                summary = existing.get("summary") or f"{invocation.name} {result_status}"
+                write_progress(
+                    self.work_paths,
+                    stage=invocation.name,
+                    status=result_status,
+                    done=existing.get("done"),
+                    total=existing.get("total"),
+                    current=existing.get("current", ""),
+                    summary=summary,
+                )
+                with measure_operation("instrumentation_workload_snapshot"):
+                    span.set_workload(collect_workload_snapshot(self.work_paths))
+                span.set_result(result_status, summary)
             if status != 0:
                 return status
             if invocation.name in {"align", "split", "mimo-proofread", "proofread-realign"}:

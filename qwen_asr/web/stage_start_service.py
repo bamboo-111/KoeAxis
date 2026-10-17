@@ -15,6 +15,7 @@ from qwen_asr.defaults import (
     DEFAULT_LLM_MODEL,
     DEFAULT_LLM_TIMEOUT,
     DEFAULT_MAX_SEGMENT_SECONDS,
+    DEFAULT_MIMO_CONCURRENCY,
     DEFAULT_MIN_SEGMENT_SECONDS,
     DEFAULT_MODEL_CACHE_DIR,
 )
@@ -164,12 +165,12 @@ def _base_payload(
         "glossary_xlsx": value("glossaryXlsx", ""),
         "mimo_proofread_mode": value("mimoProofreadMode", "segment-audio"),
         "mimo_audio_review_scope": value("mimoAudioReviewScope", "suspects"),
-        "mimo_proofread_workers": value("mimoProofreadWorkers", DEFAULT_LLM_CONCURRENCY),
+        "mimo_proofread_workers": value("mimoProofreadWorkers", DEFAULT_MIMO_CONCURRENCY),
         "mimo_nearby_batch_size": value("mimoNearbyBatchSize", 1),
         "mimo_nearby_batch_max_gap_s": value("mimoNearbyBatchMaxGapS", 8.0),
         "mimo_nearby_padding_s": value("mimoNearbyPaddingS", 1.5),
         "mimo_nearby_context_subtitles": value("mimoNearbyContextSubtitles", 1),
-        "mimo_nearby_audio_workers": value("mimoNearbyAudioWorkers", DEFAULT_LLM_CONCURRENCY),
+        "mimo_nearby_audio_workers": value("mimoNearbyAudioWorkers", DEFAULT_MIMO_CONCURRENCY),
         "mimo_proofread_max_tokens": value("mimoProofreadMaxTokens", 4096),
         "mimo_compact_output": bool(value("mimoCompactOutput", False)),
         "mimo_proofread_output_dir": value("mimoProofreadOutputDir", ""),
@@ -179,7 +180,7 @@ def _base_payload(
         "normalize_extend_ms": value("normalizeExtendMs", 350),
         "normalize_snap_gap_ms": value("normalizeSnapGapMs", 200),
         "normalize_min_blank_ms": value("normalizeMinBlankMs", 300),
-        "format": value("format", "both"),
+        "format": "srt",
         "source": value("source", "auto"),
         "export_mode": export_mode,
         "export_path": export_path,
@@ -195,7 +196,7 @@ def _validate_stage_environment(stage: str, payload: dict[str, Any]) -> None:
                 "prepare requires an existing media path in project metadata or saved Web settings",
                 status=409,
             )
-    if stage in {"translate", "correct"} and not resolve_llm_api_key(
+    if stage in {"split", "translate", "correct"} and not resolve_llm_api_key(
         None,
         str(payload.get("llm_base_url", "")),
     ):

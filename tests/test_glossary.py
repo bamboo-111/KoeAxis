@@ -68,3 +68,30 @@ def test_write_normalized_glossary_rejects_empty_input(tmp_path: Path) -> None:
     else:
         raise AssertionError("empty glossary should be rejected")
     assert not (tmp_path / "empty.normalized.xlsx").exists()
+
+
+def test_unpaired_cast_name_column_yields_kana_reading_entries(tmp_path: Path) -> None:
+    source = tmp_path / "cast.xlsx"
+    _write_single_sheet_xlsx(
+        source,
+        "Sheet1",
+        [
+            ["剧中成员名（日文）", "剧中成员名（中文）", "声优/乐手名（中文）", "角色", "备注", "", "广播用", "中文", "注释"],
+            ["井芹仁菜", "井芹仁菜", "理名(りな)", "主唱", "乐队：无刺有刺", "", "コーナー", "栏目", "web广播的标题"],
+            ["河原木桃香", "河原木桃香", "夕莉（ユリ）", "吉他手", "", "", "", "", ""],
+            ["", "", "宫内沙弥", "代理鼓手", "", "", "", "", ""],
+        ],
+    )
+
+    entries = [
+        (entry.source, entry.target, entry.note)
+        for entry in read_xlsx_glossary(source)
+        if entry.group == "声优/乐手名（中文）"
+    ]
+
+    assert entries == [
+        ("りな", "理名", "主唱；乐队：无刺有刺"),
+        ("リナ", "理名", "主唱；乐队：无刺有刺"),
+        ("ゆり", "夕莉", "吉他手"),
+        ("ユリ", "夕莉", "吉他手"),
+    ]

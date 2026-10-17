@@ -4,8 +4,9 @@ import ctypes
 import json
 import logging
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Sequence
 
+from qwen_asr.asr_context import build_context_prompt, detect_context_leak, merge_context_edits
 from qwen_asr.model_runtime import (
     cleanup_torch as _cleanup_torch,
     normalize_device_map as _normalize_device_map,
@@ -13,6 +14,7 @@ from qwen_asr.model_runtime import (
     sanitize_raw_output as _sanitize_raw_output,
 )
 from qwen_asr.models import AudioSegment, TranscriptSegment
+from qwen_asr.performance import measure_operation
 from qwen_asr.vendor_qwen import get_qwen3_asr_model_class
 
 LOGGER = logging.getLogger(__name__)
@@ -70,6 +72,8 @@ class QwenASRTranscriber:
         local_files_only: bool = True,
         batch_size: int = 1,
         profile_batches: bool = False,
+        context_terms: Sequence[str] | None = None,
+        context_mode: str = "merge",
     ) -> None:
         self.model_name = model_name
         self.dtype = dtype
@@ -84,6 +88,13 @@ class QwenASRTranscriber:
         self.profile_batches = profile_batches
         self._model: Any = None
         self._last_batch_probes: list[BatchMemoryProbe] = []
+        self.context_terms: tuple[str, ...] = tuple(context_terms or ())
+        self.context_prompt = build_context_prompt(self.context_terms)
+        if context_mode not in {"merge", "full"}:
+            raise ValueError(f"Unsupported ASR context mode: {context_mode}")
+        self.context_mode = context_mode
+        self._context_leak_segments: list[str] = []
+        self._context_term_edit_segments: list[str] = []
 
     def load(self) -> None:
         LOGGER.info("Loading ASR model: %s", self.model_name)
@@ -118,23 +129,57 @@ class QwenASRTranscriber:
             kwargs["cache_dir"] = self.model_cache_dir
         kwargs["local_files_only"] = self.local_files_only
 
-        with _offline_model_loading(self.local_files_only):
-            self._model = Qwen3ASRModel.from_pretrained(self.model_name, **kwargs)
+        with measure_operation(
+            "model_load",
+            component="asr",
+            model=self.model_name,
+            device=self.device,
+            dtype=self.dtype,
+            local_files_only=self.local_files_only,
+        ):
+            with _offline_model_loading(self.local_files_only):
+                self._model = Qwen3ASRModel.from_pretrained(self.model_name, **kwargs)
 
-    def run_segment(self, segment: AudioSegment, cleanup: bool = True) -> TranscriptSegment:
+    def run_segment(
+        self,
+        segment: AudioSegment,
+        cleanup: bool = True,
+        *,
+        use_context: bool = True,
+    ) -> TranscriptSegment:
         if self._model is None:
             raise RuntimeError("ASR model is not loaded")
 
         LOGGER.info("Transcribing %s", segment.segment_id)
         raw_output = None
+        base_raw = None
         text = ""
         language = self.language
         try:
-            raw_output = self._model.transcribe(
-                audio=segment.audio_path,
-                language=self.language,
-            )
+            with measure_operation(
+                "model_inference",
+                component="asr",
+                model=self.model_name,
+                batch_size=1,
+                audio_seconds=segment.duration,
+            ):
+                raw_output = self._transcribe(segment.audio_path, use_context=use_context)
+                base_raw = (
+                    self._transcribe(segment.audio_path, use_context=False)
+                    if use_context and self._merge_mode
+                    else None
+                )
             text, language = _extract_transcript(raw_output, self.language)
+            if base_raw is not None:
+                context_text = text
+                raw_output = base_raw
+                text, language = _extract_transcript(base_raw, self.language)
+                text = self._merge_context_text(segment.segment_id, text.strip(), context_text.strip())
+            elif use_context and self._is_context_leak(text):
+                LOGGER.warning("ASR context leak in %s; re-transcribing without context", segment.segment_id)
+                self._context_leak_segments.append(segment.segment_id)
+                raw_output = self._transcribe(segment.audio_path, use_context=False)
+                text, language = _extract_transcript(raw_output, self.language)
             return TranscriptSegment(
                 segment_id=segment.segment_id,
                 audio_path=segment.audio_path,
@@ -160,7 +205,8 @@ class QwenASRTranscriber:
             )
         finally:
             if cleanup:
-                _cleanup_torch()
+                with measure_operation("model_cleanup", component="asr", full=False):
+                    _cleanup_torch()
 
     def run_batch(self, segments: list[AudioSegment]) -> list[TranscriptSegment]:
         if not segments:
@@ -173,7 +219,8 @@ class QwenASRTranscriber:
             self._log_batch_memory_probe("before_inference", segments)
             result = self.run_segment(segment, cleanup=False)
             self._log_batch_memory_probe("after_inference", segments)
-            _cleanup_torch()
+            with measure_operation("model_cleanup", component="asr", full=False):
+                _cleanup_torch()
             self._log_batch_memory_probe("after_cleanup", segments)
             return [result]
 
@@ -181,12 +228,32 @@ class QwenASRTranscriber:
         LOGGER.info("Transcribing batch: %s", batch_label)
         self._log_batch_memory_probe("before_inference", segments)
         try:
-            raw_outputs = self._model.transcribe(
-                audio=[segment.audio_path for segment in segments],
-                language=self.language,
-            )
+            with measure_operation(
+                "model_inference",
+                component="asr",
+                model=self.model_name,
+                batch_size=len(segments),
+                audio_seconds=round(sum(segment.duration for segment in segments), 3),
+            ):
+                audios = [segment.audio_path for segment in segments]
+                raw_outputs = self._transcribe(audios)
+                base_raw_outputs = self._transcribe(audios, use_context=False) if self._merge_mode else None
             self._log_batch_memory_probe("after_inference", segments)
             normalized_outputs = _normalize_batch_outputs(raw_outputs, len(segments))
+            if base_raw_outputs is not None:
+                normalized_base = _normalize_batch_outputs(base_raw_outputs, len(segments))
+                merged_results: list[TranscriptSegment] = []
+                for segment, base_raw, context_raw in zip(segments, normalized_base, normalized_outputs, strict=True):
+                    result = _build_transcript_segment(
+                        segment=segment,
+                        raw_output=base_raw,
+                        fallback_language=self.language,
+                        keep_raw_model_output=self.keep_raw_model_output,
+                    )
+                    context_text, _ = _extract_transcript(context_raw, self.language)
+                    result.text = self._merge_context_text(segment.segment_id, result.text, context_text.strip())
+                    merged_results.append(result)
+                return merged_results
             results = [
                 _build_transcript_segment(
                     segment=segment,
@@ -196,7 +263,7 @@ class QwenASRTranscriber:
                 )
                 for segment, raw_output in zip(segments, normalized_outputs, strict=True)
             ]
-            return results
+            return self._retry_context_leaks(segments, results)
         except Exception as exc:
             if len(segments) > 1 and _is_oom_error(exc):
                 LOGGER.warning("Batch ASR hit OOM for %s", batch_label)
@@ -204,17 +271,69 @@ class QwenASRTranscriber:
             LOGGER.exception("Batch ASR failed for %s. Falling back to per-segment transcription.", batch_label)
             return [self.run_segment(segment, cleanup=False) for segment in segments]
         finally:
-            _cleanup_torch()
+            with measure_operation("model_cleanup", component="asr", full=False):
+                _cleanup_torch()
             self._log_batch_memory_probe("after_cleanup", segments)
 
     def close(self) -> None:
         self._model = None
-        _cleanup_torch(full=True)
+        with measure_operation("model_cleanup", component="asr", full=True):
+            _cleanup_torch(full=True)
 
     def consume_last_batch_memory_probes(self) -> list[dict[str, Any]]:
         probes = [probe.to_dict() for probe in self._last_batch_probes]
         self._last_batch_probes = []
         return probes
+
+    def consume_context_leak_segments(self) -> list[str]:
+        """Segment ids whose context transcript was discarded as a prompt copy since the last call."""
+        leaked = list(self._context_leak_segments)
+        self._context_leak_segments = []
+        return leaked
+
+    def consume_context_term_edit_segments(self) -> list[str]:
+        """Segment ids where merge mode copied term edits from the context transcript since the last call."""
+        edited = list(self._context_term_edit_segments)
+        self._context_term_edit_segments = []
+        return edited
+
+    def _transcribe(self, audio: Any, *, use_context: bool = True) -> Any:
+        kwargs: dict[str, Any] = {"audio": audio, "language": self.language}
+        if use_context and self.context_prompt:
+            kwargs["context"] = self.context_prompt
+        return self._model.transcribe(**kwargs)
+
+    @property
+    def _merge_mode(self) -> bool:
+        return bool(self.context_prompt) and self.context_mode == "merge"
+
+    def _merge_context_text(self, segment_id: str, base_text: str, context_text: str) -> str:
+        """Plain transcript plus only the term edits of the context transcript (see merge_context_edits)."""
+        if self._is_context_leak(context_text):
+            LOGGER.warning("ASR context leak in %s; keeping the no-context transcript", segment_id)
+            self._context_leak_segments.append(segment_id)
+            return base_text
+        merged = merge_context_edits(base_text, context_text, self.context_terms)
+        if merged != base_text:
+            self._context_term_edit_segments.append(segment_id)
+        return merged
+
+    def _is_context_leak(self, text: str) -> bool:
+        return bool(self.context_prompt) and detect_context_leak(text, self.context_terms)
+
+    def _retry_context_leaks(
+        self,
+        segments: list[AudioSegment],
+        results: list[TranscriptSegment],
+    ) -> list[TranscriptSegment]:
+        repaired: list[TranscriptSegment] = []
+        for segment, result in zip(segments, results, strict=True):
+            if result.status == "completed" and self._is_context_leak(result.text):
+                LOGGER.warning("ASR context leak in %s; re-transcribing without context", segment.segment_id)
+                self._context_leak_segments.append(segment.segment_id)
+                result = self.run_segment(segment, cleanup=False, use_context=False)
+            repaired.append(result)
+        return repaired
 
     def _log_batch_memory_probe(self, phase: str, segments: list[AudioSegment]) -> None:
         if not self.profile_batches:

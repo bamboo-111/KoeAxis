@@ -649,8 +649,10 @@ def test_webui_index_has_workflow_validation_and_log_tabs() -> None:
     assert "llm_api_key" not in INDEX_HTML
     assert "普通校对" in INDEX_HTML
     assert "MiMo + 音频校对" in INDEX_HTML
-    assert "mimo-v2.5" in INDEX_HTML
-    assert "https://api.xiaomimimo.com/v1" in INDEX_HTML
+    assert 'id="llmModel" value="gemini-3.8-flash"' in INDEX_HTML
+    assert 'id="threadNum" type="number" min="1" step="1" value="4"' in INDEX_HTML
+    assert 'id="mimoProofreadWorkers" type="number" min="1" step="1" value="10"' in INDEX_HTML
+    assert "{{DEFAULT_" not in INDEX_HTML
     assert "proofreadKind" in INDEX_HTML
     assert "startStage('correct')" not in INDEX_HTML
     assert "function renderPipeline" in INDEX_HTML

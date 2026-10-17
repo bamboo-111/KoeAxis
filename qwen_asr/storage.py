@@ -4,6 +4,7 @@ import json
 import logging
 import os
 import tempfile
+import time
 from dataclasses import is_dataclass
 from pathlib import Path
 from typing import Any, Iterable, TypeVar
@@ -27,6 +28,7 @@ def ensure_directory(path: Path) -> Path:
 
 
 def write_json_atomic(path: Path, payload: Any) -> None:
+    started = time.perf_counter()
     ensure_directory(path.parent)
     serialized = _serialize(payload)
     fd, temp_name = tempfile.mkstemp(prefix=path.name, suffix=".tmp", dir=str(path.parent))
@@ -51,33 +53,46 @@ def write_json_atomic(path: Path, payload: Any) -> None:
                 temp_path.unlink(missing_ok=True)
         except PermissionError:
             LOGGER.warning("Could not remove temporary file: %s", temp_path)
+    try:
+        byte_count = path.stat().st_size
+    except OSError:
+        byte_count = 0
+    _record_performance_io("write", path, byte_count, time.perf_counter() - started)
 
 
 def read_json(path: Path, default: Any = None) -> Any:
+    started = time.perf_counter()
     if not path.exists():
         return default
     text = path.read_bytes()
     if text.startswith(b"\xef\xbb\xbf"):
         text = text[3:]
     if orjson is not None:
-        return orjson.loads(text)
-    return json.loads(text.decode("utf-8-sig"))
+        result = orjson.loads(text)
+    else:
+        result = json.loads(text.decode("utf-8-sig"))
+    _record_performance_io("read", path, len(text), time.perf_counter() - started)
+    return result
 
 
 def append_jsonl(path: Path, payload: Any) -> None:
+    started = time.perf_counter()
     ensure_directory(path.parent)
     serialized = _serialize(payload)
     if orjson is not None:
         line = orjson.dumps(serialized) + b"\n"
         with path.open("ab") as handle:
             handle.write(line)
+        _record_performance_io("append", path, len(line), time.perf_counter() - started)
         return
     line = json.dumps(serialized, ensure_ascii=False) + "\n"
     with path.open("a", encoding="utf-8", newline="\n") as handle:
         handle.write(line)
+    _record_performance_io("append", path, len(line.encode("utf-8")), time.perf_counter() - started)
 
 
 def load_jsonl(path: Path) -> list[Any]:
+    started = time.perf_counter()
     if not path.exists():
         return []
     rows: list[Any] = []
@@ -87,6 +102,11 @@ def load_jsonl(path: Path) -> list[Any]:
             if not line:
                 continue
             rows.append(json.loads(line))
+    try:
+        byte_count = path.stat().st_size
+    except OSError:
+        byte_count = 0
+    _record_performance_io("read", path, byte_count, time.perf_counter() - started)
     return rows
 
 
@@ -112,3 +132,9 @@ def _serialize(value: Any) -> Any:
     if isinstance(value, dict):
         return {key: _serialize(item) for key, item in value.items()}
     return value
+
+
+def _record_performance_io(operation: str, path: Path, byte_count: int, duration_s: float) -> None:
+    from qwen_asr.performance import record_io
+
+    record_io(operation, path, byte_count, duration_s)

@@ -30,7 +30,7 @@ def test_subtitle_entries_for_segment_selects_overlapping_entries() -> None:
     assert list(entries) == ["2"]
 
 
-def test_filter_glossary_prefers_exact_matches_then_general_terms() -> None:
+def test_filter_glossary_puts_standing_terms_before_text_matches() -> None:
     glossary = [
         {"group": "names", "source": "Alice", "target": "爱丽丝", "note": ""},
         {"group": "misc", "source": "Unused", "target": "未使用", "note": ""},
@@ -118,3 +118,27 @@ def test_write_nearby_audio_clip_uses_full_source_audio_across_segment_boundary(
     assert meta["start_s"] == 5.0
     assert meta["end_s"] == 8.0
     assert meta["duration_s"] == 3.0
+
+
+def test_filter_glossary_sends_names_and_show_terms_but_not_unmatched_usage_notes() -> None:
+    glossary = [
+        {"group": "通用日语", "source": "ちゃん", "target": "小XX", "note": ""},
+        {"group": "通用日语", "source": "トゲナシトゲアリ", "target": "无刺有刺", "note": ""},
+        {"group": "日文", "source": "ディレクター", "target": "导演", "note": ""},
+        {"group": "日文", "source": "絵コンテ", "target": "分镜脚本", "note": "将剧本分解为镜头画面的视觉蓝图" * 2},
+        {"group": "声优/乐手名（中文）", "source": "リナ", "target": "理名", "note": "主唱；乐队：无刺有刺"},
+    ]
+    entries = {"1": {"original_subtitle": "絵コンテを描いた", "translated_subtitle": "画了分镜"}}
+
+    selected = filter_glossary(glossary, entries, limit=80)
+
+    assert [item["source"] for item in selected] == ["トゲナシトゲアリ", "リナ", "絵コンテ"]
+    assert all("group" not in item for item in selected)
+    assert selected[2]["note"].endswith("…") and len(selected[2]["note"]) == 25
+    assert selected[1]["note"] == "主唱；乐队：无刺有刺"
+
+
+def test_filter_glossary_matches_on_chinese_target_too() -> None:
+    glossary = [{"group": "日文", "source": "ディレクター", "target": "导演", "note": ""}]
+    selected = filter_glossary(glossary, {"1": {"original_subtitle": "監督", "translated_subtitle": "导演说"}}, 80)
+    assert [item["source"] for item in selected] == ["ディレクター"]

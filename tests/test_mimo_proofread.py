@@ -609,8 +609,8 @@ def test_manifest_suspect_metadata_routes_audio_review_candidates() -> None:
             "translated_subtitle": "bad",
             "asr_suspect": True,
             "needs_audio_review": True,
-            "suspect_types": ["fragment"],
-            "suspect_reason": "fragment",
+            "suspect_types": ["entity"],
+            "suspect_reason": "entity",
             "suspect_confidence": 0.3,
         },
     }
