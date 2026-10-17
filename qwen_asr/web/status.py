@@ -344,7 +344,9 @@ def _estimate_translate_completed_from_log(lines: list[str], total: int) -> int:
     successful_requests = sum(
         1
         for line in lines
-        if "HTTP Request:" in line and "chat/completions" in line and "200 OK" in line
+        if "HTTP Request:" in line
+        and ("chat/completions" in line or ":generateContent" in line)
+        and "200 OK" in line
     )
     if successful_requests <= 0:
         return 0

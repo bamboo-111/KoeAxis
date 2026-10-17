@@ -4,6 +4,7 @@ from pathlib import Path
 from typing import Any
 
 from qwen_asr.final_quality_common import fail, normalize_status, passed, skip
+from qwen_asr.mimo_candidates import only_low_yield_types
 from qwen_asr.models import WorkPaths
 from qwen_asr.storage import read_json
 
@@ -107,10 +108,14 @@ def pending_audio_review_count(work_paths: WorkPaths) -> int:
     payload = read_json(work_paths.translated_manifest, default={})
     if not isinstance(payload, dict):
         return 0
+    # Same routing rule as the MiMo stage: lines carrying only low-yield rule types stay suspects in the report
+    # but are deliberately not sent to paid audio review, so they are not "missing" candidates here.
     return sum(
         1
         for item in payload.values()
-        if isinstance(item, dict) and (bool(item.get("needs_audio_review")) or bool(item.get("asr_suspect")))
+        if isinstance(item, dict)
+        and (bool(item.get("needs_audio_review")) or bool(item.get("asr_suspect")))
+        and not only_low_yield_types(item.get("suspect_types"))
     )
 
 

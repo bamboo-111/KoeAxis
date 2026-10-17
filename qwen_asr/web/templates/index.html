@@ -672,9 +672,9 @@
             <details class="config-group" data-group="llm">
               <summary>LLM / 翻译 / 校正</summary>
               <div class="group-body form-grid">
-                <div class="field"><label for="llmModel">LLM 模型</label><input id="llmModel" value="mimo-v2.5" placeholder="split/translate/correct 可选或必填"></div>
-                <div class="field"><label for="threadNum">LLM 线程数</label><input id="threadNum" type="number" min="1" step="1" value="5"></div>
-                <div class="field"><label for="llmBaseUrl">LLM Base URL</label><input id="llmBaseUrl" value="https://api.xiaomimimo.com/v1" placeholder="https://api.xiaomimimo.com/v1"></div>
+                <div class="field"><label for="llmModel">LLM 模型</label><input id="llmModel" value="{{DEFAULT_LLM_MODEL}}" placeholder="split/translate/correct 可选或必填"></div>
+                <div class="field"><label for="threadNum">LLM 线程数</label><input id="threadNum" type="number" min="1" step="1" value="{{DEFAULT_LLM_CONCURRENCY}}"></div>
+                <div class="field"><label for="llmBaseUrl">LLM Base URL</label><input id="llmBaseUrl" value="{{DEFAULT_LLM_BASE_URL}}" placeholder="Gemini 原生用 .../v1beta；OpenAI 兼容用 .../v1"></div>
                 <div class="field wide"><span>API 凭据仅从 Web 服务进程的环境变量读取；页面不会保存或提交凭据。</span></div>
                 <div class="field"><label for="proofreadKind">校对方式</label><select id="proofreadKind"><option value="normal">普通校对</option><option value="mimo-audio">MiMo + 音频校对</option></select></div>
                 <div class="field"><label for="correctBatchNum">Correct 批大小</label><input id="correctBatchNum" type="number" min="1" step="1" value="8"></div>
@@ -688,12 +688,12 @@
                 <div class="field wide"><label for="glossaryXlsx">翻译对照 XLSX</label><div class="inline"><div class="path-combo"><input id="glossaryXlsx" placeholder="选择或输入 glossary.xlsx 路径"><button type="button" class="path-combo-toggle" onclick="togglePathMenu('glossaryHistory')" title="历史路径">⌄</button><div class="path-menu" id="glossaryHistory"></div></div><button type="button" id="pickGlossaryXlsxButton" onclick="pickPath('glossaryXlsx', '/api/pick-glossary-xlsx', 'glossaryHistory')">选择</button><button type="button" id="normalizeGlossaryButton" onclick="normalizeGlossary()">标准化</button></div></div>
                 <div class="field wide"><label for="translateCustomPrompt">Translate 自定义 Prompt</label><textarea id="translateCustomPrompt" placeholder="术语表、专有名词翻译偏好、风格要求"></textarea></div>
                 <div class="field"><label for="mimoProofreadMode">MiMo 校对模式</label><select id="mimoProofreadMode"><option value="segment-audio">整段音频</option><option value="two-stage-nearby">分步短音频</option></select></div>
-                <div class="field"><label for="mimoProofreadWorkers">MiMo 线程</label><input id="mimoProofreadWorkers" type="number" min="1" step="1" value="5"></div>
+                <div class="field"><label for="mimoProofreadWorkers">MiMo 线程</label><input id="mimoProofreadWorkers" type="number" min="1" step="1" value="{{DEFAULT_MIMO_CONCURRENCY}}"></div>
                 <div class="field"><label for="mimoNearbyBatchSize">短音频批量</label><input id="mimoNearbyBatchSize" type="number" min="1" step="1" value="5"></div>
                 <div class="field"><label for="mimoNearbyBatchMaxGapS">批内间隔(秒)</label><input id="mimoNearbyBatchMaxGapS" type="number" min="0" step="0.5" value="20"></div>
                 <div class="field"><label for="mimoNearbyPaddingS">短音频留白(秒)</label><input id="mimoNearbyPaddingS" type="number" min="0" step="0.5" value="1.5"></div>
                 <div class="field"><label for="mimoNearbyContextSubtitles">上下文字幕数</label><input id="mimoNearbyContextSubtitles" type="number" min="0" step="1" value="1"></div>
-                <div class="field"><label for="mimoNearbyAudioWorkers">短音频线程</label><input id="mimoNearbyAudioWorkers" type="number" min="1" step="1" value="5"></div>
+                <div class="field"><label for="mimoNearbyAudioWorkers">短音频线程</label><input id="mimoNearbyAudioWorkers" type="number" min="1" step="1" value="{{DEFAULT_MIMO_CONCURRENCY}}"></div>
                 <div class="field"><label for="mimoProofreadMaxTokens">MiMo Max Tokens</label><input id="mimoProofreadMaxTokens" type="number" min="512" step="512" value="4096"></div>
                 <label class="check field"><input id="mimoCompactOutput" type="checkbox"> 精简输出</label>
                 <div class="field wide"><label for="mimoProofreadOutputDir">MiMo 输出目录</label><div class="inline"><div class="path-combo"><input id="mimoProofreadOutputDir" placeholder="留空则写入 workdir\\experiments\\mimo-proofread"><button type="button" class="path-combo-toggle" onclick="togglePathMenu('mimoOutputHistory')" title="历史路径">⌄</button><div class="path-menu" id="mimoOutputHistory"></div></div><button type="button" id="pickMiMoOutputDirButton" onclick="pickPath('mimoProofreadOutputDir', '/api/pick-output-directory', 'mimoOutputHistory')">选择</button></div></div>
@@ -704,10 +704,10 @@
               <summary>Normalize / Export</summary>
               <div class="group-body form-grid">
                 <div class="field"><label for="normalizeSource">Normalize 来源</label><select id="normalizeSource"><option value="auto">auto</option><option value="translated">translated</option><option value="split">split</option><option value="transcript">transcript</option></select></div>
-                <div class="field"><label for="format">导出格式</label><select id="format"><option value="srt">srt</option><option value="vtt">vtt</option><option value="both">both</option></select></div>
+                <div class="field"><label>导出格式</label><input value="SRT" disabled></div>
                 <div class="field"><label for="source">导出源</label><select id="source"><option value="auto">auto</option><option value="normalized">normalized</option><option value="translated">translated</option><option value="split">split</option><option value="aligned">aligned</option><option value="transcript">transcript</option></select></div>
                 <div class="field"><label for="exportMode">导出位置</label><select id="exportMode" onchange="syncExportMode()"><option value="source">源文件同级</option><option value="custom">自定义路径</option></select></div>
-                <div class="field wide"><label for="exportPath">自定义导出路径</label><div class="inline"><div class="path-combo"><input id="exportPath" placeholder="目录或 .srt/.vtt 文件"><button type="button" class="path-combo-toggle" onclick="togglePathMenu('exportHistory')" title="历史路径">⌄</button><div class="path-menu" id="exportHistory"></div></div><button type="button" id="pickExportDirButton" onclick="pickPath('exportPath', '/api/pick-output-directory', 'exportHistory')">目录</button><button type="button" id="pickExportFileButton" onclick="pickPath('exportPath', '/api/pick-export-file', 'exportHistory')">文件</button></div></div>
+                <div class="field wide"><label for="exportPath">自定义导出路径</label><div class="inline"><div class="path-combo"><input id="exportPath" placeholder="目录或 .srt 文件"><button type="button" class="path-combo-toggle" onclick="togglePathMenu('exportHistory')" title="历史路径">⌄</button><div class="path-menu" id="exportHistory"></div></div><button type="button" id="pickExportDirButton" onclick="pickPath('exportPath', '/api/pick-output-directory', 'exportHistory')">目录</button><button type="button" id="pickExportFileButton" onclick="pickPath('exportPath', '/api/pick-export-file', 'exportHistory')">文件</button></div></div>
                 <div class="field"><label for="normalizeExtendMs">后端延伸(ms)</label><input id="normalizeExtendMs" type="number" min="0" step="10" value="350"></div>
                 <div class="field"><label for="normalizeSnapGapMs">紧贴阈值(ms)</label><input id="normalizeSnapGapMs" type="number" min="0" step="10" value="200"></div>
                 <div class="field"><label for="normalizeMinBlankMs">最小空白(ms)</label><input id="normalizeMinBlankMs" type="number" min="0" step="10" value="300"></div>
@@ -839,7 +839,7 @@
         'targetLanguage', 'normalizeSource', 'normalizeExtendMs', 'normalizeSnapGapMs', 'normalizeMinBlankMs', 'translateCustomPrompt', 'glossaryXlsx',
         'mimoProofreadMode', 'mimoProofreadWorkers', 'mimoNearbyBatchSize', 'mimoNearbyBatchMaxGapS', 'mimoNearbyPaddingS',
         'mimoNearbyContextSubtitles', 'mimoNearbyAudioWorkers', 'mimoProofreadMaxTokens', 'mimoCompactOutput', 'mimoProofreadOutputDir',
-        'format', 'source', 'exportMode', 'exportPath', 'withAlign', 'withCorrect', 'withNormalize', 'withSplit', 'withTranslate'
+        'source', 'exportMode', 'exportPath', 'withAlign', 'withCorrect', 'withNormalize', 'withSplit', 'withTranslate'
       ];
     }
 
@@ -1036,7 +1036,7 @@
         normalize_min_blank_ms: document.getElementById('normalizeMinBlankMs').value,
         translate_custom_prompt: document.getElementById('translateCustomPrompt').value,
         glossary_xlsx: document.getElementById('glossaryXlsx').value,
-        format: document.getElementById('format').value,
+        format: 'srt',
         source: document.getElementById('source').value,
         export_mode: document.getElementById('exportMode').value,
         export_path: document.getElementById('exportPath').value,

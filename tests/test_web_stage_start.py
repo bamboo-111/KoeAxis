@@ -81,5 +81,38 @@ def test_prepare_stage_uses_existing_project_media(tmp_path: Path) -> None:
     assert payload["media_path"] == str(media)
 
 
+def test_web_stage_export_is_srt_only_even_with_legacy_format_setting(tmp_path: Path) -> None:
+    paths = WorkPaths.from_workdir(tmp_path)
+    paths.normalized_srt.parent.mkdir(parents=True, exist_ok=True)
+    paths.normalized_srt.write_text("1\n00:00:00,000 --> 00:00:01,000\ntext\n", encoding="utf-8")
+
+    payload = build_workspace_stage_payload(
+        paths,
+        stage="export",
+        settings={"format": "both"},
+    )
+
+    assert payload["format"] == "srt"
+
+
 def test_proofread_realign_is_reported_as_pipeline_managed() -> None:
     assert stage_start_capability("proofread-realign", [])["reason"] == "managed_by_pipeline"
+
+
+def test_translate_stage_defaults_to_gemini_38_flash(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    from qwen_asr.defaults import DEFAULT_LLM_BASE_URL
+
+    paths = WorkPaths.from_workdir(tmp_path)
+    write_json_atomic(paths.split_manifest, {"1": {"original_subtitle": "x"}})
+    monkeypatch.setenv("GEMINI_API_KEY", "environment-value")
+
+    payload = build_workspace_stage_payload(paths, stage="translate", settings={})
+    command = build_command(payload)
+
+    assert payload["llm_model"] == "gemini-3.8-flash"
+    assert payload["llm_base_url"] == DEFAULT_LLM_BASE_URL
+    assert "/v1beta" in payload["llm_base_url"]
+    assert str(payload["thread_num"]) == "4"
+    assert command[command.index("--llm-model") + 1] == "gemini-3.8-flash"
+    assert "llm_api_key" not in payload
+    assert "--llm-api-key" not in command

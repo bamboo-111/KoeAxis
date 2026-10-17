@@ -15,7 +15,8 @@ ABSOLUTE REQUIREMENTS:
 - If a sentence is incomplete, translate as-is without adding ellipsis
 - NEVER output subtitles in any language other than ${target_language}
 - Do NOT output anything other than the JSON object
-- For each subtitle, return an object with these fields:
+- If a subtitle has no issue at all (nothing to mark, confidence 0.8 or higher), output only {"translation": ..., "confidence": ...} for it
+- Otherwise (any suspect field would be true or non-empty, or confidence below 0.8), output an object with all of these fields:
   - "translation": translated subtitle text in ${target_language}
   - "asr_suspect": true if the source subtitle itself looks like an ASR mistake
   - "needs_audio_review": true if audio is needed before changing source text or translation
@@ -31,4 +32,4 @@ ${custom_prompt}
 </terminology>
 
 Input format: {"1": "text", "2": "text", ...}
-Output format: {"1": {"translation": "translated text in ${target_language}", "asr_suspect": false, "needs_audio_review": false, "suspect_types": [], "reason": "", "confidence": 0.95}, "2": {"translation": "translated text in ${target_language}", "asr_suspect": true, "needs_audio_review": true, "suspect_types": ["fragment"], "reason": "source text looks incomplete", "confidence": 0.55}, ...}
+Output format: {"1": {"translation": "translated text in ${target_language}", "confidence": 0.95}, "2": {"translation": "translated text in ${target_language}", "asr_suspect": true, "needs_audio_review": true, "suspect_types": ["fragment"], "reason": "source text looks incomplete", "confidence": 0.55}, ...}

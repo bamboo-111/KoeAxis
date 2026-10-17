@@ -104,6 +104,9 @@ def _compare_stages(source_name: str, source: list[Cue], target_name: str, targe
         seen_target_duplicates[text] += 1
         if seen_target_duplicates[text] <= source_duplicates[text]:
             continue
+        if _repeat_spoken_in_source(source, text, start_ms, end_ms):
+            # The speaker really said it twice; a finer stage only moved the repeat onto a cue boundary.
+            continue
         _append_issue(
             issues,
             seen_issues,
@@ -281,6 +284,16 @@ def _adjacent_boundary_duplicates(cues: list[Cue]) -> list[tuple[str, int, int]]
     return duplicates
 
 
+def _repeat_spoken_in_source(source: list[Cue], text: str, start_ms: int, end_ms: int, margin_ms: int = 1000) -> bool:
+    """True when the source stage already contains the doubled text around that time."""
+    local = "".join(
+        cue.normalized
+        for cue in source
+        if cue.end_ms >= start_ms - margin_ms and cue.start_ms <= end_ms + margin_ms
+    )
+    return bool(text) and (text + text) in local
+
+
 def _time_related(source: Cue, target: Cue) -> bool:
     margin = 500
     return target.end_ms >= source.start_ms - margin and target.start_ms <= source.end_ms + margin
@@ -361,6 +374,13 @@ def _srt_ms(value: str) -> int:
     return ((int(hours) * 60 + int(minutes)) * 60 + int(seconds)) * 1000 + int(milliseconds)
 
 
+# ゠ and the middle dot ・ sit in the katakana block but are punctuation; normalize strips ・ from display
+# text (リナ・ジマ -> リナジマ), so counting it as content made the normalize content check FAIL (episode 53).
+_KATAKANA_BLOCK_PUNCTUATION = frozenset((0x30A0, 0x30FB))
+
+
 def _is_japanese(char: str) -> bool:
     code = ord(char)
+    if code in _KATAKANA_BLOCK_PUNCTUATION:
+        return False
     return 0x3040 <= code <= 0x30FF or 0x3400 <= code <= 0x9FFF or 0xFF66 <= code <= 0xFF9D

@@ -4,11 +4,23 @@ import argparse
 import logging
 from pathlib import Path
 
+from qwen_asr.defaults import DEFAULT_SPLIT_LLM_MODEL
 from qwen_asr.models import WorkPaths
 from qwen_asr.optimizer_bridge import run_split_stage
 from qwen_asr.progress import write_progress
 
 LOGGER = logging.getLogger(__name__)
+
+
+def resolve_split_llm_model(args: argparse.Namespace) -> str | None:
+    """Explicit --split-llm-model wins; MiMo pipelines default the merge step to Flash; others reuse --llm-model."""
+    explicit = getattr(args, "split_llm_model", None)
+    if explicit:
+        return str(explicit)
+    llm_model = getattr(args, "llm_model", None)
+    if llm_model and str(llm_model).lower().startswith("mimo-"):
+        return DEFAULT_SPLIT_LLM_MODEL
+    return llm_model
 
 
 def cmd_split(args: argparse.Namespace, work_paths: WorkPaths) -> int:
@@ -31,7 +43,7 @@ def cmd_split(args: argparse.Namespace, work_paths: WorkPaths) -> int:
     run_split_stage(
         work_paths=work_paths,
         optimizer_root=Path(args.optimizer_root),
-        llm_model=args.llm_model,
+        llm_model=resolve_split_llm_model(args),
         base_url=args.llm_base_url,
         api_key=args.llm_api_key,
         thread_num=args.thread_num,
@@ -42,6 +54,7 @@ def cmd_split(args: argparse.Namespace, work_paths: WorkPaths) -> int:
         llm_extra_body=stage_helpers._parse_json_object_argument("llm_extra_body_json", args.llm_extra_body_json),
         timeout=args.timeout,
         split_mode=getattr(args, "split_mode", "rule"),
+        split_boundaries=getattr(args, "split_boundaries", "bunsetsu"),
     )
     count = stage_helpers._read_json_dict_count(work_paths.split_manifest)
     write_progress(

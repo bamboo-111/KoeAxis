@@ -27,3 +27,14 @@ None
 docs/api-credentials.local.md
 .env
 .env.*
+
+# Local run artifacts and tool caches (never published)
+output/
+scratch/
+.playwright-cli/
+experiments/*/runs/
+samples/*.mp3
+samples/*.wav
+samples/test.srt
+samples/无名字幕组任务分划.xlsx
+samples/*.normalized*.xlsx

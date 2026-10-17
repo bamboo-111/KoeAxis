@@ -36,3 +36,19 @@ def test_manifest_candidate_selection_keeps_audio_scope_precise() -> None:
 
     assert collect_stage1_suspects(report) == ["2", "3"]
     assert report[0]["source"] == "translation-manifest"
+
+
+def test_manifest_candidates_skip_low_yield_only_types_but_keep_them_in_report() -> None:
+    translated = {
+        "1": {"original_subtitle": "うん", "translated_subtitle": "嗯", "asr_suspect": True,
+              "needs_audio_review": True, "suspect_types": ["short_response"], "suspect_confidence": 0.6},
+        "2": {"original_subtitle": "ぜひということで", "translated_subtitle": "那么", "asr_suspect": True,
+              "suspect_types": ["fragment", "semantic"], "suspect_confidence": 0.6},
+        "3": {"original_subtitle": "棘ナシとギャアリ", "translated_subtitle": "无刺有刺", "asr_suspect": True,
+              "suspect_types": ["fragment", "entity"], "suspect_confidence": 0.6},
+    }
+
+    report = build_manifest_suspect_report(translated, confidence_threshold=0.75)
+
+    assert collect_stage1_suspects(report) == ["3"]
+    assert [item["id"] for item in report[0]["suggestions"]] == ["1", "2", "3"]

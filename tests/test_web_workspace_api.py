@@ -43,6 +43,20 @@ def test_subtitle_preview_content_types_are_utf8() -> None:
     assert _subtitle_preview_content_type(Path("subtitle.srt")) == "text/plain; charset=utf-8"
 
 
+def test_export_file_picker_only_offers_srt(monkeypatch: pytest.MonkeyPatch) -> None:
+    captured: dict[str, str] = {}
+
+    def fake_picker(**kwargs: str) -> str:
+        captured.update(kwargs)
+        return ""
+
+    monkeypatch.setattr(server, "_run_tk_save_file_picker", fake_picker)
+
+    assert server.pick_export_file() == {"cancelled": True}
+    assert captured["filetypes"] == "[('SRT subtitle files', '*.srt')]"
+    assert captured["defaultextension"] == ".srt"
+
+
 def test_workspace_scope_rejects_paths_outside_root(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     root = tmp_path / "workspaces"
     root.mkdir()

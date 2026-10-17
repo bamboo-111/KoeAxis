@@ -39,7 +39,7 @@ from qwen_asr.optimizer_bridge import (
 from qwen_asr.pipeline_runner import PipelineRunner
 from qwen_asr.preflight import ensure_preflight
 from qwen_asr.progress import write_progress
-from qwen_asr.segmenter import SegmenterConfig, build_segments
+from qwen_asr.segmenter import SegmenterConfig, build_segments, compute_energy_profile
 from qwen_asr.storage import (
     append_jsonl,
     ensure_directory,
@@ -365,6 +365,9 @@ def _clear_translate_outputs(work_paths: WorkPaths) -> None:
 
 def _clear_normalize_outputs(work_paths: WorkPaths) -> None:
     _clear_stage_outputs(work_paths, "normalize")
+    # A previous export no longer matches once normalize reruns; with program memory its text even
+    # differs from the upstream manifests, so the pre-normalize gate would compare against stale text.
+    ArtifactState(work_paths).delete_downstream_outputs("normalize")
 
 
 def _clear_export_outputs(work_paths: WorkPaths) -> None:

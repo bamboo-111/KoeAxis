@@ -9,6 +9,8 @@ from qwen_asr import optimizer_bridge_guards as _guards
 from qwen_asr.glossary import build_glossary_prompt
 from qwen_asr.models import WorkPaths
 from qwen_asr.progress import write_progress
+from qwen_asr.credentials import resolve_llm_api_key
+from qwen_asr.semantic_boundary_merge import merge_adjacent_boundaries
 from qwen_asr.storage import read_json, write_json_atomic
 
 LOGGER = logging.getLogger(__name__)
@@ -31,8 +33,9 @@ def run_split_stage(
     llm_extra_body: dict[str, Any] | None = None,
     timeout: float = 120.0,
     split_mode: str = "rule",
+    split_boundaries: str = "bunsetsu",
 ) -> None:
-    del llm_model, base_url, api_key, thread_num, prompt_limit_ratio, disable_thinking, llm_extra_body
+    del prompt_limit_ratio
     if split_mode != "rule":
         raise ValueError(f"Unsupported split mode: {split_mode}. Only 'rule' is available.")
     ASRData, ASRDataSeg, SubtitleSplitter = load_optimizer_types(optimizer_root)
@@ -49,10 +52,24 @@ def run_split_stage(
         max_word_count_cjk=max_word_count_cjk,
         max_word_count_english=max_word_count_english,
         timeout=timeout,
+        bunsetsu_boundaries=split_boundaries != "off",
     )
     try:
         processed = splitter._process_by_rules(source.segments)  # noqa: SLF001
         processed = postprocess_split_segments(splitter, processed)
+        resolved_api_key = resolve_llm_api_key(api_key, base_url)
+        if llm_model and base_url and resolved_api_key:
+            processed = merge_adjacent_boundaries(
+                processed,
+                model=llm_model,
+                base_url=base_url,
+                api_key=resolved_api_key,
+                workers=thread_num,
+                max_chars=max(32, max_word_count_cjk * 2),
+                disable_thinking=disable_thinking,
+                llm_extra_body=llm_extra_body,
+                timeout=timeout,
+            )
         result = ASRData(processed)
     finally:
         splitter.stop()
@@ -159,8 +176,53 @@ def run_translate_stage(
 
     translated_payload = result.to_json()
     merge_translation_suspect_metadata(translated_payload, result.segments)
+    mark_alignment_repaired_suspects(translated_payload, read_json(work_paths.aligned_manifest, default=[]))
     write_json_atomic(work_paths.translated_manifest, translated_payload)
     work_paths.translated_srt.write_text(result.to_srt(), encoding="utf-8")
+
+
+ALIGNMENT_REPAIRED_SUSPECT_TYPE = "alignment_repaired"
+
+
+def mark_alignment_repaired_suspects(payload: dict[str, Any], aligned_payload: Any) -> int:
+    """Send subtitles overlapping a locally repaired alignment span to audio review.
+
+    Collapsed alignment usually means the transcript there was not really spoken (duplicated
+    phrases, garbled chants), so these lines are ASR suspects as well as timing estimates.
+    """
+    spans: list[tuple[int, int, str]] = []
+    for item in aligned_payload if isinstance(aligned_payload, list) else []:
+        recovery = item.get("recovery") if isinstance(item, dict) else None
+        if not isinstance(recovery, dict) or recovery.get("method") != "align-local-repair":
+            continue
+        for span in recovery.get("repaired_spans") or []:
+            try:
+                start_ms = int(round(float(span["start_time"]) * 1000))
+                end_ms = int(round(float(span["end_time"]) * 1000))
+            except (KeyError, TypeError, ValueError):
+                continue
+            spans.append((start_ms, end_ms, str(span.get("collapsed_text", ""))))
+    marked = 0
+    for item in payload.values():
+        if not isinstance(item, dict):
+            continue
+        try:
+            start_ms, end_ms = int(item.get("start_time", 0)), int(item.get("end_time", 0))
+        except (TypeError, ValueError):
+            continue
+        hits = [text for span_start, span_end, text in spans if start_ms < span_end and end_ms > span_start]
+        if not hits:
+            continue
+        types = [str(value) for value in item.get("suspect_types") or [] if str(value).strip()]
+        if ALIGNMENT_REPAIRED_SUSPECT_TYPE not in types:
+            types.append(ALIGNMENT_REPAIRED_SUSPECT_TYPE)
+        item["suspect_types"] = types
+        item["needs_audio_review"] = True
+        reason = str(item.get("suspect_reason", "")).strip()
+        note = "对齐局部塌缩已修补，可能有未说出的文本: " + " / ".join(hits)
+        item["suspect_reason"] = f"{reason}; {note}" if reason else note
+        marked += 1
+    return marked
 
 
 def merge_translation_suspect_metadata(payload: dict[str, Any], segments: list[Any]) -> None:

@@ -76,6 +76,11 @@ def extract_protected_short_responses(
             normalize_content=normalize_content,
             new_asr_data_seg=new_asr_data_seg,
         )
+        if segments_normalized_text(split_segments, normalize_content=normalize_content) != normalize_content(
+            str(getattr(segment, "text", ""))
+        ):
+            # Keep just this cue whole; one bad cue must not disable extraction for the whole episode.
+            split_segments = [segment]
         output.extend(split_segments)
     if segments_normalized_text(output, normalize_content=normalize_content) != segments_normalized_text(
         result_segments,
@@ -142,12 +147,18 @@ def split_text_part_by_protected_item(
     if item_start < start_ms or item_end > end_ms:
         return [part]
     text = str(part["text"])
-    span = find_protected_text_span(text, str(item["text"]), normalize_content=normalize_content)
+    # A reply that ends the cue is the last occurrence (え？ after 抱えて), not the first.
+    from_end = item_end >= end_ms and item_start > start_ms
+    span = find_protected_text_span(
+        text, str(item["text"]), normalize_content=normalize_content, from_end=from_end
+    )
     if span is None:
         return [part]
     before_text = text[: span[0]]
     protected_text = text[span[0] : span[1]]
     after_text = text[span[1] :]
+    if (before_text.strip() and item_start <= start_ms) or (after_text.strip() and item_end >= end_ms):
+        return [part]  # no time left for the surrounding text: splitting would drop it
     pieces: list[dict[str, Any]] = []
     if before_text.strip() and item_start > start_ms:
         pieces.append({"text": before_text, "start_ms": start_ms, "end_ms": item_start})
@@ -162,11 +173,13 @@ def find_protected_text_span(
     protected_text: str,
     *,
     normalize_content: Callable[[str], str],
+    from_end: bool = False,
 ) -> tuple[int, int] | None:
     normalized_target = normalize_content(protected_text)
     if not normalized_target:
         return None
-    for start in range(len(text)):
+    starts = range(len(text) - 1, -1, -1) if from_end else range(len(text))
+    for start in starts:
         normalized = ""
         content_start: int | None = None
         for end in range(start, len(text)):

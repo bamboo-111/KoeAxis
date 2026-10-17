@@ -7,7 +7,28 @@ import time
 from pathlib import Path
 from typing import Any, Callable
 
-from qwen_asr.performance import record_network_request, usage_tokens
+from qwen_asr.performance import record_network_request, usage_cached_tokens, usage_tokens
+
+_PROMPT_SEGMENT_KEYS = ("segment_id", "global_start_time", "global_end_time", "language", "text")
+
+
+def prompt_json(value: Any) -> str:
+    """Compact UTF-8 JSON for prompts: escaping CJK as backslash-u sequences multiplies the token count."""
+    return json.dumps(value, ensure_ascii=False, separators=(",", ":"))
+
+
+def prompt_segment(segment: dict[str, Any]) -> dict[str, Any]:
+    """The model needs the segment's span and text, not word timestamps, raw output or file paths."""
+    slim = {key: segment[key] for key in _PROMPT_SEGMENT_KEYS if key in segment}
+    return slim or segment
+
+
+def _nearby_with_targets(nearby_entries: dict[str, Any], target_entries: dict[str, Any]) -> dict[str, Any]:
+    """Targets normally sit inside the nearby window already; send each entry once."""
+    merged = dict(nearby_entries)
+    for subtitle_id, entry in target_entries.items():
+        merged.setdefault(subtitle_id, entry)
+    return merged
 
 
 def maybe_disable_thinking_text(text: str, config: Any) -> str:
@@ -105,6 +126,7 @@ def _record_mimo_request(
         no_think_sent=no_think_sent,
         extra_body_sent=extra_body_sent,
         error_type=type(error).__name__ if error is not None else None,
+        cached_tokens=usage_cached_tokens(usage),
     )
 
 
@@ -156,9 +178,9 @@ def call_mimo(
         "If no correction is needed, return []. Keep IDs and timestamps unchanged.\n"
         "Object schema: {id, original, translation, suggested_translation, reason, confidence}. Keep reason short.\n"
         "Do not add markdown or prose outside JSON.\n"
-        f"Segment JSON: {json.dumps(segment, ensure_ascii=True)}\n"
-        f"Glossary JSON: {json.dumps(glossary_entries, ensure_ascii=True)}\n"
-        f"Subtitle entries JSON: {json.dumps(subtitle_entries, ensure_ascii=True)}"
+        f"Glossary JSON: {prompt_json(glossary_entries)}\n"
+        f"Segment JSON: {prompt_json(prompt_segment(segment))}\n"
+        f"Subtitle entries JSON: {prompt_json(subtitle_entries)}"
     )
     response = chat_completion_create(
         client=client,
@@ -208,9 +230,9 @@ def call_mimo_text_stage1(
         "Return ONLY a valid JSON array. Include an object if either translation correction is needed OR audio review is needed.\n"
         "Do not include markdown or prose.\n"
         f"{compact_schema_prompt(config)}"
-        f"Segment JSON: {json.dumps(segment, ensure_ascii=True)}\n"
-        f"Glossary JSON: {json.dumps(glossary_entries, ensure_ascii=True)}\n"
-        f"Subtitle entries JSON: {json.dumps(subtitle_entries, ensure_ascii=True)}"
+        f"Glossary JSON: {prompt_json(glossary_entries)}\n"
+        f"Segment JSON: {prompt_json(prompt_segment(segment))}\n"
+        f"Subtitle entries JSON: {prompt_json(subtitle_entries)}"
     )
     response = chat_completion_create(
         client=client,
@@ -254,12 +276,11 @@ def call_mimo_nearby_audio(
         "Use one JSON object per subtitle ID.\n"
         "Do not include markdown or prose.\n"
         f"{compact_schema_prompt(config)}"
-        f"Target IDs JSON: {json.dumps(target_ids, ensure_ascii=True)}\n"
-        f"Clip local start/end seconds JSON: {json.dumps(clip_meta, ensure_ascii=True)}\n"
-        f"Segment JSON: {json.dumps(segment, ensure_ascii=True)}\n"
-        f"Glossary JSON: {json.dumps(glossary_entries, ensure_ascii=True)}\n"
-        f"Target entries JSON: {json.dumps(target_entries, ensure_ascii=True)}\n"
-        f"Nearby entries JSON: {json.dumps(nearby_entries, ensure_ascii=True)}"
+        f"Glossary JSON: {prompt_json(glossary_entries)}\n"
+        f"Target IDs JSON: {prompt_json(target_ids)}\n"
+        f"Clip local start/end seconds JSON: {prompt_json(clip_meta)}\n"
+        f"Segment JSON: {prompt_json(prompt_segment(segment))}\n"
+        f"Nearby entries JSON (includes every target ID): {prompt_json(_nearby_with_targets(nearby_entries, target_entries))}"
     )
     response = chat_completion_create(
         client=client,

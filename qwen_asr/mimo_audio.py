@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 import wave
 from pathlib import Path
 from typing import Any
@@ -37,6 +38,23 @@ def subtitle_entries_for_segment(
     }
 
 
+_ALWAYS_GROUPS = {"names", "show_terms"}
+# Groups holding show vocabulary; their katakana proper nouns (トゲラジ, ダイヤモンドダスト) are always sent.
+# Other groups (e.g. production job titles) are translation hints and are sent only on a textual hit.
+_SHOW_TERM_GROUPS = {"show_terms", "通用日语", "广播用"}
+_KATAKANA_TERM = re.compile(r"[\u30a0-\u30ffー・]{3,}")
+_NOTE_LIMIT = 24
+
+
+def _always_relevant(entry: dict[str, str]) -> bool:
+    """Entries worth sending without a textual hit: names and show katakana proper nouns, i.e. the terms an
+    ASR mishearing distorts beyond exact matching (棘ナシとギャアリ vs トゲナシトゲアリ). Usage notes are not."""
+    group = str(entry.get("group") or "")
+    if group in _ALWAYS_GROUPS or "名" in group:
+        return True
+    return group in _SHOW_TERM_GROUPS and bool(_KATAKANA_TERM.fullmatch(str(entry.get("source") or "")))
+
+
 def filter_glossary(
     glossary: list[dict[str, str]],
     subtitle_entries: dict[str, Any],
@@ -49,13 +67,29 @@ def filter_glossary(
         for item in subtitle_entries.values()
         if isinstance(item, dict)
     )
-    exact_matches = [entry for entry in glossary if entry["source"] and entry["source"] in haystack]
-    general = [
+    # Standing (always-relevant) terms first, in glossary order: they are identical for every request,
+    # so with the glossary placed right after the fixed instructions the provider can cache that prefix.
+    # Text hits that are not standing terms follow and fill the remaining slots.
+    general = [entry for entry in glossary if _always_relevant(entry)]
+    exact_matches = [
         entry
         for entry in glossary
-        if entry not in exact_matches and entry.get("group") in {"names", "show_terms", "通用日语"}
+        if not _always_relevant(entry)
+        and (
+            (entry["source"] and entry["source"] in haystack)
+            or (len(entry.get("target") or "") >= 2 and entry["target"] in haystack)
+        )
     ]
-    return (exact_matches + general)[:limit]
+    return [_compact_entry(entry) for entry in (general + exact_matches)[:limit]]
+
+
+def _compact_entry(entry: dict[str, str]) -> dict[str, str]:
+    """Prompt form: no group label and a short note; notes are context, not instructions."""
+    compact = {"source": entry["source"], "target": entry.get("target", "")}
+    note = str(entry.get("note") or "").strip()
+    if note:
+        compact["note"] = note if len(note) <= _NOTE_LIMIT else note[:_NOTE_LIMIT] + "…"
+    return compact
 
 
 def segment_for_subtitle_id(

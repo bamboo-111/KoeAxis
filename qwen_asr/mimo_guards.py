@@ -243,6 +243,69 @@ def original_content_deletion_guard(
     return {"accepted": True, "reason": "minor-original-edit", "overlap": overlap}
 
 
+def original_neighbor_duplication_guard(
+    *,
+    current_original: str,
+    suggested_original: str,
+    previous_original: str = "",
+    next_original: str = "",
+    min_units: int = 2,
+) -> dict[str, Any]:
+    """Reject an original fix that "completes" a cue with text the neighbouring cue already starts/ends with.
+
+    Example: cue 434 "ライブブルーレイ&" + cue 435 "DVDトゲナシ..."; MiMo hears the clip and appends "DVD"
+    to 434, which duplicates the head of 435 on screen.
+    """
+    from qwen_asr.content_quality import normalize_japanese
+
+    current = normalize_japanese(current_original)
+    suggested = normalize_japanese(suggested_original)
+    if not suggested or suggested == current:
+        return {"accepted": True, "reason": "no-original-change"}
+    following = normalize_japanese(next_original)
+    for size in range(min(len(suggested), len(following)), min_units - 1, -1):
+        piece = suggested[-size:]
+        if _continues_word(piece[-1], following[size:size + 1]):
+            continue  # "アリ" vs next "アリーナ…": only a prefix of a longer word, not a repeat
+        if following.startswith(piece) and not current.endswith(piece):
+            return {
+                "accepted": False,
+                "reason": "original-appends-next-subtitle-head",
+                "duplicated_text": piece,
+                "neighbor_original": next_original,
+            }
+    preceding = normalize_japanese(previous_original)
+    for size in range(min(len(suggested), len(preceding)), min_units - 1, -1):
+        piece = suggested[:size]
+        if _continues_word(piece[0], preceding[-size - 1:-size] if len(preceding) > size else ""):
+            continue
+        if preceding.endswith(piece) and not current.startswith(piece):
+            return {
+                "accepted": False,
+                "reason": "original-prepends-previous-subtitle-tail",
+                "duplicated_text": piece,
+                "neighbor_original": previous_original,
+            }
+    return {"accepted": True, "reason": "no-neighbor-duplication"}
+
+
+def _word_script(char: str) -> str:
+    if not char:
+        return ""
+    code = ord(char)
+    if 0x30A0 <= code <= 0x30FF or 0xFF66 <= code <= 0xFF9D:
+        return "katakana"
+    if char.isascii() and char.isalnum():
+        return "latin"
+    return ""
+
+
+def _continues_word(edge: str, neighbor_char: str) -> bool:
+    """True when the neighbour keeps going in the same katakana/latin word right after the shared piece."""
+    script = _word_script(edge)
+    return bool(script) and _word_script(neighbor_char) == script
+
+
 def original_high_risk_replacement_guard(
     *,
     current_original: str,
@@ -350,6 +413,24 @@ def translation_shortening_guard(
             "suggested_units": suggested_units,
         }
     return {"accepted": True, "reason": "translation-length-ok"}
+
+
+_TRANSLATION_KANA_RE = re.compile(r"[\u3040-\u30ff]")  # same range the final quality gate rejects
+
+
+def translation_kana_introduction_guard(
+    *,
+    current_translation: str,
+    suggested_translation: str,
+) -> dict[str, Any]:
+    """Reject proofread rewrites that put Japanese kana back into a clean Chinese translation."""
+    if not suggested_translation or suggested_translation == current_translation:
+        return {"accepted": True, "reason": "no-translation-change"}
+    if _TRANSLATION_KANA_RE.search(suggested_translation) and not _TRANSLATION_KANA_RE.search(
+        current_translation
+    ):
+        return {"accepted": False, "reason": "translation-introduces-japanese-kana"}
+    return {"accepted": True, "reason": "translation-script-ok"}
 
 
 def japanese_signal(text: str) -> str:

@@ -3,11 +3,15 @@ from __future__ import annotations
 import argparse
 import logging
 from pathlib import Path
+from typing import Any
+
+from optimizer.asr_data import ASRDataSeg
 
 from qwen_asr.models import WorkPaths
 from qwen_asr.normalize import NormalizeParams, normalize_asr_data
+from qwen_asr.program_memory import apply_if_requested as apply_program_memory_if_requested
 from qwen_asr.progress import write_progress
-from qwen_asr.storage import write_json_atomic
+from qwen_asr.storage import read_json, write_json_atomic
 
 LOGGER = logging.getLogger(__name__)
 
@@ -43,9 +47,30 @@ def cmd_normalize(args: argparse.Namespace, work_paths: WorkPaths) -> int:
         snap_gap_ms=args.snap_gap_ms,
         min_blank_ms=args.min_blank_ms,
     )
-    result = normalize_asr_data(source_asr_data, params)
+    layout_events: list[dict[str, Any]] = []
+    timing_tokens = [
+        ASRDataSeg(
+            str(token["text"]),
+            round(float(token["start_time"]) * 1000),
+            round(float(token["end_time"]) * 1000),
+        )
+        for item in read_json(work_paths.aligned_manifest, default=[])
+        if isinstance(item, dict) and item.get("status") == "completed"
+        for token in item.get("tokens", [])
+    ]
+    result = normalize_asr_data(source_asr_data, params, timing_tokens=timing_tokens, layout_events=layout_events)
+    write_json_atomic(
+        work_paths.workdir / "reports" / "normalize_layout.json",
+        {
+            "input_cue_count": len(source_asr_data.segments),
+            "output_cue_count": len(result.segments),
+            "strip_display_punctuation": True,
+            "events": layout_events,
+        },
+    )
     write_json_atomic(work_paths.normalized_manifest, result.to_json())
     work_paths.normalized_srt.write_text(result.to_srt(), encoding="utf-8")
+    apply_program_memory_if_requested(args, work_paths)
     LOGGER.info("Normalized %d subtitle segments", len(result.segments))
     write_progress(
         work_paths,

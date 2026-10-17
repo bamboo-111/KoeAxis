@@ -14,7 +14,8 @@ KoeAxis 是面向本地音频转写、时间轴、翻译与人工审阅字幕候
 - 导出 `JSON / TXT / SRT / VTT`
 - 支持全局时间戳 offset 处理
 - 内置本地 `optimizer/` 断句与翻译逻辑
-- split、correct、translate 与 MiMo API 默认并发数统一为 5
+- 文本 LLM（split / correct / translate）默认 `gemini-3.8-flash`，走 Gemini 原生 `generateContent`（Base URL 以 `/v1beta` 结尾；`GEMINI_BASE_URL` 可指向中转站，否则用 Google 官方），默认并发 4（常见中转单 Key 同时 ≤5 个请求）；MiMo 听音校对仍用 `mimo-v2.6-pro`，并发 10。依据见第 30 期对比（2026-10）
+- 改回 MiMo 文本模型：`--llm-model mimo-v2.6-pro --llm-base-url https://api.xiaomimimo.com/v1 --thread-num 10`
 - 提供本地网页控制台处理全流程与中间继续
 
 ## 推荐环境
@@ -285,6 +286,8 @@ python main.py normalize ^
   --min-blank-ms 300
 ```
 
+normalize 还会在不改写原文与译文的前提下整理双语显示句界：合并明确的悬空短语，并在双语句界可对应时拆开多句。最终显示文本去除句读标点，保留小数、邮箱、URL 和英文词内符号；上游转写、翻译及校对 manifest 保留原始标点。独立短应答保留为单条，在相邻显示时间允许时延长至至少 500ms。具体边界操作与时间定位方式写入 `reports/normalize_layout.json`。已有 normalize 产物需用 `--no-resume` 重生成，再执行 export。
+
 ### 8. 本地网页
 
 ```bat
@@ -313,6 +316,19 @@ http://127.0.0.1:8765
 - 非敏感页面参数自动保存；API 凭据只从 Web 服务进程环境读取，不进入 HTML、localStorage、payload、命令日志或报告
 - 工作线程数可配置（`1+`）；split 使用规则并发，LLM 参数仅用于 translate、MiMo 和包含这些阶段的 run
 - 通过独立子进程执行各阶段，保持 GPU 阶段之间的显存释放策略
+
+### 9. 多人共用的 CI 服务（可选）
+
+控制端（无需 GPU，可部署在 Linux 服务器）+ GPU Worker 主动拉取任务，浏览器上传素材、看阶段/日志/质量 checks、重跑、A/B 对比、下载成品：
+
+```bash
+pip install -r requirements-ci.txt
+python -m qwen_asr.ci create-user --username admin --role admin
+python -m qwen_asr.ci server --host 0.0.0.0 --port 8710
+python -m qwen_asr.ci worker --server http://<server>:8710 --token kxw_...   # GPU 机器
+```
+
+HTTP API（OpenAPI）、Worker 协议、预设格式、环境变量与扩展点见 [`docs/CI.md`](docs/CI.md)；部署样例在 `deploy/`。
 
 ## 输出目录
 

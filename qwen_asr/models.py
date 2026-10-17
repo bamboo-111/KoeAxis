@@ -200,6 +200,8 @@ class AlignedSegment:
     alignment_unknown_count: int = 0
     alignment_failure_reason: str = ""
     alignment_state: str = ""
+    # Audit evidence written by recovery actions (e.g. accept_completed_coarse); must survive re-serialization.
+    recovery: dict[str, Any] | None = None
 
     def __post_init__(self) -> None:
         from qwen_asr.alignment_state import compatibility_status, derive_alignment_state

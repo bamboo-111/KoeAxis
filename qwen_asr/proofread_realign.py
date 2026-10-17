@@ -8,6 +8,7 @@ from typing import Any
 
 from qwen_asr.align import QwenForcedAligner
 from qwen_asr.mfa_experiment import detect_mfa_environment, run_local_mfa_alignment_experiments
+from qwen_asr.mfa_runner import prefetch_local_mfa_alignments
 from qwen_asr.models import TranscriptSegment, WorkPaths
 from qwen_asr import proofread_realign_strategy as _strategy
 from qwen_asr.storage import read_json, write_json_atomic
@@ -107,6 +108,11 @@ def run_proofread_realign_stage(
                 )
             )
     elif primary == "mfa-local":
+        _prefetch_mfa_realign(
+            work_paths,
+            alignment_pending,
+            padding_ms=int(getattr(args, "proofread_realign_mfa_padding_ms", 700)),
+        )
         for subtitle_id, item in alignment_pending:
             rows.append(
                 _realign_one_mfa_only(
@@ -479,6 +485,30 @@ def _realign_one_mfa_only(
         "mfa_status": mfa_row.get("mfa_status", mfa_row.get("status")),
         "mfa_result": mfa_row.get("mfa_result", mfa_row),
     }
+
+
+def _prefetch_mfa_realign(
+    work_paths: WorkPaths,
+    pending: list[tuple[str, dict[str, Any]]],
+    *,
+    padding_ms: int,
+) -> dict[str, Any]:
+    """Align all mfa-local candidates in one MFA start-up; `_try_mfa_local_realign` then hits the cache."""
+    candidates = []
+    for subtitle_id, item in pending:
+        start_ms = max(0, int(item.get("start_time", 0) or 0))
+        end_ms = max(start_ms + 1, int(item.get("end_time", start_ms + 1) or start_ms + 1))
+        text = str(item.get("original_subtitle", "")).strip()
+        if text:
+            candidates.append({"subtitle_id": subtitle_id, "start_ms": start_ms, "end_ms": end_ms, "text": text})
+    if len(candidates) < 2:
+        return {"status": "skipped", "reason": "fewer-than-two-candidates", "aligned_count": 0}
+    return prefetch_local_mfa_alignments(
+        work_paths,
+        candidates,
+        environment=detect_mfa_environment(run_version_check=True),
+        padding_ms=padding_ms,
+    )
 
 
 def _try_mfa_local_realign(

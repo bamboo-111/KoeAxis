@@ -8,6 +8,10 @@ from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
+# `mfa version` through micromamba costs ~3 s and recovery calls this once per MFA attempt; a successful
+# result for the same command/root is reused for the rest of the process (only with the default runner).
+_VERSION_CACHE: dict[tuple[tuple[str, ...], str], str] = {}
+
 
 def detect_mfa_environment(
     *,
@@ -36,23 +40,30 @@ def detect_mfa_environment(
     version_output = ""
     version_error = ""
     if command and run_version_check:
-        try:
-            env = os.environ.copy()
-            if root_dir:
-                env["MFA_ROOT_DIR"] = str(root_dir)
-            completed = run_command(
-                [*command, "version"],
-                check=False,
-                capture_output=True,
-                text=True,
-                timeout=20,
-                env=env,
-            )
-            version_output = (completed.stdout or completed.stderr or "").strip()
-            if completed.returncode != 0:
-                version_error = f"mfa version exited with {completed.returncode}"
-        except Exception as exc:  # pylint: disable=broad-exception-caught
-            version_error = str(exc)
+        cache_key = (tuple(str(value) for value in command), str(root_dir or ""))
+        use_cache = run_command is subprocess.run
+        if use_cache and cache_key in _VERSION_CACHE:
+            version_output = _VERSION_CACHE[cache_key]
+        else:
+            try:
+                env = os.environ.copy()
+                if root_dir:
+                    env["MFA_ROOT_DIR"] = str(root_dir)
+                completed = run_command(
+                    [*command, "version"],
+                    check=False,
+                    capture_output=True,
+                    text=True,
+                    timeout=20,
+                    env=env,
+                )
+                version_output = (completed.stdout or completed.stderr or "").strip()
+                if completed.returncode != 0:
+                    version_error = f"mfa version exited with {completed.returncode}"
+                elif use_cache:
+                    _VERSION_CACHE[cache_key] = version_output
+            except Exception as exc:  # pylint: disable=broad-exception-caught
+                version_error = str(exc)
     return {
         "available": bool(command),
         "executable": executable or "",

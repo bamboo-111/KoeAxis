@@ -45,6 +45,10 @@ from optimizer.exceptions import (
     LLMRateLimitError,
     LLMResponseError,
 )
+from optimizer.gemini_native import build_payload as build_gemini_payload
+from optimizer.gemini_native import generate_content as gemini_generate_content
+from optimizer.gemini_native import is_gemini_native_url
+from qwen_asr.performance import record_network_request, usage_cached_tokens, usage_tokens
 
 logger = logging.getLogger("optimizer.llm_client")
 
@@ -298,6 +302,20 @@ def call_llm(
         LLMAuthError / LLMRateLimitError / LLMConnectionError /
         LLMResponseError / LLMError
     """
+    if is_gemini_native_url(base_url):
+        return _call_gemini_native(
+            messages=messages,
+            model=model,
+            temperature=temperature,
+            base_url=base_url,
+            api_key=api_key,
+            disable_thinking=disable_thinking,
+            require_json=require_json,
+            llm_extra_body=llm_extra_body,
+            timeout=timeout,
+            max_tokens=kwargs.get("max_tokens"),
+        )
+
     # 原样透传 provider-specific extra_body
     kwargs = _build_extra_kwargs(kwargs, llm_extra_body=llm_extra_body)
 
@@ -314,8 +332,11 @@ def call_llm(
     can_fallback = has_extra_body or has_response_format
 
     client = _create_client(base_url, api_key, timeout=timeout)
-
+    request_started = time.perf_counter()
+    attempts = 0
+    response = None
     try:
+        attempts += 1
         response = _do_llm_call(client, model, messages, temperature, **kwargs)
     except LLMConnectionError as e:
         # 如果是 400 且有非标准参数，尝试去掉后重试
@@ -327,11 +348,53 @@ def call_llm(
                 k: v for k, v in kwargs.items()
                 if k not in ("extra_body", "response_format")
             }
-            response = _do_llm_call(
-                client, model, messages, temperature, **fallback_kwargs,
-            )
+            attempts += 1
+            try:
+                response = _do_llm_call(
+                    client, model, messages, temperature, **fallback_kwargs,
+                )
+            except Exception as fallback_error:
+                _record_llm_request(
+                    base_url=base_url,
+                    model=model,
+                    duration_s=time.perf_counter() - request_started,
+                    success=False,
+                    attempts=attempts,
+                    timeout=_is_timeout_error(fallback_error),
+                    usage=None,
+                    disable_thinking=disable_thinking,
+                    extra_body_sent=has_extra_body,
+                    error=fallback_error,
+                )
+                raise
         else:
+            _record_llm_request(
+                base_url=base_url,
+                model=model,
+                duration_s=time.perf_counter() - request_started,
+                success=False,
+                attempts=attempts,
+                timeout=_is_timeout_error(e),
+                usage=None,
+                disable_thinking=disable_thinking,
+                extra_body_sent=has_extra_body,
+                error=e,
+            )
             raise
+    except Exception as e:
+        _record_llm_request(
+            base_url=base_url,
+            model=model,
+            duration_s=time.perf_counter() - request_started,
+            success=False,
+            attempts=attempts,
+            timeout=_is_timeout_error(e),
+            usage=None,
+            disable_thinking=disable_thinking,
+            extra_body_sent=has_extra_body,
+            error=e,
+        )
+        raise
 
     # 清理响应内容
     _clean_response_content(response)
@@ -352,7 +415,107 @@ def call_llm(
         model,
         response.usage,
     )
+    _record_llm_request(
+        base_url=base_url,
+        model=model,
+        duration_s=time.perf_counter() - request_started,
+        success=True,
+        attempts=attempts,
+        timeout=False,
+        usage=response.usage,
+        disable_thinking=disable_thinking,
+        extra_body_sent=has_extra_body,
+        error=None,
+    )
     return response
+
+
+def _call_gemini_native(
+    *,
+    messages: list[dict[str, str]],
+    model: str,
+    temperature: float,
+    base_url: str,
+    api_key: str,
+    disable_thinking: bool,
+    require_json: bool,
+    llm_extra_body: dict[str, Any] | None,
+    timeout: float,
+    max_tokens: int | None,
+) -> ChatCompletion:
+    """Gemini 原生 generateContent 分支；返回值与 OpenAI 分支一致。"""
+    payload = build_gemini_payload(
+        messages,
+        temperature=temperature,
+        require_json=require_json,
+        disable_thinking=disable_thinking,
+        extra_body=llm_extra_body,
+        max_tokens=max_tokens,
+    )
+    request_started = time.perf_counter()
+    try:
+        response = gemini_generate_content(
+            base_url=base_url, api_key=api_key, model=model, payload=payload, timeout=timeout,
+        )
+    except Exception as e:
+        _record_llm_request(
+            base_url=base_url, model=model, duration_s=time.perf_counter() - request_started,
+            success=False, attempts=1, timeout=_is_timeout_error(e), usage=None,
+            disable_thinking=disable_thinking, extra_body_sent=bool(llm_extra_body), error=e,
+        )
+        raise
+    _clean_response_content(response)
+    if not response.choices or not response.choices[0].message or not response.choices[0].message.content:
+        error = LLMResponseError(detail="Gemini response has no text content")
+        _record_llm_request(
+            base_url=base_url, model=model, duration_s=time.perf_counter() - request_started,
+            success=False, attempts=1, timeout=False, usage=response.usage,
+            disable_thinking=disable_thinking, extra_body_sent=bool(llm_extra_body), error=error,
+        )
+        raise error
+    _record_llm_request(
+        base_url=base_url, model=model, duration_s=time.perf_counter() - request_started,
+        success=True, attempts=1, timeout=False, usage=response.usage,
+        disable_thinking=disable_thinking, extra_body_sent=bool(llm_extra_body), error=None,
+    )
+    return response
+
+
+def _record_llm_request(
+    *,
+    base_url: str,
+    model: str,
+    duration_s: float,
+    success: bool,
+    attempts: int,
+    timeout: bool,
+    usage: Any,
+    disable_thinking: bool,
+    extra_body_sent: bool,
+    error: Exception | None,
+) -> None:
+    input_tokens, output_tokens, reasoning_tokens = usage_tokens(usage)
+    record_network_request(
+        provider=urlparse(base_url).netloc or "openai-compatible",
+        model=model,
+        duration_s=duration_s,
+        success=success,
+        attempts=attempts,
+        timeout=timeout,
+        input_tokens=input_tokens,
+        output_tokens=output_tokens,
+        reasoning_tokens=reasoning_tokens,
+        thinking_disabled=disable_thinking,
+        no_think_sent=disable_thinking,
+        extra_body_sent=extra_body_sent,
+        error_type=type(error).__name__ if error is not None else None,
+        cached_tokens=usage_cached_tokens(usage),
+    )
+
+
+def _is_timeout_error(error: Exception) -> bool:
+    message = str(error).lower()
+    return "timeout" in message or "timed out" in message or "超时" in str(error)
 
 
 def check_llm_connection(

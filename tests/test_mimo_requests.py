@@ -67,3 +67,22 @@ def test_transient_error_and_usage_conversion() -> None:
     assert not is_transient_error(RuntimeError("invalid prompt"))
     assert usage_to_dict(Usage()) == {"total_tokens": 3}
     assert usage_to_dict(None) == {}
+
+
+def test_prompt_json_keeps_cjk_unescaped_and_compact() -> None:
+    from qwen_asr.mimo_requests import prompt_json
+
+    assert prompt_json({"a": "理名", "b": [1, 2]}) == '{"a":"理名","b":[1,2]}'
+
+
+def test_prompt_segment_drops_word_timestamps_and_paths() -> None:
+    from qwen_asr.mimo_requests import prompt_segment
+
+    segment = {
+        "segment_id": "segment_000001", "global_start_time": 1.0, "global_end_time": 9.0, "text": "リナです",
+        "tokens": [{"text": "リナ", "start": 1.0}], "raw_model_output": "x" * 500, "audio_path": "E:/a.wav",
+    }
+    assert prompt_segment(segment) == {
+        "segment_id": "segment_000001", "global_start_time": 1.0, "global_end_time": 9.0, "text": "リナです",
+    }
+    assert prompt_segment({"other": 1}) == {"other": 1}

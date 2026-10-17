@@ -18,6 +18,7 @@ from concurrent.futures import (  # pylint: disable=no-name-in-module
 from typing import List, Union
 
 from optimizer.asr_data import ASRData, ASRDataSeg
+from optimizer.splitter_bunsetsu import allowed_cut_indices as _allowed_cut_indices
 from optimizer.splitter_boundaries import (
     STRONG_SENTENCE_END as _STRONG_SENTENCE_END,
     inline_dialogue_parts as _inline_dialogue_parts,
@@ -172,6 +173,7 @@ class SubtitleSplitter:
         disable_thinking: bool = False,
         llm_extra_body: dict | None = None,
         timeout: float = 120.0,
+        bunsetsu_boundaries: bool = True,
     ) -> None:
         """初始化分割器。
 
@@ -185,11 +187,13 @@ class SubtitleSplitter:
             prompt_limit_ratio: 注入 split prompt 的长度缩减比例。
             disable_thinking: 是否注入 /no_think 指令。
             llm_extra_body: 原样透传到 OpenAI 兼容接口 extra_body 的 JSON。
+            bunsetsu_boundaries: 日语只在文节边界（或标点后）切分；分析器不可用时退回原规则。
         """
         del model, base_url, api_key, prompt_limit_ratio, disable_thinking, llm_extra_body, timeout
         self.thread_num = thread_num
         self.max_word_count_cjk = max_word_count_cjk
         self.max_word_count_english = max_word_count_english
+        self.bunsetsu_boundaries = bunsetsu_boundaries
         self.is_running = True
         self.executor: ThreadPoolExecutor | None = ThreadPoolExecutor(max_workers=self.thread_num)
 
@@ -515,6 +519,7 @@ class SubtitleSplitter:
         result: List[List[ASRDataSeg]] = []
         current_group: List[ASRDataSeg] = [segments[0]]
         recent_gaps: list[int] = []
+        allowed = self._allowed_cuts(segments)
 
         for i in range(1, len(segments)):
             time_gap = segments[i].start_time - segments[i - 1].end_time
@@ -526,13 +531,18 @@ class SubtitleSplitter:
                     recent_gaps.pop(0)
                 if len(recent_gaps) == TIME_GAP_WINDOW_SIZE:
                     avg_gap = sum(recent_gaps) / len(recent_gaps)
-                    if time_gap > avg_gap * TIME_GAP_MULTIPLIER and len(current_group) > MIN_GROUP_SIZE:
+                    if (
+                        time_gap > avg_gap * TIME_GAP_MULTIPLIER
+                        and len(current_group) > MIN_GROUP_SIZE
+                        and (allowed is None or (i - 1) in allowed)
+                    ):
                         result.append(current_group)
                         current_group = []
                         recent_gaps = []
 
-            # 超过最大间隔则分组
-            if time_gap > max_gap:
+            # 超过最大间隔则分组；文节内部的停顿（犹豫、对齐偏差）只有超过 MAX_GAP 才切开
+            inside_bunsetsu = allowed is not None and (i - 1) not in allowed
+            if time_gap > max_gap and not (inside_bunsetsu and time_gap <= MAX_GAP):
                 result.append(current_group)
                 current_group = []
                 recent_gaps = []
@@ -684,8 +694,17 @@ class SubtitleSplitter:
             # 检查时间间隔
             gaps = [current_segments[j + 1].start_time - current_segments[j].end_time for j in range(n - 1)]
             all_equal = all(abs(gap - gaps[0]) < 1e-6 for gap in gaps)
+            allowed = self._allowed_cuts(current_segments)
 
-            if all_equal:
+            if allowed:
+                # 只在文节边界中选：优先中段，取最大时间间隔，平局取靠近中间者
+                start_idx = max(n // 6, 1)
+                end_idx = min((5 * n) // 6, n - 2)
+                candidates = [j for j in range(start_idx, end_idx) if j in allowed] or sorted(
+                    j for j in allowed if j < n - 1
+                )
+                split_index = max(candidates, key=lambda idx: (gaps[idx], -abs(idx - n // 2)))
+            elif all_equal:
                 split_index = n // 2
             else:
                 start_idx = max(n // 6, 1)
@@ -704,6 +723,12 @@ class SubtitleSplitter:
 
         result_segs.sort(key=lambda seg: seg.start_time)
         return result_segs
+
+    def _allowed_cuts(self, segments: List[ASRDataSeg]) -> set[int] | None:
+        """Token boundaries where a cut keeps Japanese bunsetsu intact (None = unrestricted)."""
+        if not self.bunsetsu_boundaries:
+            return None
+        return _allowed_cut_indices(segments)
 
     # ------------------------------------------------------------------
     # 合并处理后的分段
