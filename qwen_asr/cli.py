@@ -478,6 +478,13 @@ def build_parser() -> argparse.ArgumentParser:
     )
     run.add_argument("--align-fallback", choices=["off", "asr-short-window"], default="off")
     run.add_argument("--align-fallback-window-seconds", type=float, default=3.0)
+    run.add_argument(
+        "--align-recovery",
+        choices=["off", "auto"],
+        default="off",
+        help="auto: when align leaves failed segments, retry them (Qwen bf16, then local MFA, then audited VAD "
+        "coarse timing, same as CI runs) and continue the pipeline instead of stopping.",
+    )
     _add_align_timing_arguments(run)
     _add_speaker_arguments(run)
     run.add_argument("--proofread-realign-model", default=DEFAULT_ALIGN_MODEL)
@@ -584,6 +591,13 @@ def build_parser() -> argparse.ArgumentParser:
     )
     batch.add_argument("--align-fallback", choices=["off", "asr-short-window"], default="off")
     batch.add_argument("--align-fallback-window-seconds", type=float, default=3.0)
+    batch.add_argument(
+        "--align-recovery",
+        choices=["off", "auto"],
+        default="off",
+        help="auto: when align leaves failed segments, retry them (Qwen bf16, then local MFA, then audited VAD "
+        "coarse timing, same as CI runs) and continue the pipeline instead of stopping.",
+    )
     _add_align_timing_arguments(batch)
     _add_speaker_arguments(batch)
     batch.add_argument("--proofread-realign-model", default=DEFAULT_ALIGN_MODEL)

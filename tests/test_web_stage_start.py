@@ -57,10 +57,13 @@ def test_stage_start_passes_saved_speaker_settings(tmp_path: Path, monkeypatch: 
             "speakers": "理名,夕莉",
             "asrContextFile": "ctx.txt",
             "programMemoryFile": "memory.json",
+            "alignRecovery": True,
         },
     )
     assert payload["asr_context_file"] == "ctx.txt"
     assert payload["program_memory_file"] == "memory.json"
+    assert payload["align_recovery"] == "auto"
+    assert payload["proofread_realign_mfa_fallback"] == "off"
     command = build_command(payload)
 
     assert command[command.index("--speaker-enroll") + 1] == str(enroll)

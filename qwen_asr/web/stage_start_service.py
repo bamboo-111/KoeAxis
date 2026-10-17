@@ -167,6 +167,8 @@ def _base_payload(
         "speakers": value("speakers", ""),
         "asr_context_file": value("asrContextFile", ""),
         "program_memory_file": value("programMemoryFile", ""),
+        "align_recovery": "auto" if value("alignRecovery", False) else "off",
+        "proofread_realign_mfa_fallback": "local" if value("proofreadRealignMfaFallback", False) else "off",
         "mimo_proofread_mode": value("mimoProofreadMode", "segment-audio"),
         "mimo_audio_review_scope": value("mimoAudioReviewScope", "suspects"),
         "mimo_proofread_workers": value("mimoProofreadWorkers", DEFAULT_MIMO_CONCURRENCY),

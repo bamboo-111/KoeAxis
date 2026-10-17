@@ -667,6 +667,7 @@
                 <div class="field wide"><label for="modelCacheDir">模型缓存目录</label><div class="inline"><div class="path-combo"><input id="modelCacheDir" placeholder="留空使用项目默认 .model-cache"><button type="button" class="path-combo-toggle" onclick="togglePathMenu('modelCacheHistory')" title="缓存历史">⌄</button><div class="path-menu" id="modelCacheHistory"></div></div><button type="button" id="pickModelCacheDirButton" onclick="pickPath('modelCacheDir', '/api/pick-model-cache-dir', 'modelCacheHistory')">选择</button></div></div>
                 <div class="field wide"><label for="asrContextFile">ASR 上下文文件（可选）</label><div class="inline"><div class="path-combo"><input id="asrContextFile" placeholder="如 samples\asr-context-togeradi.txt；逗号或换行分隔的人名/术语"><button type="button" class="path-combo-toggle" onclick="togglePathMenu('asrContextHistory')" title="历史路径">⌄</button><div class="path-menu" id="asrContextHistory"></div></div><button type="button" id="pickAsrContextButton" onclick="pickPath('asrContextFile', '/api/pick-asr-context-file', 'asrContextHistory')">选择</button></div></div>
                 <div class="field wide"><label for="alignModel">Align 模型</label><input id="alignModel" value="Qwen/Qwen3-ForcedAligner-0.6B"></div>
+                <label class="check field wide"><input id="alignRecovery" type="checkbox"> 对齐失败自动恢复（Run / Batch Run：Qwen bf16 → 本地 MFA → VAD 粗时间，同 CI）</label>
               </div>
             </details>
 
@@ -700,6 +701,7 @@
                 <div class="field"><label for="mimoNearbyAudioWorkers">短音频线程</label><input id="mimoNearbyAudioWorkers" type="number" min="1" step="1" value="{{DEFAULT_MIMO_CONCURRENCY}}"></div>
                 <div class="field"><label for="mimoProofreadMaxTokens">MiMo Max Tokens</label><input id="mimoProofreadMaxTokens" type="number" min="512" step="512" value="4096"></div>
                 <label class="check field"><input id="mimoCompactOutput" type="checkbox"> 精简输出</label>
+                <label class="check field wide"><input id="proofreadRealignMfaFallback" type="checkbox"> 校对后重对齐失败时用本地 MFA 回退（Run / Batch Run，同 CI）</label>
                 <div class="field wide"><label for="mimoProofreadOutputDir">MiMo 输出目录</label><div class="inline"><div class="path-combo"><input id="mimoProofreadOutputDir" placeholder="留空则写入 workdir\\experiments\\mimo-proofread"><button type="button" class="path-combo-toggle" onclick="togglePathMenu('mimoOutputHistory')" title="历史路径">⌄</button><div class="path-menu" id="mimoOutputHistory"></div></div><button type="button" id="pickMiMoOutputDirButton" onclick="pickPath('mimoProofreadOutputDir', '/api/pick-output-directory', 'mimoOutputHistory')">选择</button></div></div>
               </div>
             </details>
@@ -852,7 +854,7 @@
         'llmModel', 'threadNum', 'splitMaxWordCountCjk', 'splitMaxWordCountEnglish',
         'proofreadKind', 'correctBatchNum', 'translateBatchNum', 'llmTimeout', 'disableThinking', 'llmExtraBodyJson', 'llmBaseUrl',
         'targetLanguage', 'normalizeSource', 'normalizeExtendMs', 'normalizeSnapGapMs', 'normalizeMinBlankMs', 'translateCustomPrompt', 'glossaryXlsx',
-        'speakerEnroll', 'speakers', 'asrContextFile', 'programMemoryFile',
+        'speakerEnroll', 'speakers', 'asrContextFile', 'programMemoryFile', 'alignRecovery', 'proofreadRealignMfaFallback',
         'mimoProofreadMode', 'mimoProofreadWorkers', 'mimoNearbyBatchSize', 'mimoNearbyBatchMaxGapS', 'mimoNearbyPaddingS',
         'mimoNearbyContextSubtitles', 'mimoNearbyAudioWorkers', 'mimoProofreadMaxTokens', 'mimoCompactOutput', 'mimoProofreadOutputDir',
         'source', 'exportMode', 'exportPath', 'withAlign', 'withCorrect', 'withNormalize', 'withSplit', 'withTranslate'
@@ -1056,6 +1058,8 @@
         speakers: document.getElementById('speakers').value,
         asr_context_file: document.getElementById('asrContextFile').value,
         program_memory_file: document.getElementById('programMemoryFile').value,
+        align_recovery: document.getElementById('alignRecovery').checked ? 'auto' : 'off',
+        proofread_realign_mfa_fallback: document.getElementById('proofreadRealignMfaFallback').checked ? 'local' : 'off',
         format: 'srt',
         source: document.getElementById('source').value,
         export_mode: document.getElementById('exportMode').value,

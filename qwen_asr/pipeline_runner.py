@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import logging
 from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
@@ -15,6 +16,8 @@ from qwen_asr.quality_suspects import apply_quality_diff_suspects_to_translated,
 from qwen_asr.stages import stage_names_for_run
 from qwen_asr.storage import read_json, write_json_atomic
 
+
+LOGGER = logging.getLogger(__name__)
 
 StageHandler = Callable[[argparse.Namespace, WorkPaths], int]
 
@@ -127,11 +130,45 @@ class PipelineRunner:
                 with measure_operation("instrumentation_workload_snapshot"):
                     span.set_workload(collect_workload_snapshot(self.work_paths))
                 span.set_result(result_status, summary)
+            if status != 0 and invocation.name == "align" and getattr(args, "align_recovery", "off") == "auto":
+                status = self._recover_alignment(args, recorder)
             if status != 0:
                 return status
             if invocation.name in {"align", "split", "mimo-proofread", "proofread-realign"}:
                 self._record_content_gate(include_export=False)
         return 0
+
+    def _recover_alignment(self, args: argparse.Namespace, recorder: PipelinePerformanceRecorder) -> int:
+        """Same automatic recovery CI runs after align (Qwen bf16 -> local MFA -> audited coarse timing)."""
+        from qwen_asr.ci.recovery_flow import failed_alignment_count, recovery_settings, run_alignment_recovery
+        from qwen_asr.defaults import DEFAULT_MODEL_CACHE_DIR
+
+        failed = failed_alignment_count(self.work_paths)
+        if not failed:
+            return 1  # align failed for another reason; nothing to recover
+        with recorder.stage("align-recovery") as span:
+            write_progress(
+                self.work_paths,
+                stage="align-recovery",
+                status="running",
+                summary=f"align-recovery started: {failed} failed segments",
+            )
+            summary = run_alignment_recovery(
+                self.work_paths,
+                settings=recovery_settings(args, DEFAULT_MODEL_CACHE_DIR),
+                language_route=str(getattr(args, "language", None) or "auto"),
+                log=lambda *parts: LOGGER.info("%s", " ".join(str(part) for part in parts)),
+            )
+            ok = not summary.get("failed_remaining") and self.work_paths.aligned_manifest.exists()
+            coarse = sum(row.get("status") == "completed_coarse" for row in summary.get("coarse") or [])
+            text = (
+                f"align-recovery {'completed' if ok else 'failed'}: {failed} failed, "
+                f"{coarse} coarse, {summary.get('failed_remaining', 0)} remaining"
+            )
+            LOGGER.info(text)
+            write_progress(self.work_paths, stage="align-recovery", status="completed" if ok else "failed", summary=text)
+            span.set_result("completed" if ok else "failed", text)
+        return 0 if ok else 1
 
     def _apply_quality_suspects_if_requested(self, args: argparse.Namespace) -> int:
         if not bool(getattr(args, "with_mimo_proofread", False)):

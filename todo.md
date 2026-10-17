@@ -60,7 +60,8 @@
 - [ ] 说话人后续：① 说话人提示让 LLM 合并偏保守（同人未完句不合并，详见实验 README“改坏”分析；弱化提示已试，无改善）；② 翻译带说话人的效果没有评测手段，只做了抽查；③ 重叠处的叠加行、按重叠区提高阈值都试过无效，插话附和只考虑对附和词单独处理；④ ASS 齐声台词目前只出一行（已校稿是每人复制一行）。
 - [x] Web 支持说话人（2026-10-18）：`/legacy` 运行设置加「说话人注册 JSON」「在场成员」，run / batch-run / align / split / export 命令带 `--speaker-enroll`，工作台阶段启动复用保存的设置；导出列表、状态识别 `.ass`。
 - [x] Web 运行设置加入 ASR 上下文文件（`--asr-context-file`，transcribe/run/batch-run）和节目记忆（`--program-memory-file`，normalize/run/batch-run），文件参数与 togeradi preset 一致。
-- [ ] Web 仍未提供 `--proofread-realign-mfa-fallback local`（CLI 默认 off，CI preset 为 local），也没有 CI phase 的对齐失败恢复（`run_alignment_recovery`）。
+- [x] `run` / `batch-run` 新增 `--align-recovery auto`：align 留下失败段时在同一进程里执行 CI 的恢复（Qwen bf16 → 本地 MFA → 审计过的 VAD 粗时间），恢复干净后继续后续阶段；54 期 segment_000041 实测由 MFA 救回。Web 运行设置加「对齐失败自动恢复」「校对后重对齐 MFA 回退」两个复选框（默认关），映射到 Run / Batch Run。
+- [ ] Web 与 togeradi CI 仍有差异：Web Run / Batch Run 不传 MiMo 参数（`--mimo-proofread-mode two-stage-nearby`、`--mimo-nearby-batch-size 3` 等，走 CLI 默认）；`/legacy` 页面里「纠错」和「MiMo 校对」二选一（CI 两者都开）；`/legacy` 没有 align-fallback（`asr-short-window`）控件；无 `--performance-profile` 与 `QWEN_ASR_MFA_BACKGROUND_PREFETCH=1`。
 
 ---
 

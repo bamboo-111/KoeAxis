@@ -1028,3 +1028,60 @@ def test_stage_result_defaults() -> None:
     assert result.return_code == 0
     assert result.status == StageStatus.SKIPPED
     assert result.summary == "already complete"
+
+
+def _align_recovery_run(tmp_path: Path, monkeypatch, *, mode: str, recovered: bool) -> tuple[int, list[str], list[dict]]:
+    import qwen_asr.ci.recovery_flow as recovery_flow
+
+    paths = WorkPaths.from_workdir(tmp_path)
+    calls: list[str] = []
+    recovery_calls: list[dict] = []
+
+    def handler(name: str):
+        def _run(args: argparse.Namespace, work_paths: WorkPaths) -> int:
+            calls.append(name)
+            if name == "align":
+                write_json_atomic(work_paths.aligned_manifest, [{"segment_id": "s1", "status": "failed"}])
+                return 1
+            return 0
+
+        return _run
+
+    def fake_recovery(work_paths, *, settings, language_route, log, **_):
+        recovery_calls.append({"settings": settings, "language_route": language_route})
+        if recovered:
+            write_json_atomic(work_paths.aligned_manifest, [{"segment_id": "s1", "status": "completed"}])
+        return {"failed_initial": 1, "failed_remaining": 0 if recovered else 1, "coarse": []}
+
+    monkeypatch.setattr(recovery_flow, "run_alignment_recovery", fake_recovery)
+    monkeypatch.setattr(PipelineRunner, "_run_final_gate", lambda self, **_: 0)
+    monkeypatch.setattr(PipelineRunner, "_record_content_gate", lambda self, **_: None)
+    args = argparse.Namespace(
+        with_correct=False, with_align=True, with_split=False, with_translate=False, with_normalize=False,
+        force=True, model="asr", language="Japanese", align_model="align", normalize_source="auto",
+        align_recovery=mode, model_cache_dir="cache", device="cuda:0", local_files_only=True,
+    )
+    handlers = {name: handler(name) for name in ("prepare", "transcribe", "align", "export")}
+    return PipelineRunner(paths, handlers).run(args), calls, recovery_calls
+
+
+def test_run_align_recovery_auto_continues_after_recovered_segments(tmp_path: Path, monkeypatch) -> None:
+    status, calls, recovery_calls = _align_recovery_run(tmp_path, monkeypatch, mode="auto", recovered=True)
+
+    assert status == 0
+    assert calls == ["prepare", "transcribe", "align", "export"]
+    assert recovery_calls == [{
+        "settings": {"model_cache_dir": "cache", "device": "cuda:0", "local_files_only": True},
+        "language_route": "Japanese",
+    }]
+    assert read_progress(WorkPaths.from_workdir(tmp_path))["stage"] == "export"
+
+
+def test_run_align_recovery_off_or_unrecovered_stops_after_align(tmp_path: Path, monkeypatch) -> None:
+    status, calls, recovery_calls = _align_recovery_run(tmp_path / "off", monkeypatch, mode="off", recovered=True)
+    assert status == 1 and calls == ["prepare", "transcribe", "align"] and recovery_calls == []
+
+    status, calls, recovery_calls = _align_recovery_run(tmp_path / "left", monkeypatch, mode="auto", recovered=False)
+    assert status == 1 and calls == ["prepare", "transcribe", "align"] and len(recovery_calls) == 1
+    progress = read_progress(WorkPaths.from_workdir(tmp_path / "left"))
+    assert progress["stage"] == "align-recovery" and progress["status"] == "failed"

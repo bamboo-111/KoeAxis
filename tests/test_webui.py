@@ -301,6 +301,19 @@ def test_webui_ci_preset_files_reach_cli(tmp_path: Path) -> None:
         build_command({**base, "program_memory_file": str(tmp_path / "missing.json")})
 
 
+def test_webui_recovery_options_reach_run_and_batch_run() -> None:
+    from qwen_asr.cli import build_parser
+
+    base = _speaker_stage_payloads("")
+    for stage in ("run", "batch-run"):
+        command = build_command(base[stage])
+        assert "--align-recovery" not in command and "--proofread-realign-mfa-fallback" not in command, stage
+        payload = {**base[stage], "align_recovery": "auto", "proofread_realign_mfa_fallback": "local"}
+        args = build_parser().parse_args(build_command(payload)[2:])
+        assert args.align_recovery == "auto", stage
+        assert args.proofread_realign_mfa_fallback == "local", stage
+
+
 def test_webui_index_has_ci_preset_file_controls() -> None:
     for snippet in (
         'id="asrContextFile"',
@@ -309,7 +322,9 @@ def test_webui_index_has_ci_preset_file_controls() -> None:
         "/api/pick-program-memory-file",
         "asr_context_file: document.getElementById('asrContextFile').value",
         "program_memory_file: document.getElementById('programMemoryFile').value",
-        "'asrContextFile', 'programMemoryFile'",
+        "'asrContextFile', 'programMemoryFile', 'alignRecovery', 'proofreadRealignMfaFallback'",
+        'id="alignRecovery"',
+        'id="proofreadRealignMfaFallback"',
     ):
         assert snippet in INDEX_HTML, snippet
 

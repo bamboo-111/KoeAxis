@@ -386,6 +386,7 @@ def build_command(payload: dict) -> list[str]:
             command.append("--with-normalize")
         command.extend(_speaker_args(payload))
         command.extend(_program_memory_args(payload))
+        command.extend(_recovery_args(payload))
     elif stage == "batch-run":
         command = [python_runtime(), str(ROOT / "main.py"), "batch-run", "--workdir", workdir, "--log-level", "INFO"]
         command.extend(model_cache_args)
@@ -471,6 +472,7 @@ def build_command(payload: dict) -> list[str]:
             command.extend(["--glossary-xlsx", str(payload["glossary_xlsx"]).strip()])
         command.extend(_speaker_args(payload))
         command.extend(_program_memory_args(payload))
+        command.extend(_recovery_args(payload))
         if str(payload.get("export_path", "")).strip():
             command.extend(["--export-path", str(payload["export_path"]).strip()])
         if str(payload.get("batch_manifest", "")).strip():
@@ -529,6 +531,16 @@ def _program_memory_args(payload: dict) -> list[str]:
     if not Path(path).is_file():
         raise ValueError(f"Program memory file not found: {path}")
     return ["--program-memory-file", path]
+
+
+def _recovery_args(payload: dict) -> list[str]:
+    """Run/Batch Run alignment rescue matching the CI presets (both off unless enabled in the settings)."""
+    args: list[str] = []
+    if payload.get("align_recovery") in (True, "auto"):
+        args.extend(["--align-recovery", "auto"])
+    if payload.get("proofread_realign_mfa_fallback") in (True, "local"):
+        args.extend(["--proofread-realign-mfa-fallback", "local"])
+    return args
 
 
 def _mimo_proofread_args(payload: dict) -> list[str]:

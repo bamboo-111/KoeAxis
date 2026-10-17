@@ -255,6 +255,7 @@ python main.py run ... --with-align --with-split --with-translate --speaker-enro
 - export：给了 `--speaker-enroll` 时，除 SRT 外在同目录另写同名 `.ass`（CI 一并上传）。标注方法照已校 ASS（#15/#16/#18）：每位成员一个样式 `1.理名` / `2.夕莉` / `5.朱李`（方正大黑_GBK 75，仅颜色不同，PlayRes 640×480，样式取自 #15，存于注册文件 `"ass"` 字段），只列本期在场成员；每条最终字幕按其词时间重新投票定样式，把握低（分差 <0.05）的行 Name 标 `说话人待确认`，无法判断的行用 `Default` 样式。文本为双语“原文\N译文”。30 期单成员字幕逐条准确率约 94.5%（分差 ≥0.15 时 65/65）。SRT 无样式，不含说话人；MiMo 校对 / normalize 不改说话人，导出时重新计算。
 - Web：在 `/legacy`（运行设置）的「LLM / 翻译 / 校正」组填写「说话人注册 JSON」（可选「在场成员」，留空自动判断），保存后 Run / Batch Run 以及工作台「继续」的 align / split / export 阶段都会带上 `--speaker-enroll`；路径不存在时拒绝启动。导出的 `.ass` 出现在工作台导出列表里，可预览、下载。
 - Web 与 togeradi CI preset 的文件参数一致：`/legacy`「ASR」组的「ASR 上下文文件」对应 `--asr-context-file`（transcribe / Run / Batch Run），「Normalize / Export」组的「节目记忆 JSON」对应 `--program-memory-file`（normalize / Run / Batch Run，文件不存在时拒绝启动）。
+- 对齐失败自动恢复：`run` / `batch-run` 加 `--align-recovery auto` 后，align 留下失败段时自动执行与 CI 相同的恢复（Qwen bf16 重试 → 本地 MFA → 审计过的 VAD 粗时间，记录在 `reports/workflow_alignment_recovery.json` / `workflow_coarse_acceptance.json`），全部恢复后继续后续阶段，否则停止。Web 运行设置里对应「对齐失败自动恢复」（ASR 组）和「校对后重对齐失败时用本地 MFA 回退」（`--proofread-realign-mfa-fallback local`，LLM 组）两个复选框，默认关闭，作用于 Run / Batch Run。
 - 30 期人工标准（300 秒，79 个必切换人点）：正确条 66–71 → 83，漏切换人 32–35 → 23，错切 15–16 → 17（LLM 合并本身每次有波动）。
 - 权重 `.model-cache/speaker/redimnet/M-vb2+vox2+cnc-ft_mix.pt` 需自行下载（https://github.com/IDRnD/ReDimNet/releases ，MIT）；缺失或出错时只告警，断句和翻译照常进行、不带说话人。模型代码在 `qwen_asr/speaker/redimnet/`（MIT，ID R&D）。
 
