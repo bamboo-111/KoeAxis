@@ -89,6 +89,14 @@ class Handler(BaseHTTPRequestHandler):
         if parsed.path == "/api/workspaces":
             self._send_json({"workspaces": list_workspaces()})
             return
+        if parsed.path == "/api/ci-presets":
+            from qwen_asr.web.ci_presets import list_web_presets
+
+            try:
+                self._send_json({"presets": list_web_presets()})
+            except RuntimeError as exc:
+                self._send_json({"error": str(exc)}, status=500)
+            return
         if parsed.path == "/api/v1/workspace/media":
             query = parse_qs(parsed.query)
             try:
@@ -440,6 +448,13 @@ def _subtitle_preview_content_type(path: Path) -> str:
         return "text/plain; charset=utf-8"
     return _content_type_for_path(path)
 
+def job_environment(environ: dict[str, str] | None = None) -> dict[str, str]:
+    """Child process environment; MFA clips are prefetched in the background like on the CI workers."""
+    env = dict(os.environ if environ is None else environ)
+    env.setdefault("QWEN_ASR_MFA_BACKGROUND_PREFETCH", "1")
+    return env
+
+
 def start_job(payload: dict) -> dict:
     global ACTIVE_JOB
     with JOB_LOCK:
@@ -449,6 +464,7 @@ def start_job(payload: dict) -> dict:
         process = subprocess.Popen(
             command,
             cwd=str(ROOT),
+            env=job_environment(),
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
         )

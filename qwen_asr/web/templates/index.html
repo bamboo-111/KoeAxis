@@ -575,7 +575,7 @@
               <button class="ghost" onclick="toggleConfig(false)">收起</button>
             </div>
             <div class="drawer-status">
-              <span>Preset: default</span>
+              <span class="inline"><label for="ciPreset">CI 预设</label><select id="ciPreset"><option value="">（加载中）</option></select><button type="button" id="applyCiPresetButton" onclick="applyCiPreset()">载入</button></span>
               <span id="configStatus">已保存 · 无错误</span>
             </div>
             <div class="checks">
@@ -667,6 +667,8 @@
                 <div class="field wide"><label for="modelCacheDir">模型缓存目录</label><div class="inline"><div class="path-combo"><input id="modelCacheDir" placeholder="留空使用项目默认 .model-cache"><button type="button" class="path-combo-toggle" onclick="togglePathMenu('modelCacheHistory')" title="缓存历史">⌄</button><div class="path-menu" id="modelCacheHistory"></div></div><button type="button" id="pickModelCacheDirButton" onclick="pickPath('modelCacheDir', '/api/pick-model-cache-dir', 'modelCacheHistory')">选择</button></div></div>
                 <div class="field wide"><label for="asrContextFile">ASR 上下文文件（可选）</label><div class="inline"><div class="path-combo"><input id="asrContextFile" placeholder="如 samples\asr-context-togeradi.txt；逗号或换行分隔的人名/术语"><button type="button" class="path-combo-toggle" onclick="togglePathMenu('asrContextHistory')" title="历史路径">⌄</button><div class="path-menu" id="asrContextHistory"></div></div><button type="button" id="pickAsrContextButton" onclick="pickPath('asrContextFile', '/api/pick-asr-context-file', 'asrContextHistory')">选择</button></div></div>
                 <div class="field wide"><label for="alignModel">Align 模型</label><input id="alignModel" value="Qwen/Qwen3-ForcedAligner-0.6B"></div>
+                <div class="field"><label for="alignFallback">对齐回退</label><select id="alignFallback"><option value="off">关闭</option><option value="asr-short-window">ASR 短窗回退（同 CI）</option></select></div>
+                <div class="field"><label for="alignFallbackWindowSeconds">短窗长度(秒)</label><input id="alignFallbackWindowSeconds" type="number" min="0.5" step="0.5" value="3"></div>
                 <label class="check field wide"><input id="alignRecovery" type="checkbox"> 对齐失败自动恢复（Run / Batch Run：Qwen bf16 → 本地 MFA → VAD 粗时间，同 CI）</label>
               </div>
             </details>
@@ -678,7 +680,7 @@
                 <div class="field"><label for="threadNum">LLM 线程数</label><input id="threadNum" type="number" min="1" step="1" value="{{DEFAULT_LLM_CONCURRENCY}}"></div>
                 <div class="field"><label for="llmBaseUrl">LLM Base URL</label><input id="llmBaseUrl" value="{{DEFAULT_LLM_BASE_URL}}" placeholder="Gemini 原生用 .../v1beta；OpenAI 兼容用 .../v1"></div>
                 <div class="field wide"><span>API 凭据仅从 Web 服务进程的环境变量读取；页面不会保存或提交凭据。</span></div>
-                <div class="field"><label for="proofreadKind">校对方式</label><select id="proofreadKind"><option value="normal">普通校对</option><option value="mimo-audio">MiMo + 音频校对</option></select></div>
+                <div class="field"><label for="proofreadKind">校对方式</label><select id="proofreadKind"><option value="normal">普通校对</option><option value="mimo-audio">MiMo + 音频校对</option><option value="both">纠错 + MiMo 音频校对（同 CI）</option></select></div>
                 <div class="field"><label for="correctBatchNum">Correct 批大小</label><input id="correctBatchNum" type="number" min="1" step="1" value="8"></div>
                 <div class="field"><label for="translateBatchNum">Translate 批大小</label><input id="translateBatchNum" type="number" min="1" step="1" value="20"></div>
                 <div class="field"><label for="splitMaxWordCountCjk">Split CJK 限制</label><input id="splitMaxWordCountCjk" type="number" min="1" step="1" value="18"></div>
@@ -693,6 +695,7 @@
                 <div class="field wide"><span>填写注册文件后：对齐时识别说话人，断句在换人处切开，翻译带说话人提示，导出时在 SRT 旁另写同名 .ass（每位成员一个样式）。</span></div>
                 <div class="field wide"><label for="translateCustomPrompt">Translate 自定义 Prompt</label><textarea id="translateCustomPrompt" placeholder="术语表、专有名词翻译偏好、风格要求"></textarea></div>
                 <div class="field"><label for="mimoProofreadMode">MiMo 校对模式</label><select id="mimoProofreadMode"><option value="segment-audio">整段音频</option><option value="two-stage-nearby">分步短音频</option></select></div>
+                <div class="field"><label for="mimoAudioReviewScope">听音范围</label><select id="mimoAudioReviewScope"><option value="suspects">仅疑点</option><option value="all">全部</option></select></div>
                 <div class="field"><label for="mimoProofreadWorkers">MiMo 线程</label><input id="mimoProofreadWorkers" type="number" min="1" step="1" value="{{DEFAULT_MIMO_CONCURRENCY}}"></div>
                 <div class="field"><label for="mimoNearbyBatchSize">短音频批量</label><input id="mimoNearbyBatchSize" type="number" min="1" step="1" value="5"></div>
                 <div class="field"><label for="mimoNearbyBatchMaxGapS">批内间隔(秒)</label><input id="mimoNearbyBatchMaxGapS" type="number" min="0" step="0.5" value="20"></div>
@@ -717,6 +720,7 @@
                 <div class="field"><label for="normalizeExtendMs">后端延伸(ms)</label><input id="normalizeExtendMs" type="number" min="0" step="10" value="350"></div>
                 <div class="field"><label for="normalizeSnapGapMs">紧贴阈值(ms)</label><input id="normalizeSnapGapMs" type="number" min="0" step="10" value="200"></div>
                 <div class="field"><label for="normalizeMinBlankMs">最小空白(ms)</label><input id="normalizeMinBlankMs" type="number" min="0" step="10" value="300"></div>
+                <label class="check field wide"><input id="performanceProfile" type="checkbox"> 写性能报告（Run / Batch Run：reports/pipeline_performance.json）</label>
                 <div class="field wide"><label for="programMemoryFile">节目记忆 JSON（可选）</label><div class="inline"><div class="path-combo"><input id="programMemoryFile" placeholder="如 samples\program-memory-togeradi.json；normalize 后按条修正节目固定误识别"><button type="button" class="path-combo-toggle" onclick="togglePathMenu('programMemoryHistory')" title="历史路径">⌄</button><div class="path-menu" id="programMemoryHistory"></div></div><button type="button" id="pickProgramMemoryButton" onclick="pickPath('programMemoryFile', '/api/pick-program-memory-file', 'programMemoryHistory')">选择</button></div></div>
               </div>
             </details>
@@ -855,7 +859,8 @@
         'proofreadKind', 'correctBatchNum', 'translateBatchNum', 'llmTimeout', 'disableThinking', 'llmExtraBodyJson', 'llmBaseUrl',
         'targetLanguage', 'normalizeSource', 'normalizeExtendMs', 'normalizeSnapGapMs', 'normalizeMinBlankMs', 'translateCustomPrompt', 'glossaryXlsx',
         'speakerEnroll', 'speakers', 'asrContextFile', 'programMemoryFile', 'alignRecovery', 'proofreadRealignMfaFallback',
-        'mimoProofreadMode', 'mimoProofreadWorkers', 'mimoNearbyBatchSize', 'mimoNearbyBatchMaxGapS', 'mimoNearbyPaddingS',
+        'alignFallback', 'alignFallbackWindowSeconds', 'performanceProfile',
+        'mimoProofreadMode', 'mimoAudioReviewScope', 'mimoProofreadWorkers', 'mimoNearbyBatchSize', 'mimoNearbyBatchMaxGapS', 'mimoNearbyPaddingS',
         'mimoNearbyContextSubtitles', 'mimoNearbyAudioWorkers', 'mimoProofreadMaxTokens', 'mimoCompactOutput', 'mimoProofreadOutputDir',
         'source', 'exportMode', 'exportPath', 'withAlign', 'withCorrect', 'withNormalize', 'withSplit', 'withTranslate'
       ];
@@ -877,22 +882,56 @@
       renderPathHistories();
     }
 
+    function applySettingsToForm(settings) {
+      for (const id of settingFields()) {
+        const el = document.getElementById(id);
+        if (!el || !(id in settings)) continue;
+        if (el.type === 'checkbox') el.checked = Boolean(settings[id]);
+        else if (el.tagName === 'SELECT') {
+          const wanted = String(settings[id] || '');
+          const hasOption = Array.from(el.options).some(option => option.value === wanted);
+          el.value = hasOption ? wanted : '';
+        } else el.value = settings[id];
+      }
+    }
+
+    let ciPresets = [];
+
+    async function loadCiPresets() {
+      const select = document.getElementById('ciPreset');
+      try {
+        const response = await fetch('/api/ci-presets');
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'CI 预设读取失败');
+        ciPresets = data.presets || [];
+        select.innerHTML = '<option value="">（不使用）</option>' + ciPresets
+          .map(item => `<option value="${escapeHtml(item.id)}">${escapeHtml(item.title || item.id)}</option>`).join('');
+      } catch (err) {
+        select.innerHTML = '<option value="">（读取失败）</option>';
+      }
+    }
+
+    function applyCiPreset() {
+      const preset = ciPresets.find(item => item.id === document.getElementById('ciPreset').value);
+      if (!preset) return;
+      applySettingsToForm(preset.settings || {});
+      saveSettings();
+      syncExportMode();
+      const notes = [];
+      if ((preset.missing_files || []).length) notes.push('缺少文件：' + preset.missing_files.join('，'));
+      if ((preset.unmapped || []).length) notes.push('Web 无对应设置：' + preset.unmapped.join('，'));
+      if ((preset.unmapped_env || []).length) notes.push('未应用的环境变量：' + preset.unmapped_env.join('，'));
+      showValidation(notes.length ? { message: `已载入「${preset.title || preset.id}」，但 ` + notes.join('；') } : '');
+      document.getElementById('configStatus').textContent = notes.length ? '已载入预设 · 有提示' : `已载入预设 ${preset.id}`;
+    }
+
     function loadSettings() {
       const sourceKey = [SETTINGS_KEY, ...LEGACY_SETTINGS_KEYS].find(key => localStorage.getItem(key));
       const raw = sourceKey ? localStorage.getItem(sourceKey) : '';
       if (!raw) return;
       try {
         const settings = sanitizedSettings(JSON.parse(raw));
-        for (const id of settingFields()) {
-          const el = document.getElementById(id);
-          if (!el || !(id in settings)) continue;
-          if (el.type === 'checkbox') el.checked = Boolean(settings[id]);
-          else if (el.tagName === 'SELECT') {
-            const wanted = String(settings[id] || '');
-            const hasOption = Array.from(el.options).some(option => option.value === wanted);
-            el.value = hasOption ? wanted : '';
-          } else el.value = settings[id];
-        }
+        applySettingsToForm(settings);
         localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
         LEGACY_SETTINGS_KEYS.forEach(key => localStorage.removeItem(key));
       } catch (_) {}
@@ -1038,6 +1077,7 @@
         llm_extra_body_json: document.getElementById('llmExtraBodyJson').value,
         llm_base_url: document.getElementById('llmBaseUrl').value,
         mimo_proofread_mode: document.getElementById('mimoProofreadMode').value,
+        mimo_audio_review_scope: document.getElementById('mimoAudioReviewScope').value,
         mimo_proofread_workers: document.getElementById('mimoProofreadWorkers').value,
         mimo_nearby_batch_size: document.getElementById('mimoNearbyBatchSize').value,
         mimo_nearby_batch_max_gap_s: document.getElementById('mimoNearbyBatchMaxGapS').value,
@@ -1059,6 +1099,9 @@
         asr_context_file: document.getElementById('asrContextFile').value,
         program_memory_file: document.getElementById('programMemoryFile').value,
         align_recovery: document.getElementById('alignRecovery').checked ? 'auto' : 'off',
+        align_fallback: document.getElementById('alignFallback').value,
+        align_fallback_window_seconds: document.getElementById('alignFallbackWindowSeconds').value,
+        performance_profile: document.getElementById('performanceProfile').checked,
         proofread_realign_mfa_fallback: document.getElementById('proofreadRealignMfaFallback').checked ? 'local' : 'off',
         format: 'srt',
         source: document.getElementById('source').value,
@@ -1067,8 +1110,8 @@
         resume: resume,
         force: force,
         with_align: document.getElementById('withAlign').checked,
-        with_correct: document.getElementById('withCorrect').checked && document.getElementById('proofreadKind').value === 'normal',
-        with_mimo_proofread: document.getElementById('withCorrect').checked && document.getElementById('proofreadKind').value === 'mimo-audio',
+        with_correct: document.getElementById('withCorrect').checked && ['normal', 'both'].includes(document.getElementById('proofreadKind').value),
+        with_mimo_proofread: document.getElementById('withCorrect').checked && ['mimo-audio', 'both'].includes(document.getElementById('proofreadKind').value),
         with_normalize: document.getElementById('withNormalize').checked,
         with_split: document.getElementById('withSplit').checked,
         with_translate: document.getElementById('withTranslate').checked
@@ -1118,7 +1161,7 @@
       const proofreadKind = document.getElementById('proofreadKind').value;
       const proofreadEnabled = document.getElementById('withCorrect').checked;
       const needsLlm = stage === 'translate' || stage === 'correct' || stage === 'mimo-proofread' ||
-        ((stage === 'run' || stage === 'batch-run') && (document.getElementById('withTranslate').checked || (proofreadEnabled && proofreadKind === 'normal')));
+        ((stage === 'run' || stage === 'batch-run') && (document.getElementById('withTranslate').checked || (proofreadEnabled && proofreadKind !== 'mimo-audio')));
       if (needsLlm && !llmModel) return { message: 'LLM/MiMo 需要填写模型。', fieldId: 'llmModel' };
       if (needsLlm && !llmBaseUrl) return { message: 'LLM/MiMo 需要填写 Base URL。', fieldId: 'llmBaseUrl' };
       return { message: '' };
@@ -1719,6 +1762,7 @@
 
     setInterval(refresh, 3000);
     loadSettings();
+    loadCiPresets();
     loadUiState();
     bindSettingsPersistence();
     bindActionButtons();

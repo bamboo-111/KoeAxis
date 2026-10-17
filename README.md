@@ -256,6 +256,7 @@ python main.py run ... --with-align --with-split --with-translate --speaker-enro
 - Web：在 `/legacy`（运行设置）的「LLM / 翻译 / 校正」组填写「说话人注册 JSON」（可选「在场成员」，留空自动判断），保存后 Run / Batch Run 以及工作台「继续」的 align / split / export 阶段都会带上 `--speaker-enroll`；路径不存在时拒绝启动。导出的 `.ass` 出现在工作台导出列表里，可预览、下载。
 - Web 与 togeradi CI preset 的文件参数一致：`/legacy`「ASR」组的「ASR 上下文文件」对应 `--asr-context-file`（transcribe / Run / Batch Run），「Normalize / Export」组的「节目记忆 JSON」对应 `--program-memory-file`（normalize / Run / Batch Run，文件不存在时拒绝启动）。
 - 对齐失败自动恢复：`run` / `batch-run` 加 `--align-recovery auto` 后，align 留下失败段时自动执行与 CI 相同的恢复（Qwen bf16 重试 → 本地 MFA → 审计过的 VAD 粗时间，记录在 `reports/workflow_alignment_recovery.json` / `workflow_coarse_acceptance.json`），全部恢复后继续后续阶段，否则停止。Web 运行设置里对应「对齐失败自动恢复」（ASR 组）和「校对后重对齐失败时用本地 MFA 回退」（`--proofread-realign-mfa-fallback local`，LLM 组）两个复选框，默认关闭，作用于 Run / Batch Run。
+- 与 CI 完全一致的最简单方式：`/legacy` 配置抽屉顶部选「CI 预设」（读取 `ci-presets/*.json`，如 togeradi）点「载入」，会把预设展开成 CI 实际使用的 `main.py run` 参数（含 CLI 默认值）并填入全部相关设置（纠错 + MiMo 两段式、对齐回退与自动恢复、MFA 回退、文件参数、性能报告等）后保存；预设里有 Web 无法表示的参数或缺失的文件时会提示。设备、LLM Base URL、工作目录与导出位置保留页面上的值。Web 启动的任务默认开启 MFA 后台预取（`QWEN_ASR_MFA_BACKGROUND_PREFETCH=1`，与 CI worker 相同）。
 - 30 期人工标准（300 秒，79 个必切换人点）：正确条 66–71 → 83，漏切换人 32–35 → 23，错切 15–16 → 17（LLM 合并本身每次有波动）。
 - 权重 `.model-cache/speaker/redimnet/M-vb2+vox2+cnc-ft_mix.pt` 需自行下载（https://github.com/IDRnD/ReDimNet/releases ，MIT）；缺失或出错时只告警，断句和翻译照常进行、不带说话人。模型代码在 `qwen_asr/speaker/redimnet/`（MIT，ID R&D）。
 

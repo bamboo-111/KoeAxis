@@ -58,10 +58,15 @@
 - [x] 端到端验收（2026-10-18，54 期，按 CI gpu/api 两阶段跑 togeradi preset，文本 LLM gemini-3.8-flash 并发 4，MiMo mimo-v2.6-pro）：GPU 阶段 1 段对齐失败（节目口号），自动恢复用 MFA 救回；API 阶段约 4 分钟；产出 SRT/ASS 各 661 条，在场成员自动判为 理名+夕莉，待确认 73 行；final quality WARN（与 26/27 期同级）。
 - [x] Gemini 代替 MiMo 做听音校对（2026-10-18，54 期同一译文）：新服务商（ohmyapi）不支持音频（原生接口 400 UNSUPPORTED_BILLING_MODE，OpenAI 兼容接口无此通道），旧服务商 qhaigc 两种接口都支持。用 qhaigc gemini-3.8-flash 跑同样两段式：MiMo 采纳 33 处（修正 #89/#145-146/#512-513 译文错位、#182 漏主语等），Gemini 只 7 处且 2 处改错（年份 2026→2024、直译变生硬），耗时 410s vs 113s。保留 MiMo。
 - [ ] 说话人后续：① 说话人提示让 LLM 合并偏保守（同人未完句不合并，详见实验 README“改坏”分析；弱化提示已试，无改善）；② 翻译带说话人的效果没有评测手段，只做了抽查；③ 重叠处的叠加行、按重叠区提高阈值都试过无效，插话附和只考虑对附和词单独处理；④ ASS 齐声台词目前只出一行（已校稿是每人复制一行）。
+- [ ] **54 期说话人识别问题（用户反馈，2026-10-18）**：
+  - 「声ログ」环节实际有三人说话，却基本都被判成同一个人；错判数量是标了“说话人待确认”行数的好几倍，即低把握标注远远漏报。
+  - 对朱李的识别似乎格外差；其他地方也特别容易误判成理名（疑似理名注册声纹偏宽 / 得分偏高，需按人统计混淆矩阵，检查注册片段与阈值、在场成员判断）。
+  - 连续重复的一句话（如「ありがとうございますありがとうございますありがとうございます」「ミュージックまミュージックね，ミュージックまミュージックね」「ブルスリーうますぎてうますぎ」）可能是多人轮流说，断句 / 合并时要慎重判断是否同一人。
+  - 578–581 条重复了四遍：最后一遍的时间应给下一句；而这几句本该合并时又没合并（查 split 的说话人切分与 LLM 合并在重复句上的行为）。
 - [x] Web 支持说话人（2026-10-18）：`/legacy` 运行设置加「说话人注册 JSON」「在场成员」，run / batch-run / align / split / export 命令带 `--speaker-enroll`，工作台阶段启动复用保存的设置；导出列表、状态识别 `.ass`。
 - [x] Web 运行设置加入 ASR 上下文文件（`--asr-context-file`，transcribe/run/batch-run）和节目记忆（`--program-memory-file`，normalize/run/batch-run），文件参数与 togeradi preset 一致。
 - [x] `run` / `batch-run` 新增 `--align-recovery auto`：align 留下失败段时在同一进程里执行 CI 的恢复（Qwen bf16 → 本地 MFA → 审计过的 VAD 粗时间），恢复干净后继续后续阶段；54 期 segment_000041 实测由 MFA 救回。Web 运行设置加「对齐失败自动恢复」「校对后重对齐 MFA 回退」两个复选框（默认关），映射到 Run / Batch Run。
-- [ ] Web 与 togeradi CI 仍有差异：Web Run / Batch Run 不传 MiMo 参数（`--mimo-proofread-mode two-stage-nearby`、`--mimo-nearby-batch-size 3` 等，走 CLI 默认）；`/legacy` 页面里「纠错」和「MiMo 校对」二选一（CI 两者都开）；`/legacy` 没有 align-fallback（`asr-short-window`）控件；无 `--performance-profile` 与 `QWEN_ASR_MFA_BACKGROUND_PREFETCH=1`。
+- [x] Web 与 CI 对齐（2026-10-18）：Run / Batch Run 传 MiMo 参数；校对方式加「纠错 + MiMo 音频校对」；`/legacy` 加对齐回退、听音范围、性能报告控件；Web 任务默认 `QWEN_ASR_MFA_BACKGROUND_PREFETCH=1`；配置抽屉加「CI 预设 → 载入」（`/api/ci-presets`，用 CI 的 `build_run_argv` + CLI 解析器换算成 Web 设置，测试保证载入后 Web 生成的 run 参数与 CI 只差 align_recovery / device / base URL / workdir）。
 
 ---
 

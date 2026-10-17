@@ -372,21 +372,14 @@ def build_command(payload: dict) -> list[str]:
             command.append("--with-split")
         if payload.get("with_translate"):
             command.append("--with-translate")
-            command.extend(
-                [
-                    "--llm-model",
-                    payload["llm_model"],
-                    "--llm-base-url",
-                    payload["llm_base_url"],
-                    "--target-language",
-                    payload["target_language"],
-                ]
-            )
+            command.extend(["--target-language", payload["target_language"]])
+        if payload.get("with_translate") or payload.get("with_correct"):
+            command.extend(["--llm-model", payload["llm_model"], "--llm-base-url", payload["llm_base_url"]])
         if payload.get("with_normalize"):
             command.append("--with-normalize")
         command.extend(_speaker_args(payload))
         command.extend(_program_memory_args(payload))
-        command.extend(_recovery_args(payload))
+        command.extend(_pipeline_parity_args(payload))
     elif stage == "batch-run":
         command = [python_runtime(), str(ROOT / "main.py"), "batch-run", "--workdir", workdir, "--log-level", "INFO"]
         command.extend(model_cache_args)
@@ -472,7 +465,7 @@ def build_command(payload: dict) -> list[str]:
             command.extend(["--glossary-xlsx", str(payload["glossary_xlsx"]).strip()])
         command.extend(_speaker_args(payload))
         command.extend(_program_memory_args(payload))
-        command.extend(_recovery_args(payload))
+        command.extend(_pipeline_parity_args(payload))
         if str(payload.get("export_path", "")).strip():
             command.extend(["--export-path", str(payload["export_path"]).strip()])
         if str(payload.get("batch_manifest", "")).strip():
@@ -533,9 +526,13 @@ def _program_memory_args(payload: dict) -> list[str]:
     return ["--program-memory-file", path]
 
 
-def _recovery_args(payload: dict) -> list[str]:
-    """Run/Batch Run alignment rescue matching the CI presets (both off unless enabled in the settings)."""
+def _pipeline_parity_args(payload: dict) -> list[str]:
+    """Run/Batch Run options the CI presets use: MiMo settings, alignment rescue, performance profile."""
     args: list[str] = []
+    if payload.get("with_mimo_proofread"):
+        args.extend(_mimo_options(payload))
+    if payload.get("performance_profile"):
+        args.append("--performance-profile")
     if payload.get("align_recovery") in (True, "auto"):
         args.extend(["--align-recovery", "auto"])
     if payload.get("proofread_realign_mfa_fallback") in (True, "local"):
@@ -544,6 +541,16 @@ def _recovery_args(payload: dict) -> list[str]:
 
 
 def _mimo_proofread_args(payload: dict) -> list[str]:
+    args = _mimo_options(payload)
+    if payload.get("resume") is False:
+        args.append("--no-resume")
+    if str(payload.get("glossary_xlsx", "")).strip():
+        args.extend(["--glossary-xlsx", str(payload["glossary_xlsx"]).strip()])
+    return args
+
+
+def _mimo_options(payload: dict) -> list[str]:
+    """MiMo flags shared by the mimo-proofread stage and Run / Batch Run."""
     scope = str(payload.get("mimo_audio_review_scope", "suspects"))
     args = [
         "--mimo-proofread-mode", str(payload.get("mimo_proofread_mode", "segment-audio")),
@@ -573,10 +580,6 @@ def _mimo_proofread_args(payload: dict) -> list[str]:
         args.append("--mimo-compact-output")
     if scope == "all":
         args.append("--mimo-diagnostic-all")
-    if payload.get("resume") is False:
-        args.append("--no-resume")
-    if str(payload.get("glossary_xlsx", "")).strip():
-        args.extend(["--glossary-xlsx", str(payload["glossary_xlsx"]).strip()])
     return args
 
 
