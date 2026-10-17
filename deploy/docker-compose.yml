@@ -1,0 +1,38 @@
+# Example deployment: control server + Caddy (automatic HTTPS). Every value here is a placeholder;
+# swap Caddy for nginx/Traefik, SQLite for PostgreSQL, etc. as your environment requires.
+#
+#   cp deploy/server.env.example deploy/server.env   # then edit
+#   docker compose -f deploy/docker-compose.yml up -d --build
+#   docker compose -f deploy/docker-compose.yml exec server python -m qwen_asr.ci create-user --username admin --role admin
+#   docker compose -f deploy/docker-compose.yml exec server python -m qwen_asr.ci create-token --kind worker --name gpu-1
+services:
+  server:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.server
+    env_file: server.env
+    volumes:
+      - koeaxis-data:/data
+      # Preset-referenced files (glossary, ASR context, program memory). Read-only.
+      - ../samples:/app/samples:ro
+      # Optional: override/add presets without rebuilding.
+      # - ./presets:/app/ci-presets:ro
+    expose:
+      - "8710"
+    restart: unless-stopped
+
+  caddy:
+    image: caddy:2
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+    depends_on:
+      - server
+    restart: unless-stopped
+
+volumes:
+  koeaxis-data:
+  caddy-data:

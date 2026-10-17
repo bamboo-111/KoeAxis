@@ -33,6 +33,10 @@ extend-exclude = [
 select = ["E4", "E7", "E9", "F", "B"]
 ignore = []
 
+[tool.ruff.lint.flake8-bugbear]
+# FastAPI declares dependencies/parameters through argument defaults (qwen_asr/ci/api.py).
+extend-immutable-calls = ["fastapi.Depends", "fastapi.File", "fastapi.Form", "fastapi.Query"]
+
 [tool.ruff.lint.per-file-ignores]
 # These modules intentionally preserve legacy module attributes for imports and test monkeypatches.
 "optimizer/splitter.py" = ["F401"]

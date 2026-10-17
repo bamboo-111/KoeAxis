@@ -1,0 +1,16 @@
+# Example reverse proxy. Replace the host name; Caddy obtains certificates automatically.
+ci.example.com {
+	# Large uploads (radio episodes / videos). Keep in line with KOEAXIS_CI_MAX_UPLOAD_MB.
+	request_body {
+		max_size 4GB
+	}
+	reverse_proxy server:8710
+
+	# Optional SSO: put an auth gateway in front and forward the user name, e.g.
+	#   forward_auth authelia:9091 {
+	#       uri /api/verify?rd=https://auth.example.com
+	#       copy_headers Remote-User
+	#   }
+	# then set KOEAXIS_CI_TRUSTED_USER_HEADER=Remote-User and KOEAXIS_CI_TRUSTED_PROXY_IPS=<caddy container IP/CIDR>.
+	# Keep /api/v1/worker/* reachable with bearer tokens (do not require the browser SSO there).
+}

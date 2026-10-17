@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>KoeAxis CI</title>
+  <link rel="stylesheet" href="static/app.css">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="#/runs">KoeAxis <span>CI</span></a>
+    <nav id="nav" hidden>
+      <a href="#/runs" data-nav="runs">运行</a>
+      <a href="#/new" data-nav="new">新建</a>
+      <a href="#/compare" data-nav="compare">对比</a>
+      <a href="#/workers" data-nav="workers">Workers</a>
+      <a href="#/admin" data-nav="admin" id="nav-admin" hidden>管理</a>
+    </nav>
+    <div class="user" id="user-box" hidden>
+      <a href="#/account" id="user-name"></a>
+      <button class="link" id="logout">退出</button>
+    </div>
+  </header>
+  <main id="app"><p class="muted">加载中…</p></main>
+  <div id="toast" role="status" aria-live="polite"></div>
+  <script src="static/app.js"></script>
+</body>
+</html>

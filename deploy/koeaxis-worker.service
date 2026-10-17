@@ -1,0 +1,21 @@
+# Example systemd unit for a Linux GPU worker (untested template; adjust paths and user).
+#   sudo cp deploy/koeaxis-worker.service /etc/systemd/system/ && sudo systemctl enable --now koeaxis-worker
+[Unit]
+Description=KoeAxis CI GPU worker
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=koeaxis
+WorkingDirectory=/opt/koeaxis
+# KOEAXIS_SERVER, KOEAXIS_WORKER_TOKEN, MIMO_API_KEY, ...
+EnvironmentFile=/etc/koeaxis/worker.env
+Environment=PYTHONIOENCODING=utf-8 PYTHONDONTWRITEBYTECODE=1
+ExecStart=/opt/koeaxis/.venv/bin/python -B -m qwen_asr.ci worker --data-dir /var/lib/koeaxis-worker --model-cache-dir /var/cache/koeaxis-models
+Restart=always
+RestartSec=15
+# Lets the worker kill whole phase process trees on cancel/stop.
+KillMode=mixed
+
+[Install]
+WantedBy=multi-user.target
