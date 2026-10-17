@@ -165,6 +165,8 @@ def _base_payload(
         "glossary_xlsx": value("glossaryXlsx", ""),
         "speaker_enroll": value("speakerEnroll", ""),
         "speakers": value("speakers", ""),
+        "asr_context_file": value("asrContextFile", ""),
+        "program_memory_file": value("programMemoryFile", ""),
         "mimo_proofread_mode": value("mimoProofreadMode", "segment-audio"),
         "mimo_audio_review_scope": value("mimoAudioReviewScope", "suspects"),
         "mimo_proofread_workers": value("mimoProofreadWorkers", DEFAULT_MIMO_CONCURRENCY),

@@ -665,6 +665,7 @@
                 <div class="field"><label for="device">device</label><input id="device" value="cuda:0"></div>
                 <label class="check field"><input id="localFilesOnly" type="checkbox" checked> 只用本地模型缓存</label>
                 <div class="field wide"><label for="modelCacheDir">模型缓存目录</label><div class="inline"><div class="path-combo"><input id="modelCacheDir" placeholder="留空使用项目默认 .model-cache"><button type="button" class="path-combo-toggle" onclick="togglePathMenu('modelCacheHistory')" title="缓存历史">⌄</button><div class="path-menu" id="modelCacheHistory"></div></div><button type="button" id="pickModelCacheDirButton" onclick="pickPath('modelCacheDir', '/api/pick-model-cache-dir', 'modelCacheHistory')">选择</button></div></div>
+                <div class="field wide"><label for="asrContextFile">ASR 上下文文件（可选）</label><div class="inline"><div class="path-combo"><input id="asrContextFile" placeholder="如 samples\asr-context-togeradi.txt；逗号或换行分隔的人名/术语"><button type="button" class="path-combo-toggle" onclick="togglePathMenu('asrContextHistory')" title="历史路径">⌄</button><div class="path-menu" id="asrContextHistory"></div></div><button type="button" id="pickAsrContextButton" onclick="pickPath('asrContextFile', '/api/pick-asr-context-file', 'asrContextHistory')">选择</button></div></div>
                 <div class="field wide"><label for="alignModel">Align 模型</label><input id="alignModel" value="Qwen/Qwen3-ForcedAligner-0.6B"></div>
               </div>
             </details>
@@ -714,6 +715,7 @@
                 <div class="field"><label for="normalizeExtendMs">后端延伸(ms)</label><input id="normalizeExtendMs" type="number" min="0" step="10" value="350"></div>
                 <div class="field"><label for="normalizeSnapGapMs">紧贴阈值(ms)</label><input id="normalizeSnapGapMs" type="number" min="0" step="10" value="200"></div>
                 <div class="field"><label for="normalizeMinBlankMs">最小空白(ms)</label><input id="normalizeMinBlankMs" type="number" min="0" step="10" value="300"></div>
+                <div class="field wide"><label for="programMemoryFile">节目记忆 JSON（可选）</label><div class="inline"><div class="path-combo"><input id="programMemoryFile" placeholder="如 samples\program-memory-togeradi.json；normalize 后按条修正节目固定误识别"><button type="button" class="path-combo-toggle" onclick="togglePathMenu('programMemoryHistory')" title="历史路径">⌄</button><div class="path-menu" id="programMemoryHistory"></div></div><button type="button" id="pickProgramMemoryButton" onclick="pickPath('programMemoryFile', '/api/pick-program-memory-file', 'programMemoryHistory')">选择</button></div></div>
               </div>
             </details>
           </div>
@@ -785,6 +787,8 @@
       modelCacheHistory: 'qwen3_asr_model_cache_history_v1',
       glossaryHistory: 'qwen3_asr_glossary_history_v1',
       speakerEnrollHistory: 'koeaxis_speaker_enroll_history_v1',
+      asrContextHistory: 'koeaxis_asr_context_history_v1',
+      programMemoryHistory: 'koeaxis_program_memory_history_v1',
       mimoOutputHistory: 'koeaxis_mimo_output_history_v1',
       exportHistory: EXPORT_HISTORY_KEY,
     };
@@ -794,6 +798,8 @@
       modelCacheHistory: 'modelCacheDir',
       glossaryHistory: 'glossaryXlsx',
       speakerEnrollHistory: 'speakerEnroll',
+      asrContextHistory: 'asrContextFile',
+      programMemoryHistory: 'programMemoryFile',
       mimoOutputHistory: 'mimoProofreadOutputDir',
       exportHistory: 'exportPath',
     };
@@ -827,6 +833,8 @@
       exportPath: 'out',
       glossaryXlsx: 'llm',
       speakerEnroll: 'llm',
+      asrContextFile: 'asr',
+      programMemoryFile: 'out',
       llmModel: 'llm',
       llmBaseUrl: 'llm',
       proofreadKind: 'llm'
@@ -844,7 +852,7 @@
         'llmModel', 'threadNum', 'splitMaxWordCountCjk', 'splitMaxWordCountEnglish',
         'proofreadKind', 'correctBatchNum', 'translateBatchNum', 'llmTimeout', 'disableThinking', 'llmExtraBodyJson', 'llmBaseUrl',
         'targetLanguage', 'normalizeSource', 'normalizeExtendMs', 'normalizeSnapGapMs', 'normalizeMinBlankMs', 'translateCustomPrompt', 'glossaryXlsx',
-        'speakerEnroll', 'speakers',
+        'speakerEnroll', 'speakers', 'asrContextFile', 'programMemoryFile',
         'mimoProofreadMode', 'mimoProofreadWorkers', 'mimoNearbyBatchSize', 'mimoNearbyBatchMaxGapS', 'mimoNearbyPaddingS',
         'mimoNearbyContextSubtitles', 'mimoNearbyAudioWorkers', 'mimoProofreadMaxTokens', 'mimoCompactOutput', 'mimoProofreadOutputDir',
         'source', 'exportMode', 'exportPath', 'withAlign', 'withCorrect', 'withNormalize', 'withSplit', 'withTranslate'
@@ -1046,6 +1054,8 @@
         glossary_xlsx: document.getElementById('glossaryXlsx').value,
         speaker_enroll: document.getElementById('speakerEnroll').value,
         speakers: document.getElementById('speakers').value,
+        asr_context_file: document.getElementById('asrContextFile').value,
+        program_memory_file: document.getElementById('programMemoryFile').value,
         format: 'srt',
         source: document.getElementById('source').value,
         export_mode: document.getElementById('exportMode').value,
@@ -1424,6 +1434,8 @@
       savePathHistoryItem('modelCacheHistory', document.getElementById('modelCacheDir').value);
       savePathHistoryItem('glossaryHistory', document.getElementById('glossaryXlsx').value);
       savePathHistoryItem('speakerEnrollHistory', document.getElementById('speakerEnroll').value);
+      savePathHistoryItem('asrContextHistory', document.getElementById('asrContextFile').value);
+      savePathHistoryItem('programMemoryHistory', document.getElementById('programMemoryFile').value);
       savePathHistoryItem('mimoOutputHistory', document.getElementById('mimoProofreadOutputDir').value);
       if (document.getElementById('exportMode').value === 'custom') {
         savePathHistoryItem('exportHistory', document.getElementById('exportPath').value);

@@ -280,6 +280,22 @@ class Handler(BaseHTTPRequestHandler):
                 return
             self._send_json(result)
             return
+        if parsed.path == "/api/pick-asr-context-file":
+            try:
+                result = pick_asr_context_file()
+            except RuntimeError as exc:
+                self._send_json({"error": str(exc)}, status=400)
+                return
+            self._send_json(result)
+            return
+        if parsed.path == "/api/pick-program-memory-file":
+            try:
+                result = pick_program_memory_file()
+            except RuntimeError as exc:
+                self._send_json({"error": str(exc)}, status=400)
+                return
+            self._send_json(result)
+            return
         if parsed.path == "/api/pick-output-directory":
             try:
                 result = pick_output_directory()
@@ -565,6 +581,26 @@ def pick_speaker_enroll() -> dict:
     selected = _run_tk_file_picker(
         title="Select speaker enrollment json",
         filetypes="[('Speaker enrollment', '*.json'), ('All files', '*.*')]",
+    )
+    if not selected:
+        return {"cancelled": True}
+    return {"cancelled": False, "path": str(Path(selected).resolve())}
+
+
+def pick_asr_context_file() -> dict:
+    selected = _run_tk_file_picker(
+        title="Select ASR context file",
+        filetypes="[('ASR context', '*.txt'), ('All files', '*.*')]",
+    )
+    if not selected:
+        return {"cancelled": True}
+    return {"cancelled": False, "path": str(Path(selected).resolve())}
+
+
+def pick_program_memory_file() -> dict:
+    selected = _run_tk_file_picker(
+        title="Select program memory json",
+        filetypes="[('Program memory', '*.json'), ('All files', '*.*')]",
     )
     if not selected:
         return {"cancelled": True}

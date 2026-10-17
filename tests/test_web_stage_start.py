@@ -55,8 +55,12 @@ def test_stage_start_passes_saved_speaker_settings(tmp_path: Path, monkeypatch: 
             "llmBaseUrl": "https://api.xiaomimimo.com/v1",
             "speakerEnroll": str(enroll),
             "speakers": "理名,夕莉",
+            "asrContextFile": "ctx.txt",
+            "programMemoryFile": "memory.json",
         },
     )
+    assert payload["asr_context_file"] == "ctx.txt"
+    assert payload["program_memory_file"] == "memory.json"
     command = build_command(payload)
 
     assert command[command.index("--speaker-enroll") + 1] == str(enroll)

@@ -209,6 +209,7 @@ def build_command(payload: dict) -> list[str]:
                 str(max(0, int(payload.get("normalize_min_blank_ms", 300)))),
             ]
         )
+        command.extend(_program_memory_args(payload))
     elif stage == "quality-gate":
         if payload.get("quality_gate_include_export"):
             command.append("--include-export")
@@ -384,6 +385,7 @@ def build_command(payload: dict) -> list[str]:
         if payload.get("with_normalize"):
             command.append("--with-normalize")
         command.extend(_speaker_args(payload))
+        command.extend(_program_memory_args(payload))
     elif stage == "batch-run":
         command = [python_runtime(), str(ROOT / "main.py"), "batch-run", "--workdir", workdir, "--log-level", "INFO"]
         command.extend(model_cache_args)
@@ -468,6 +470,7 @@ def build_command(payload: dict) -> list[str]:
         if str(payload.get("glossary_xlsx", "")).strip():
             command.extend(["--glossary-xlsx", str(payload["glossary_xlsx"]).strip()])
         command.extend(_speaker_args(payload))
+        command.extend(_program_memory_args(payload))
         if str(payload.get("export_path", "")).strip():
             command.extend(["--export-path", str(payload["export_path"]).strip()])
         if str(payload.get("batch_manifest", "")).strip():
@@ -516,6 +519,16 @@ def _speaker_args(payload: dict) -> list[str]:
     if speakers:
         args.extend(["--speakers", speakers])
     return args
+
+
+def _program_memory_args(payload: dict) -> list[str]:
+    """Optional per-show recurring-misrecognition rules applied right after normalize."""
+    path = str(payload.get("program_memory_file") or "").strip()
+    if not path:
+        return []
+    if not Path(path).is_file():
+        raise ValueError(f"Program memory file not found: {path}")
+    return ["--program-memory-file", path]
 
 
 def _mimo_proofread_args(payload: dict) -> list[str]:

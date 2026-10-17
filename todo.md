@@ -59,7 +59,8 @@
 - [x] Gemini 代替 MiMo 做听音校对（2026-10-18，54 期同一译文）：新服务商（ohmyapi）不支持音频（原生接口 400 UNSUPPORTED_BILLING_MODE，OpenAI 兼容接口无此通道），旧服务商 qhaigc 两种接口都支持。用 qhaigc gemini-3.8-flash 跑同样两段式：MiMo 采纳 33 处（修正 #89/#145-146/#512-513 译文错位、#182 漏主语等），Gemini 只 7 处且 2 处改错（年份 2026→2024、直译变生硬），耗时 410s vs 113s。保留 MiMo。
 - [ ] 说话人后续：① 说话人提示让 LLM 合并偏保守（同人未完句不合并，详见实验 README“改坏”分析；弱化提示已试，无改善）；② 翻译带说话人的效果没有评测手段，只做了抽查；③ 重叠处的叠加行、按重叠区提高阈值都试过无效，插话附和只考虑对附和词单独处理；④ ASS 齐声台词目前只出一行（已校稿是每人复制一行）。
 - [x] Web 支持说话人（2026-10-18）：`/legacy` 运行设置加「说话人注册 JSON」「在场成员」，run / batch-run / align / split / export 命令带 `--speaker-enroll`，工作台阶段启动复用保存的设置；导出列表、状态识别 `.ass`。
-- [ ] Web 运行设置还没有 ASR 上下文文件（`--asr-context-file`）和节目记忆（`--program-memory-file`），从 Web 跑的结果与 togeradi preset 不完全一致。
+- [x] Web 运行设置加入 ASR 上下文文件（`--asr-context-file`，transcribe/run/batch-run）和节目记忆（`--program-memory-file`，normalize/run/batch-run），文件参数与 togeradi preset 一致。
+- [ ] Web 仍未提供 `--proofread-realign-mfa-fallback local`（CLI 默认 off，CI preset 为 local），也没有 CI phase 的对齐失败恢复（`run_alignment_recovery`）。
 
 ---
 

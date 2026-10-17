@@ -272,6 +272,48 @@ def test_webui_index_has_speaker_controls() -> None:
         assert snippet in INDEX_HTML, snippet
 
 
+def test_webui_ci_preset_files_reach_cli(tmp_path: Path) -> None:
+    """ASR context goes to transcribe/run/batch-run; program memory to normalize/run/batch-run (same as the togeradi CI preset)."""
+    from qwen_asr.cli import build_parser
+
+    context = tmp_path / "context.txt"
+    context.write_text("理名,夕莉", encoding="utf-8")
+    memory = tmp_path / "memory.json"
+    memory.write_text("{}", encoding="utf-8")
+    base = _speaker_stage_payloads("")["run"]
+    extra = {"asr_context_file": str(context), "program_memory_file": str(memory)}
+    for stage, flags in (
+        ("transcribe", {"--asr-context-file"}),
+        ("normalize", {"--program-memory-file"}),
+        ("run", {"--asr-context-file", "--program-memory-file"}),
+        ("batch-run", {"--asr-context-file", "--program-memory-file"}),
+    ):
+        payload = {**base, **extra, "stage": stage, **({"media_paths": ["a.mp3", "b.mp3"]} if stage == "batch-run" else {})}
+        command = build_command(payload)
+        args = build_parser().parse_args(command[2:])
+        for flag in ("--asr-context-file", "--program-memory-file"):
+            assert (flag in command) == (flag in flags), (stage, flag)
+        if "--asr-context-file" in flags:
+            assert args.asr_context_file == str(context), stage
+        if "--program-memory-file" in flags:
+            assert args.program_memory_file == str(memory), stage
+    with pytest.raises(ValueError, match="Program memory file not found"):
+        build_command({**base, "program_memory_file": str(tmp_path / "missing.json")})
+
+
+def test_webui_index_has_ci_preset_file_controls() -> None:
+    for snippet in (
+        'id="asrContextFile"',
+        'id="programMemoryFile"',
+        "/api/pick-asr-context-file",
+        "/api/pick-program-memory-file",
+        "asr_context_file: document.getElementById('asrContextFile').value",
+        "program_memory_file: document.getElementById('programMemoryFile').value",
+        "'asrContextFile', 'programMemoryFile'",
+    ):
+        assert snippet in INDEX_HTML, snippet
+
+
 def test_webui_build_align_command_uses_cleanup_interval_default() -> None:
     command = build_command(
         {
