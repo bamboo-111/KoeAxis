@@ -20,6 +20,10 @@ from typing import Any, Callable, Sequence
 import numpy as np
 
 DEFAULT_MIN_MARGIN = 0.1
+# Repeated phrases inside a cue ("ありがとうございますありがとうございます") are cut between copies when both copies
+# confidently belong to different members. On episode 30's gold slice (rule split, no LLM merge) 0.08 recovered 2 of
+# the 23 missed speaker changes and broke nothing; 0.05 added wrong cuts, 0.12 and above changed nothing.
+DEFAULT_REPEAT_MARGIN: float | None = 0.08
 UNKNOWN = ""
 
 
@@ -113,6 +117,55 @@ def cue_speaker(scores: np.ndarray, members: Sequence[str]) -> CueSpeaker:
     return CueSpeaker(members[best], float(mean[best] - np.delete(mean, best).max()))
 
 
+def _key(texts: Sequence[str]) -> str:
+    return "".join(c for text in texts for c, _ in _norm_chars(text))
+
+
+def repeat_cuts(token_texts: Sequence[str], scores: np.ndarray, min_margin: float, *, max_tokens: int = 8,
+                min_chars: int = 3, similarity: float = 0.75) -> list[int]:
+    """Token positions inside one cue where a repeated phrase is said again by somebody else.
+
+    Two adjacent copies A = tokens[i:k], B = tokens[k:m] (normalised texts at least ``similarity`` alike, e.g.
+    "ありがとうございます" twice or "うますぎて" / "うますぎ") are cut apart at k only when each copy on its own
+    confidently belongs to a different member (mean-score margin >= ``min_margin`` on both). Run voting alone cannot
+    do this: the copies are short, so one of them is usually merged into the other.
+    """
+    n = len(token_texts)
+    if scores.ndim != 2 or scores.shape[1] < 2 or n < 2:
+        return []
+    candidates: list[tuple[float, int, int, int]] = []  # (match quality, cut k, copy A start i, copy B end m)
+    for k in range(1, n):
+        best: tuple[float, int, int] | None = None
+        for i in range(max(0, k - max_tokens), k):
+            a = _key(token_texts[i:k])
+            if len(a) < min_chars:
+                continue
+            for m in range(k + 1, min(n, k + max_tokens) + 1):
+                b = _key(token_texts[k:m])
+                if len(b) < min_chars or len(b) > len(a) * 1.5 or len(a) > len(b) * 1.5:
+                    continue
+                # a copy that starts like the previous one is a better cut than one shifted by a character
+                quality = difflib.SequenceMatcher(None, a, b, autojunk=False).ratio()
+                if quality >= similarity and (best is None or quality + 0.1 * (a[0] == b[0]) > best[0]):
+                    best = (quality + 0.1 * (a[0] == b[0]), i, m)
+        if best is not None:
+            candidates.append((best[0], k, best[1], best[2]))
+    # Copy boundaries first, from the text alone: in a periodic run ("ありがとうございますありがとうございます") every
+    # shifted position matches as well as the true one, so the best and then earliest match wins and the others within
+    # half a copy of it are dropped. Only then the voices decide, so a mid-word position can never be cut.
+    chosen: list[tuple[int, int, int]] = []
+    for _, k, i, m in sorted(candidates, key=lambda item: (-item[0], item[1])):
+        spacing = max(min_chars, min(len(_key(token_texts[i:k])), len(_key(token_texts[k:m]))) / 2)
+        if all(len(_key(token_texts[min(k, o):max(k, o)])) >= spacing for o, _, _ in chosen):
+            chosen.append((k, i, m))
+    out: list[int] = []
+    for k, i, m in chosen:
+        left, right = cue_speaker(scores[i:k], range(scores.shape[1])), cue_speaker(scores[k:m], range(scores.shape[1]))
+        if left.speaker != right.speaker and min(left.margin, right.margin) >= min_margin:
+            out.append(k)
+    return sorted(out)
+
+
 @dataclass
 class SpeakerAssigner:
     """Speaker decisions for one episode: word tokens (text, start_ms, end_ms) scored on a SpeakerTrack."""
@@ -122,17 +175,20 @@ class SpeakerAssigner:
     token_times: list[tuple[int, int]]  # ms
     token_scores: np.ndarray  # (tokens, members)
     min_margin: float = DEFAULT_MIN_MARGIN
+    repeat_margin: float | None = DEFAULT_REPEAT_MARGIN
 
     @classmethod
     def from_track(cls, track: Any, tokens: Sequence[Any], min_margin: float = DEFAULT_MIN_MARGIN,
-                   pad: float = 0.05) -> SpeakerAssigner:
+                   pad: float = 0.05, repeat_margin: float | None = None) -> SpeakerAssigner:
         """tokens: objects with .text, .start_time, .end_time in ms (optimizer ASRDataSeg)."""
         texts = [str(t.text) for t in tokens]
         times = [(int(t.start_time), int(t.end_time)) for t in tokens]
         scores = np.zeros((len(texts), len(track.members)), np.float32)
         for i, (start, end) in enumerate(times):
             scores[i] = track.span_scores(start / 1000, end / 1000, pad)
-        return cls(list(track.members), texts, times, scores, min_margin)
+        if repeat_margin is None:
+            repeat_margin = DEFAULT_REPEAT_MARGIN
+        return cls(list(track.members), texts, times, scores, min_margin, repeat_margin)
 
     def _tokens_by_cue(self, cue_texts: Sequence[str]) -> tuple[dict[int, list[int]], list[tuple[int, int] | None]]:
         where = map_tokens_to_cues(self.token_texts, cue_texts)
@@ -147,9 +203,11 @@ class SpeakerAssigner:
         by_cue, _ = self._tokens_by_cue([str(c.text) for c in cues])
         return [cue_speaker(self.token_scores[by_cue.get(j, [])], self.members) for j in range(len(cues))]
 
-    def split_cues(self, cues: Sequence[Any], new_cue: Callable[[str, int, int], Any]) -> tuple[list[Any], int]:
+    def split_cues(self, cues: Sequence[Any], new_cue: Callable[[str, int, int], Any], *,
+                   voice_runs: bool = True) -> tuple[list[Any], int]:
         """Cut cues at confident speaker changes. new_cue(text, start_ms, end_ms) builds a piece.
 
+        voice_runs=False only cuts between copies of a repeated phrase (``repeat_cuts``).
         Returns the new cue list and the number of cuts.
         """
         if len(self.members) < 2:
@@ -160,13 +218,20 @@ class SpeakerAssigner:
         for j, cue in enumerate(cues):
             idx = by_cue.get(j, [])
             text = str(cue.text)
-            labels = vote_labels(self.token_scores[idx], self.min_margin) if idx else []
-            runs = _runs(labels)
+            labels = vote_labels(self.token_scores[idx], self.min_margin) if idx and voice_runs else []
+            starts = {a for a, _ in _runs(labels)[1:]}
+            if self.repeat_margin is not None and idx:
+                texts = [self.token_texts[i] for i in idx]
+                runs = set(starts)
+                for k in repeat_cuts(texts, self.token_scores[idx], self.repeat_margin):
+                    # a voice cut a few characters away already separates the two copies
+                    if all(len(_key(texts[min(k, s):max(k, s)])) >= 3 for s in runs):
+                        starts.add(k)
             # cut positions (char index of each later run's first token); runs whose text position does not move
             # forward (char order disagrees with time order) are not cut
             bounds: list[tuple[int, int, int]] = []  # (char cut, end_ms of previous token, start_ms of next token)
             last = 0
-            for _, (a2, _) in zip(runs, runs[1:], strict=False):
+            for a2 in sorted(starts):
                 pos = where[idx[a2]][1]  # type: ignore[index]
                 if pos <= last or not text[last:pos].strip() or not text[pos:].strip():
                     continue

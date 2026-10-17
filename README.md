@@ -249,8 +249,8 @@ python main.py split --workdir .\work
 python main.py run ... --with-align --with-split --with-translate --speaker-enroll samples/speaker-enroll-togeradi.json
 ```
 
-- 给了 `--speaker-enroll`（成员注册声纹，`experiments/speaker-change/export_enrollment.py` 从已校字幕生成）后，align 结束时用 ReDimNet-M 0.75s 滑窗（步长 0.2s）给整期音频逐 10ms 打各成员的声纹相似度，缓存为 `manifests/speaker_scores.npz`（RTX 4070S 上 27 分钟音频约 12s；音频、注册文件或 `--speakers` 变化时重算）。在场成员自动判断（高置信最佳窗口占比 ≥2% 且 95 分位余弦 ≥0.52），也可用 `--speakers 理名,朱李` 指定。
-- split：规则断句后，每个词按其时间段投票定说话人，只在高置信换人处（平均分差 ≥ `--speaker-min-margin`，默认 0.1）切开，文字不变；两人重叠、边界词分差小，不会切。LLM 合并时每条带上说话人（不确定为 `?`），并禁止合并确信不同的说话人。`split_segments.json` 每条写入 `speaker`（不确定为空）和 `speaker_margin`。
+- 给了 `--speaker-enroll`（成员注册声纹，`experiments/speaker-change/export_enrollment.py` 从已校字幕生成）后，align 结束时用 ReDimNet-M 0.75s 滑窗（步长 0.2s）给整期音频逐 10ms 打各成员的声纹相似度，缓存为 `manifests/speaker_scores.npz`（RTX 4070S 上 27 分钟音频约 12s；音频、注册文件或 `--speakers` 变化时重算）。在场成员自动判断（高置信最佳窗口占比 ≥2% 且 95 分位余弦 ≥0.52，或占比 ≥5%），也可用 `--speakers 理名,朱李` 指定。整期判为缺席、但在某段（如声log 手机录音）30 秒内占优的成员只在该区间参与判断（局部在场，日志 `only locally present`）。
+- split：规则断句后，每个词按其时间段投票定说话人，只在高置信换人处（平均分差 ≥ `--speaker-min-margin`，默认 0.1）切开，文字不变；两人重叠、边界词分差小，不会切。LLM 合并时每条带上说话人（不确定为 `?`），并禁止合并确信不同的说话人。`split_segments.json` 每条写入 `speaker`（不确定为空）和 `speaker_margin`。重复短语（「ありがとうございます」×3、「やります」×4）：只含同一短语的相邻字幕合并为一条（「、」连接），被对齐挤进下一句开头的末遍移回、时间留给下一句；两遍各自确信是不同成员（分差 ≥0.08）时才在两遍之间切开，否则保持一行。
 - translate：说话人作为 `<speakers>` 提示随输入发送，帮助判断人称、对谁说话和语气；不写进译文。`translated_segments.json` 保留 `speaker`。
 - export：给了 `--speaker-enroll` 时，除 SRT 外在同目录另写同名 `.ass`（CI 一并上传）。标注方法照已校 ASS（#15/#16/#18）：每位成员一个样式 `1.理名` / `2.夕莉` / `5.朱李`（方正大黑_GBK 75，仅颜色不同，PlayRes 640×480，样式取自 #15，存于注册文件 `"ass"` 字段），只列本期在场成员；每条最终字幕按其词时间重新投票定样式，把握低（分差 <0.05）的行 Name 标 `说话人待确认`，无法判断的行用 `Default` 样式。文本为双语“原文\N译文”。30 期单成员字幕逐条准确率约 94.5%（分差 ≥0.15 时 65/65）。SRT 无样式，不含说话人；MiMo 校对 / normalize 不改说话人，导出时重新计算。
 - Web：在 `/legacy`（运行设置）的「LLM / 翻译 / 校正」组填写「说话人注册 JSON」（可选「在场成员」，留空自动判断），保存后 Run / Batch Run 以及工作台「继续」的 align / split / export 阶段都会带上 `--speaker-enroll`；路径不存在时拒绝启动。导出的 `.ass` 出现在工作台导出列表里，可预览、下载。
@@ -460,7 +460,8 @@ Qwen3ForcedAlignerModel.from_pretrained(...).align(...)
 - `qwen_asr/subtitle.py`: SRT/VTT 导出
 - `qwen_asr/normalize.py`: 时间轴规范化后处理
 - `qwen_asr/optimizer_bridge.py`: optimizer 适配层
-- `qwen_asr/speaker/`: 注册声纹说话人识别（`voiceprint.py` 逐帧打分与在场成员判断，`assign.py` 词/字幕说话人与换人切分，`redimnet/` 为 vendored 模型代码）
+- `qwen_asr/speaker/`: 注册声纹说话人识别（`voiceprint.py` 逐帧打分与在场成员 / 局部在场判断，`assign.py` 词/字幕说话人与换人切分、重复短语按遍切分，`redimnet/` 为 vendored 模型代码）
+- `qwen_asr/repeat_chains.py`: split 阶段重复短语整理（并回切在副本中间的断句、移回被挤压的末遍、合并只含同一短语的相邻字幕）
 
 WebUI：
 

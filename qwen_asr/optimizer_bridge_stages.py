@@ -96,6 +96,15 @@ def run_split_stage(
                 timeout=timeout,
                 speaker_min_margin=speaker_min_margin,
             )
+        processed = tidy_repeat_chains(
+            processed,
+            source.segments,
+            lambda text, start, end: _adapter._new_asr_data_seg(
+                ASRDataSeg, text=text, translated_text="", start_time=start, end_time=end
+            ),
+            assigner=assigner,
+            min_margin=speaker_min_margin,
+        )
         result = ASRData(processed)
     finally:
         splitter.stop()
@@ -171,6 +180,36 @@ def attach_speakers(assigner: Any, segments: list[Any]) -> None:
     for segment, label in zip(segments, assigner.label_cues(segments), strict=True):
         segment.speaker = label.speaker
         segment.speaker_margin = label.margin
+
+
+def tidy_repeat_chains(
+    segments: list[Any],
+    tokens: list[Any],
+    new_cue: Any,
+    *,
+    assigner: Any = None,
+    min_margin: float = 0.1,
+) -> list[Any]:
+    """Repeated short phrases (see qwen_asr.repeat_chains): rejoin length cuts inside a copy, move a last copy the
+    aligner squeezed into the next sentence back, join cues that only repeat the phrase (unless the speaker
+    confidently changes), and finally cut between copies whose voices confidently differ."""
+    from qwen_asr.repeat_chains import char_spans, merge_repeat_chains, move_degenerate_copies, rejoin_split_copies
+
+    segments, rejoined = rejoin_split_copies(segments, new_cue)
+    segments, moved = move_degenerate_copies(segments, char_spans(tokens, segments), new_cue)
+    labels = assigner.label_cues(segments) if assigner is not None else None
+    segments, joins = merge_repeat_chains(segments, new_cue, labels=labels, min_margin=min_margin)
+    cuts = 0
+    if assigner is not None:
+        segments, cuts = assigner.split_cues(segments, new_cue, voice_runs=False)
+    if rejoined or moved or joins or cuts:
+        LOGGER.info(
+            "Repeated phrases: %d cuts inside a copy undone, %d squeezed copies moved back, %d repeat cues joined, "
+            "%d cuts between copies said by different members", rejoined, moved, joins, cuts,
+        )
+    if assigner is not None:
+        attach_speakers(assigner, segments)
+    return segments
 
 
 def postprocess_split_segments(splitter: Any, segments: list[Any]) -> list[Any]:

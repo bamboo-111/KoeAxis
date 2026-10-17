@@ -25,7 +25,7 @@ LOGGER = logging.getLogger(__name__)
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 SAMPLE_RATE = 16000
 STEP = 0.01  # seconds per score frame
-CACHE_VERSION = 1
+CACHE_VERSION = 2
 DEFAULT_WEIGHTS = PROJECT_ROOT / ".model-cache" / "speaker" / "redimnet" / "M-vb2+vox2+cnc-ft_mix.pt"
 WEIGHTS_URL = "https://github.com/IDRnD/ReDimNet/releases/download/latest/M-vb2+vox2+cnc-ft_mix.pt"
 # Present-member detection (validated on episodes 15/16/18/30 with leave-one-episode-out centroids, no VAD):
@@ -33,6 +33,19 @@ WEIGHTS_URL = "https://github.com/IDRnD/ReDimNet/releases/download/latest/M-vb2+
 DETECT_MIN_SHARE = 0.02
 DETECT_MIN_P95 = 0.52
 DETECT_MARGIN = 0.1
+# Low-scoring recordings (public recordings, episodes 43/44): every member's p95 sits around 0.43-0.57, so a member
+# heard a lot can fail the p95 test. A member who is the confident best match in >= 5 % of the windows is present
+# anyway (absent members stayed <= 0.5 % on every checked episode).
+DETECT_STRONG_SHARE = 0.05
+# Local presence (episode 54: a phone recording of all three inside a two-person episode): a member absent overall
+# is allowed inside 30 s blocks where she is the confident best match in >= 15 % of the windows and at least 1.5x as
+# often as anybody else; outside those regions her score is pinned to -1 so she never wins.
+LOCAL_BLOCK = 30.0
+LOCAL_STEP = 5.0
+LOCAL_MIN_SHARE = 0.15
+LOCAL_DOMINANCE = 1.5
+LOCAL_PAD = 2.0
+BLOCKED_SCORE = -1.0
 
 
 @dataclass
@@ -202,8 +215,10 @@ def detect_members(
     min_share: float = DETECT_MIN_SHARE,
     min_p95: float = DETECT_MIN_P95,
     margin: float = DETECT_MARGIN,
+    strong_share: float = DETECT_STRONG_SHARE,
 ) -> tuple[list[str], dict[str, dict[str, float]]]:
-    """Members heard in the episode: share of confidently-best windows and 95th-percentile cosine both high."""
+    """Members heard in the episode: share of confidently-best windows and 95th-percentile cosine both high, or a
+    share alone of at least ``strong_share``."""
     stats: dict[str, dict[str, float]] = {}
     if len(members) < 2 or not len(window_scores):
         return list(members), stats
@@ -213,10 +228,101 @@ def detect_members(
         share = float(np.mean((best == j) & (gap > margin)))
         p95 = float(np.percentile(window_scores[:, j], 95))
         stats[name] = {"share": round(share, 4), "p95": round(p95, 4)}
-    present = [name for name in members if stats[name]["share"] >= min_share and stats[name]["p95"] >= min_p95]
+    present = [
+        name for name in members
+        if (stats[name]["share"] >= min_share and stats[name]["p95"] >= min_p95) or stats[name]["share"] >= strong_share
+    ]
     if not present:  # nothing confident (very short or noisy audio): keep everyone rather than guess
         present = list(members)
     return present, stats
+
+
+def local_regions(
+    window_scores: np.ndarray,
+    members: list[str],
+    present: list[str],
+    hop: float,
+    *,
+    block: float = LOCAL_BLOCK,
+    step: float = LOCAL_STEP,
+    min_share: float = LOCAL_MIN_SHARE,
+    dominance: float = LOCAL_DOMINANCE,
+    margin: float = DETECT_MARGIN,
+    pad: float = LOCAL_PAD,
+    win: float = 0.75,
+) -> dict[str, list[tuple[float, float]]]:
+    """{member: [(start_s, end_s), ...]} for members absent overall who dominate some ``block``-second stretches."""
+    if len(members) < 2 or not len(window_scores):
+        return {}
+    top = np.sort(window_scores, 1)
+    gap = top[:, -1] - top[:, -2]
+    best = window_scores.argmax(1)
+    conf = np.stack([(best == j) & (gap > margin) for j in range(len(members))], 1)
+    t = np.arange(len(window_scores)) * hop
+    total = float(t[-1] + win)
+    out: dict[str, list[tuple[float, float]]] = {}
+    for j, name in enumerate(members):
+        if name in present:
+            continue
+        spans: list[list[float]] = []
+        for b0 in np.arange(0.0, max(total - block, 0.0) + step, step):
+            sel = (t >= b0) & (t < b0 + block)
+            if not sel.any():
+                continue
+            share = conf[sel].mean(0)
+            others = float(np.delete(share, j).max())
+            if share[j] >= min_share and share[j] >= dominance * others:
+                hits = t[sel][conf[sel, j]]
+                spans.append([float(hits.min()) - pad, float(hits.max()) + hop * 4 + pad])
+        merged: list[list[float]] = []
+        for a, b in sorted(spans):
+            if merged and a <= merged[-1][1]:
+                merged[-1][1] = max(merged[-1][1], b)
+            else:
+                merged.append([a, b])
+        if merged:
+            out[name] = [(round(max(a, 0.0), 2), round(min(b, total), 2)) for a, b in merged]
+    return out
+
+
+def member_scores(
+    window_scores: np.ndarray,
+    members: list[str],
+    n_frames: int,
+    *,
+    win: float,
+    hop: float,
+    speakers: list[str] | None = None,
+) -> tuple[list[str], np.ndarray, dict[str, Any]]:
+    """(members used, frame scores, info). Members absent overall but locally present are scored only inside their
+    regions (``BLOCKED_SCORE`` elsewhere). Manual ``speakers`` are used as given, everywhere."""
+    present, stats = detect_members(window_scores, members)
+    regions = {} if speakers else local_regions(window_scores, members, present, hop, win=win)
+    chosen = list(speakers) if speakers else [name for name in members if name in present or name in regions]
+    index = [members.index(name) for name in chosen]
+    scores = frame_scores(window_scores[:, index], n_frames, win=win, hop=hop)
+    for k, name in enumerate(chosen):
+        if name not in regions:
+            continue
+        allowed = np.zeros(n_frames, bool)
+        for a, b in regions[name]:
+            allowed[int(a / STEP):int(b / STEP) + 1] = True
+        scores[~allowed, k] = BLOCKED_SCORE
+    info = {
+        "members": chosen,
+        "detected": present,
+        "local": {name: [list(span) for span in spans] for name, spans in regions.items()},
+        "manual": bool(speakers),
+        "detection": stats,
+    }
+    return chosen, scores, info
+
+
+def format_local(regions: dict[str, Any]) -> str:
+    def clock(s: float) -> str:
+        return f"{int(s // 60)}:{s % 60:04.1f}"
+
+    return "; ".join(f"{name} {', '.join(f'{clock(a)}-{clock(b)}' for a, b in spans)}" for name, spans in regions.items())
 
 
 def frame_scores(window_scores: np.ndarray, n_frames: int, *, win: float, hop: float) -> np.ndarray:
@@ -260,24 +366,19 @@ def compute_speaker_track(
 
             torch.cuda.empty_cache()
     window_scores = emb @ enrollment.centroids.T
-    present, stats = detect_members(window_scores, enrollment.members)
-    chosen = list(speakers) if speakers else present
-    index = [enrollment.members.index(name) for name in chosen]
+    window_scores = emb @ enrollment.centroids.T
     n_frames = int(len(samples) / SAMPLE_RATE / STEP) + 1
-    scores = frame_scores(window_scores[:, index], n_frames, win=enrollment.win, hop=enrollment.hop)
-    info = {
-        "members": chosen,
-        "detected": present,
-        "manual": bool(speakers),
-        "detection": stats,
-        "windows": int(len(emb)),
-        "device": device,
-    }
+    chosen, scores, info = member_scores(
+        window_scores, enrollment.members, n_frames, win=enrollment.win, hop=enrollment.hop, speakers=speakers
+    )
+    info.update({"windows": int(len(emb)), "device": device})
+    stats = info["detection"]
     LOGGER.info(
-        "Speaker track: %s (%s); window stats %s",
+        "Speaker track: %s (%s); window stats %s%s",
         ", ".join(chosen),
         "manual" if speakers else "auto-detected",
         ", ".join(f"{k}: {v['share'] * 100:.1f}% p95 {v['p95']:.2f}" for k, v in stats.items()),
+        f"; only locally present: {format_local(info['local'])}" if info["local"] else "",
     )
     return SpeakerTrack(chosen, scores, STEP, info)
 
