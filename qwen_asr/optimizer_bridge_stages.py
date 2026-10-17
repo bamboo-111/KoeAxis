@@ -34,6 +34,11 @@ def run_split_stage(
     timeout: float = 120.0,
     split_mode: str = "rule",
     split_boundaries: str = "bunsetsu",
+    speaker_enroll: Path | str | None = None,
+    speakers: list[str] | None = None,
+    speaker_min_margin: float = 0.1,
+    speaker_weights: Path | str | None = None,
+    speaker_device: str = "auto",
 ) -> None:
     del prompt_limit_ratio
     if split_mode != "rule":
@@ -57,6 +62,26 @@ def run_split_stage(
     try:
         processed = splitter._process_by_rules(source.segments)  # noqa: SLF001
         processed = postprocess_split_segments(splitter, processed)
+        assigner = None
+        if speaker_enroll:
+            assigner = load_speaker_assigner(
+                work_paths,
+                source.segments,
+                speaker_enroll=speaker_enroll,
+                speakers=speakers,
+                min_margin=speaker_min_margin,
+                weights=speaker_weights,
+                device=speaker_device,
+            )
+        if assigner is not None:
+            processed, cuts = assigner.split_cues(
+                processed,
+                lambda text, start, end: _adapter._new_asr_data_seg(
+                    ASRDataSeg, text=text, translated_text="", start_time=start, end_time=end
+                ),
+            )
+            attach_speakers(assigner, processed)
+            LOGGER.info("Speaker split: %d cuts at confident speaker changes (%s)", cuts, ", ".join(assigner.members))
         resolved_api_key = resolve_llm_api_key(api_key, base_url)
         if llm_model and base_url and resolved_api_key:
             processed = merge_adjacent_boundaries(
@@ -69,6 +94,7 @@ def run_split_stage(
                 disable_thinking=disable_thinking,
                 llm_extra_body=llm_extra_body,
                 timeout=timeout,
+                speaker_min_margin=speaker_min_margin,
             )
         result = ASRData(processed)
     finally:
@@ -97,8 +123,54 @@ def run_split_stage(
         result.segments,
         normalize_content=_adapter._normalize_content,
     )
-    write_json_atomic(work_paths.split_manifest, result.to_json())
+    payload = result.to_json()
+    if assigner is not None:
+        for index, label in enumerate(assigner.label_cues(result.segments), 1):
+            item = payload.get(str(index))
+            if isinstance(item, dict):
+                item["speaker"] = label.speaker if label.margin >= speaker_min_margin else ""
+                item["speaker_margin"] = round(min(label.margin, 1.0), 3)
+    write_json_atomic(work_paths.split_manifest, payload)
     work_paths.split_srt.write_text(result.to_srt(), encoding="utf-8")
+
+
+def load_speaker_assigner(
+    work_paths: WorkPaths,
+    tokens: list[Any],
+    *,
+    speaker_enroll: Path | str,
+    speakers: list[str] | None,
+    min_margin: float,
+    weights: Path | str | None,
+    device: str,
+):
+    """Speaker decisions from the cached track (computed after align); None when unavailable (logged).
+
+    Speaker labels are auxiliary: a missing model or a scoring failure falls back to splitting without them.
+    """
+    from qwen_asr.speaker.assign import SpeakerAssigner
+    from qwen_asr.speaker.voiceprint import ensure_speaker_track
+
+    try:
+        track = ensure_speaker_track(
+            work_paths.audio_path,
+            work_paths.aligned_manifest.parent,
+            speaker_enroll,
+            speakers=speakers,
+            weights=weights,
+            device=device,
+        )
+    except Exception as exc:  # noqa: BLE001 - speaker labels must never fail the split stage
+        LOGGER.warning("Speaker identification unavailable, splitting without it: %s", exc)
+        return None
+    return SpeakerAssigner.from_track(track, tokens, min_margin=min_margin)
+
+
+def attach_speakers(assigner: Any, segments: list[Any]) -> None:
+    """Set .speaker / .speaker_margin on each cue for the LLM merge (prompt hint + cross-speaker merge guard)."""
+    for segment, label in zip(segments, assigner.label_cues(segments), strict=True):
+        segment.speaker = label.speaker
+        segment.speaker_margin = label.margin
 
 
 def postprocess_split_segments(splitter: Any, segments: list[Any]) -> list[Any]:
@@ -141,7 +213,9 @@ def run_translate_stage(
     if not work_paths.split_manifest.exists():
         raise RuntimeError("split_segments.json is missing. Run split first.")
 
-    asr_data = ASRData.from_json(read_json(work_paths.split_manifest, default={}))
+    split_payload = read_json(work_paths.split_manifest, default={})
+    asr_data = ASRData.from_json(split_payload)
+    with_speakers = attach_manifest_speakers(split_payload, asr_data.segments)
     prompt_parts = [custom_prompt.strip()] if custom_prompt.strip() else []
     if glossary_xlsx:
         glossary_prompt = build_glossary_prompt(glossary_xlsx)
@@ -176,9 +250,30 @@ def run_translate_stage(
 
     translated_payload = result.to_json()
     merge_translation_suspect_metadata(translated_payload, result.segments)
+    if with_speakers:
+        for index, segment in enumerate(result.segments, 1):
+            item = translated_payload.get(str(index))
+            if isinstance(item, dict) and hasattr(segment, "speaker"):
+                item["speaker"] = segment.speaker
     mark_alignment_repaired_suspects(translated_payload, read_json(work_paths.aligned_manifest, default=[]))
     write_json_atomic(work_paths.translated_manifest, translated_payload)
     work_paths.translated_srt.write_text(result.to_srt(), encoding="utf-8")
+
+
+def attach_manifest_speakers(payload: Any, segments: list[Any]) -> bool:
+    """Copy split_segments.json "speaker" labels onto the loaded segments (matched by time and text)."""
+    if not isinstance(payload, dict):
+        return False
+    labels: dict[tuple[int, int, str], str] = {}
+    for item in payload.values():
+        if isinstance(item, dict) and "speaker" in item:
+            key = (int(item.get("start_time", 0)), int(item.get("end_time", 0)), str(item.get("original_subtitle", "")))
+            labels[key] = str(item.get("speaker") or "")
+    if not labels:
+        return False
+    for segment in segments:
+        segment.speaker = labels.get((int(segment.start_time), int(segment.end_time), str(segment.text)), "")
+    return True
 
 
 ALIGNMENT_REPAIRED_SUSPECT_TYPE = "alignment_repaired"

@@ -35,8 +35,11 @@ def ends_sentence(text: str) -> bool:
     return any(not text[match.end():].strip() for match in _SENTENCE_END.finditer(text))
 
 
+_DISPLAY_STRIPPED = frozenset("、，,。．｡､.")  # commas and full stops only; ？！「」…・ etc. are kept
+
+
 def strip_display_punctuation(text: str) -> str:
-    """Remove sentence punctuation, not decimal points, email/URL syntax or word spelling."""
+    """Remove commas and full stops for display, not decimal points, email/URL syntax or word spelling."""
     protected: set[int] = set()
     for match in _LEXICAL_PATTERN.finditer(text):
         end = match.end()
@@ -44,10 +47,16 @@ def strip_display_punctuation(text: str) -> str:
             while end > match.start() and text[end - 1] in ".!?;":
                 end -= 1
         protected.update(range(match.start(), end))
-    characters = [
-        " " if index not in protected and unicodedata.category(char).startswith("P") else char
-        for index, char in enumerate(text)
-    ]
+    characters: list[str] = []
+    for index, char in enumerate(text):
+        if index in protected or char not in _DISPLAY_STRIPPED:
+            characters.append(char)
+            continue
+        # a removed comma/stop becomes a space only between words, not next to a kept bracket or mark
+        before = "".join(characters).rstrip()[-1:]
+        after = text[index + 1:].lstrip()[:1]
+        if before.isalnum() and after.isalnum():
+            characters.append(" ")
     return re.sub(r"\s+", " ", "".join(characters)).strip()
 
 
@@ -167,8 +176,13 @@ def reflow_subtitle_segments(
     timing_tokens: list[ASRDataSeg] | None = None,
     events: list[dict[str, Any]] | None = None,
     display_extension_ms: int = 0,
+    join_fragments: bool = True,
 ) -> list[ASRDataSeg]:
-    """Only change cue boundaries: source and translation content/order must survive."""
+    """Only change cue boundaries: source and translation content/order must survive.
+
+    join_fragments=False keeps every input boundary (only bilingual sentence splits are applied); normalize uses
+    that by default because the rule-based join cannot see speaker turns.
+    """
     events = events if events is not None else []
     split: list[ASRDataSeg] = []
     for segment in segments:
@@ -176,7 +190,7 @@ def reflow_subtitle_segments(
         split.extend(_split_segment(clone, timing_tokens or [], events, display_extension_ms))
     result: list[ASRDataSeg] = []
     for segment in split:
-        if result and _can_join(result[-1], segment):
+        if join_fragments and result and _can_join(result[-1], segment):
             left = result.pop()
             events.append({"operation": "fragment_merge", "left": left.text, "right": segment.text})
             result.append(ASRDataSeg(

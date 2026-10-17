@@ -243,6 +243,19 @@ python main.py split --workdir .\work
 
 生产 split 仅支持规则实现。历史 LLM split 模式已经完成实验并被否定，相关 CLI、Web、prompt 和运行分支均已退役；翻译 LLM、MiMo 和通用 `llm_client` 不受影响。
 
+说话人识别（可选，辅助断句和翻译）：
+
+```bash
+python main.py run ... --with-align --with-split --with-translate --speaker-enroll samples/speaker-enroll-togeradi.json
+```
+
+- 给了 `--speaker-enroll`（成员注册声纹，`experiments/speaker-change/export_enrollment.py` 从已校字幕生成）后，align 结束时用 ReDimNet-M 0.75s 滑窗（步长 0.2s）给整期音频逐 10ms 打各成员的声纹相似度，缓存为 `manifests/speaker_scores.npz`（RTX 4070S 上 27 分钟音频约 12s；音频、注册文件或 `--speakers` 变化时重算）。在场成员自动判断（高置信最佳窗口占比 ≥2% 且 95 分位余弦 ≥0.52），也可用 `--speakers 理名,朱李` 指定。
+- split：规则断句后，每个词按其时间段投票定说话人，只在高置信换人处（平均分差 ≥ `--speaker-min-margin`，默认 0.1）切开，文字不变；两人重叠、边界词分差小，不会切。LLM 合并时每条带上说话人（不确定为 `?`），并禁止合并确信不同的说话人。`split_segments.json` 每条写入 `speaker`（不确定为空）和 `speaker_margin`。
+- translate：说话人作为 `<speakers>` 提示随输入发送，帮助判断人称、对谁说话和语气；不写进译文。`translated_segments.json` 保留 `speaker`。
+- export：给了 `--speaker-enroll` 时，除 SRT 外在同目录另写同名 `.ass`（CI 一并上传）。标注方法照已校 ASS（#15/#16/#18）：每位成员一个样式 `1.理名` / `2.夕莉` / `5.朱李`（方正大黑_GBK 75，仅颜色不同，PlayRes 640×480，样式取自 #15，存于注册文件 `"ass"` 字段），只列本期在场成员；每条最终字幕按其词时间重新投票定样式，把握低（分差 <0.05）的行 Name 标 `说话人待确认`，无法判断的行用 `Default` 样式。文本为双语“原文\N译文”。30 期单成员字幕逐条准确率约 94.5%（分差 ≥0.15 时 65/65）。SRT 无样式，不含说话人；MiMo 校对 / normalize 不改说话人，导出时重新计算。
+- 30 期人工标准（300 秒，79 个必切换人点）：正确条 66–71 → 83，漏切换人 32–35 → 23，错切 15–16 → 17（LLM 合并本身每次有波动）。
+- 权重 `.model-cache/speaker/redimnet/M-vb2+vox2+cnc-ft_mix.pt` 需自行下载（https://github.com/IDRnD/ReDimNet/releases ，MIT）；缺失或出错时只告警，断句和翻译照常进行、不带说话人。模型代码在 `qwen_asr/speaker/redimnet/`（MIT，ID R&D）。
+
 翻译：
 
 ```bash
@@ -286,7 +299,7 @@ python main.py normalize ^
   --min-blank-ms 300
 ```
 
-normalize 还会在不改写原文与译文的前提下整理双语显示句界：合并明确的悬空短语，并在双语句界可对应时拆开多句。最终显示文本去除句读标点，保留小数、邮箱、URL 和英文词内符号；上游转写、翻译及校对 manifest 保留原始标点。独立短应答保留为单条，在相邻显示时间允许时延长至至少 500ms。具体边界操作与时间定位方式写入 `reports/normalize_layout.json`。已有 normalize 产物需用 `--no-resume` 重生成，再执行 export。
+normalize 还会在不改写原文与译文的前提下整理双语显示句界：在双语句界可对应时拆开多句。按词尾/词头规则合并悬空短语默认关闭（该规则看不到换人，30 期人工标准上改坏 10 条正确字幕），需要时加 `--join-fragments`。最终显示文本只去除逗号和句号（、，,。．.；词与词之间留一个空格），问号、感叹号、引号、括号、省略号等其他标点保留，小数、邮箱、URL 和英文词内符号也保留；只剩标点的行不显示；上游转写、翻译及校对 manifest 保留原始标点。独立短应答保留为单条，在相邻显示时间允许时延长至至少 500ms。具体边界操作与时间定位方式写入 `reports/normalize_layout.json`。已有 normalize 产物需用 `--no-resume` 重生成，再执行 export。
 
 ### 8. 本地网页
 
@@ -443,6 +456,7 @@ Qwen3ForcedAlignerModel.from_pretrained(...).align(...)
 - `qwen_asr/subtitle.py`: SRT/VTT 导出
 - `qwen_asr/normalize.py`: 时间轴规范化后处理
 - `qwen_asr/optimizer_bridge.py`: optimizer 适配层
+- `qwen_asr/speaker/`: 注册声纹说话人识别（`voiceprint.py` 逐帧打分与在场成员判断，`assign.py` 词/字幕说话人与换人切分，`redimnet/` 为 vendored 模型代码）
 
 WebUI：
 

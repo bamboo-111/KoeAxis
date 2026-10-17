@@ -367,8 +367,16 @@ class SubtitleTranslator:
         # 获取翻译 prompt
         system_prompt = self._system_prompt()
 
-        # Agent loop
-        result_dict = self._agent_loop(system_prompt, subtitle_dict)
+        # Agent loop。说话人（声纹识别，可能缺失）只作为提示随输入发送，不参与结果校验。
+        speakers = {
+            str(i): str(getattr(seg, "speaker", "") or "")
+            for i, seg in enumerate(chunk, 1)
+            if getattr(seg, "speaker", "")
+        }
+        if speakers:
+            result_dict = self._agent_loop(system_prompt, subtitle_dict, speakers=speakers)
+        else:
+            result_dict = self._agent_loop(system_prompt, subtitle_dict)
 
         if result_dict is None:
             raise RuntimeError(
@@ -389,6 +397,7 @@ class SubtitleTranslator:
         self,
         system_prompt: str,
         subtitle_dict: Dict[str, str],
+        speakers: Optional[Dict[str, str]] = None,
     ) -> Optional[Dict[str, Any]]:
         """Agent loop 翻译字幕批次。
 
@@ -407,6 +416,8 @@ class SubtitleTranslator:
             f"{json.dumps(subtitle_dict, ensure_ascii=False)}"
             "</input_subtitle>"
         )
+        if speakers:
+            user_content += f"<speakers>{json.dumps(speakers, ensure_ascii=False)}</speakers>"
 
         messages: list[dict[str, str]] = [
             {"role": "system", "content": system_prompt},

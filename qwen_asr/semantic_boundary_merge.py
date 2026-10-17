@@ -6,6 +6,7 @@ import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Any
 
+import json_repair
 from optimizer.exceptions import LLMAuthError
 from optimizer.splitter_boundaries import STRONG_SENTENCE_END
 from optimizer.splitter_readability import is_dialogue_standalone_response
@@ -23,6 +24,10 @@ Only merge adjacent ids when they form one incomplete phrase or a word was split
 Keep complete sentences, speaker changes, short replies, questions, and reactions separate.
 Never return, correct, translate, or rewrite subtitle text.
 """
+SPEAKER_NOTE = (
+    'Cues carry "speaker" from voice identification ("?" = not sure). '
+    "Never merge cues of different speakers; a known speaker is reliable, but still keep replies separate.\n"
+)
 
 
 def merge_adjacent_boundaries(
@@ -37,6 +42,7 @@ def merge_adjacent_boundaries(
     llm_extra_body: dict[str, Any] | None,
     timeout: float,
     batch_size: int = 50,
+    speaker_min_margin: float = 0.1,
 ) -> list[Any]:
     if not segments:
         return []
@@ -54,6 +60,7 @@ def merge_adjacent_boundaries(
                 disable_thinking=disable_thinking,
                 llm_extra_body=llm_extra_body,
                 timeout=timeout,
+                speaker_min_margin=speaker_min_margin,
             ): index
             for index, batch in enumerate(batches)
         }
@@ -62,7 +69,7 @@ def merge_adjacent_boundaries(
 
     result: list[Any] = []
     for index, batch in enumerate(batches):
-        result.extend(_merge_batch(batch, grouped[index], max_chars=max_chars))
+        result.extend(_merge_batch(batch, grouped[index], max_chars=max_chars, speaker_min_margin=speaker_min_margin))
     source_text = "".join(str(segment.text) for segment in segments)
     output_text = "".join(str(segment.text) for segment in result)
     if output_text != source_text:
@@ -106,6 +113,7 @@ def _request_groups(
     disable_thinking: bool,
     llm_extra_body: dict[str, Any] | None,
     timeout: float,
+    speaker_min_margin: float = 0.1,
 ) -> list[list[int]]:
     payload = [
         {
@@ -116,7 +124,14 @@ def _request_groups(
         }
         for index, segment in enumerate(batch, 1)
     ]
-    prompt = f"Prefer merged text no longer than {max_chars} characters.\n" + json.dumps(
+    with_speakers = any(getattr(segment, "speaker", None) is not None for segment in batch)
+    if with_speakers:
+        for item, segment in zip(payload, batch, strict=True):
+            item["speaker"] = _confident_speaker(segment, speaker_min_margin) or "?"
+    prompt = f"Prefer merged text no longer than {max_chars} characters.\n"
+    if with_speakers:
+        prompt += SPEAKER_NOTE
+    prompt += json.dumps(
         payload,
         ensure_ascii=False,
         separators=(",", ":"),
@@ -136,7 +151,11 @@ def _request_groups(
         timeout=timeout,
     )
     content = response.choices[0].message.content or ""
-    groups = json.loads(content).get("groups")
+    try:
+        parsed = json.loads(content)
+    except json.JSONDecodeError:
+        parsed = json_repair.loads(content)  # e.g. a dropped closing bracket; the guards below still apply
+    groups = parsed.get("groups") if isinstance(parsed, dict) else None
     if not isinstance(groups, list) or not all(isinstance(group, list) and group for group in groups):
         raise RuntimeError("Semantic boundary merge returned invalid groups")
     normalized = [[int(value) for value in group] for group in groups]
@@ -149,18 +168,24 @@ def _request_groups(
     return normalized
 
 
-def _merge_batch(batch: list[Any], groups: list[list[int]], *, max_chars: int) -> list[Any]:
+def _merge_batch(
+    batch: list[Any],
+    groups: list[list[int]],
+    *,
+    max_chars: int,
+    speaker_min_margin: float = 0.1,
+) -> list[Any]:
     result: list[Any] = []
     for group in groups:
         selected = [batch[index - 1] for index in group]
-        if len(selected) == 1 or _merge_allowed(selected, max_chars=max_chars):
+        if len(selected) == 1 or _merge_allowed(selected, max_chars=max_chars, speaker_min_margin=speaker_min_margin):
             result.append(_merged_segment(selected))
             continue
         # The model often chains 3-4 cues into one group; when the whole chain breaks a guard,
         # keep the longest guard-passing runs (left to right) instead of discarding every merge.
         run: list[Any] = [selected[0]]
         for segment in selected[1:]:
-            if _merge_allowed([*run, segment], max_chars=max_chars):
+            if _merge_allowed([*run, segment], max_chars=max_chars, speaker_min_margin=speaker_min_margin):
                 run.append(segment)
                 continue
             result.append(_merged_segment(run))
@@ -169,7 +194,14 @@ def _merge_batch(batch: list[Any], groups: list[list[int]], *, max_chars: int) -
     return result
 
 
-def _merge_allowed(selected: list[Any], *, max_chars: int) -> bool:
+def _confident_speaker(segment: Any, min_margin: float) -> str:
+    speaker = getattr(segment, "speaker", None)
+    if not speaker or float(getattr(segment, "speaker_margin", 0.0)) < min_margin:
+        return ""
+    return str(speaker)
+
+
+def _merge_allowed(selected: list[Any], *, max_chars: int, speaker_min_margin: float = 0.1) -> bool:
     text = "".join(str(segment.text) for segment in selected)
     duration = int(selected[-1].end_time) - int(selected[0].start_time)
     gaps = [
@@ -178,9 +210,10 @@ def _merge_allowed(selected: list[Any], *, max_chars: int) -> bool:
     ]
     crosses_sentence = any(STRONG_SENTENCE_END.search(str(segment.text)) for segment in selected[:-1])
     contains_response = any(is_dialogue_standalone_response(str(segment.text)) for segment in selected)
+    speakers = {_confident_speaker(segment, speaker_min_margin) for segment in selected} - {""}
     return not (
         len(text) > max_chars or duration > 10000 or any(gap > 1000 for gap in gaps)
-        or crosses_sentence or contains_response
+        or crosses_sentence or contains_response or len(speakers) > 1
     )
 
 
@@ -188,9 +221,15 @@ def _merged_segment(selected: list[Any]) -> Any:
     if len(selected) == 1:
         return selected[0]
     first = selected[0]
-    return type(first)(
+    merged = type(first)(
         text="".join(str(segment.text) for segment in selected),
         translated_text="".join(str(segment.translated_text) for segment in selected),
         start_time=int(first.start_time),
         end_time=int(selected[-1].end_time),
     )
+    labelled = [segment for segment in selected if getattr(segment, "speaker", None) is not None]
+    if labelled:  # keep the most confident label so a later merge step still sees the speaker
+        best = max(labelled, key=lambda segment: float(getattr(segment, "speaker_margin", 0.0)))
+        merged.speaker = best.speaker
+        merged.speaker_margin = float(getattr(best, "speaker_margin", 0.0))
+    return merged

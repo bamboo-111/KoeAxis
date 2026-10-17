@@ -20,6 +20,8 @@ extend-exclude = [
     "backups",
     "benchmarks/**/runs",
     "dist",
+    "experiments/speaker-change/third_party",
+    "qwen_asr/speaker/redimnet",
     "tmp_codex_pytest",
     "tmp_manual_tests",
     "tmp_pytest",

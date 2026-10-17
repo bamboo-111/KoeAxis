@@ -47,6 +47,9 @@ def cmd_export(args: argparse.Namespace, work_paths: WorkPaths) -> int:
     stage_helpers.write_transcript_text(work_paths.transcript_text, transcripts)
 
     optimizer_root = Path(args.optimizer_root)
+    speaker_ass = speaker_ass_path(work_paths)
+    if speaker_ass.exists():
+        speaker_ass.unlink()
     optimizer_asr_data = None
     if args.source in {"auto", "normalized", "mimo", "translated", "split", "transcript"}:
         optimizer_asr_data = stage_helpers._load_optimizer_export_source(args.source, work_paths, optimizer_root)
@@ -61,6 +64,8 @@ def cmd_export(args: argparse.Namespace, work_paths: WorkPaths) -> int:
                 export_vtt_from_optimizer_asr_data(optimizer_asr_data),
                 encoding="utf-8",
             )
+        if getattr(args, "speaker_enroll", None):
+            write_speaker_ass(args, work_paths, optimizer_asr_data, optimizer_root)
         ready = _finalize_exports(args, work_paths)
         write_progress(
             work_paths,
@@ -120,6 +125,51 @@ def cmd_export(args: argparse.Namespace, work_paths: WorkPaths) -> int:
     return 0
 
 
+def speaker_ass_path(work_paths: WorkPaths) -> Path:
+    return work_paths.subtitles_srt.with_suffix(".ass")
+
+
+def write_speaker_ass(args: argparse.Namespace, work_paths: WorkPaths, asr_data, optimizer_root: Path) -> bool:
+    """Extra ASS with one style per speaker (studio convention). Auxiliary: failures are logged, SRT is unaffected."""
+    from qwen_asr import optimizer_bridge_adapter as _adapter
+    from qwen_asr.commands.split import speaker_stage_options
+    from qwen_asr.optimizer_bridge_stages import load_optimizer_types, load_speaker_assigner
+    from qwen_asr.speaker.ass_export import build_speaker_ass
+    from qwen_asr.speaker.voiceprint import load_enrollment
+
+    options = speaker_stage_options(args)
+    try:
+        ASRData, ASRDataSeg, _ = load_optimizer_types(optimizer_root)
+        tokens = _adapter.aligned_manifest_to_asr_data(work_paths, ASRData, ASRDataSeg).segments
+        assigner = load_speaker_assigner(
+            work_paths,
+            tokens,
+            speaker_enroll=options["speaker_enroll"],
+            speakers=options["speakers"],
+            min_margin=options["speaker_min_margin"],
+            weights=options["speaker_weights"],
+            device=options["speaker_device"],
+        )
+        if assigner is None:
+            return False
+        segments = list(asr_data.segments)
+        text = build_speaker_ass(
+            segments,
+            assigner.label_cues(segments),
+            members=assigner.members,
+            ass_config=load_enrollment(options["speaker_enroll"]).ass,
+            title=_load_project_metadata(work_paths).get("source_name", "") or work_paths.workdir.name,
+        )
+    except Exception as exc:  # noqa: BLE001 - the speaker ASS is optional
+        LOGGER.warning("Speaker ASS export skipped: %s", exc)
+        return False
+    path = speaker_ass_path(work_paths)
+    ensure_directory(path.parent)
+    path.write_bytes(text.encode("utf-8"))  # CRLF already in text; no newline translation
+    LOGGER.info("Wrote speaker-styled ASS: %s", path)
+    return True
+
+
 def _resolve_export_media_path(args: argparse.Namespace, work_paths: WorkPaths) -> Path:
     media = getattr(args, "media_path", None) or getattr(args, "media", None) or getattr(args, "video", None)
     if media:
@@ -163,6 +213,17 @@ def _finalize_exports(args: argparse.Namespace, work_paths: WorkPaths) -> list[s
             shutil.copy2(cache_path, target)
         ready.append(suffix)
         LOGGER.info("Saved %s export: %s", suffix, target)
+
+    speaker_ass = speaker_ass_path(work_paths)
+    anchor = targets.get("srt") or targets.get("vtt")
+    if anchor is not None and speaker_ass.exists():
+        target = anchor.with_suffix(".ass")
+        ensure_directory(target.parent)
+        if not _same_file_path(speaker_ass, target):
+            shutil.copy2(speaker_ass, target)
+        targets = {**targets, "ass": target}
+        ready.append("ass")
+        LOGGER.info("Saved ass export: %s", target)
 
     payload = {
         **metadata,
