@@ -46,6 +46,7 @@ def cmd_normalize(args: argparse.Namespace, work_paths: WorkPaths) -> int:
         extend_ms=args.extend_ms,
         snap_gap_ms=args.snap_gap_ms,
         min_blank_ms=args.min_blank_ms,
+        join_fragments=bool(getattr(args, "join_fragments", False)),
     )
     layout_events: list[dict[str, Any]] = []
     timing_tokens = [

@@ -13,6 +13,7 @@ ABSOLUTE REQUIREMENTS:
 - When ${target_language} is Simplified Chinese, translated text must not contain Japanese Hiragana or Katakana. Translate Japanese titles into Chinese and render Japanese names/handles with an established Chinese form or Latin transliteration
 - Maintain one-to-one correspondence: same keys, same count
 - If a sentence is incomplete, translate as-is without adding ellipsis
+- When <speakers> is given after the input, it maps subtitle keys to the person speaking (voice identification; keys without a speaker are unknown, and labels can occasionally be wrong). Use it to resolve who says what: first/second person, who is being addressed or answered, and a consistent tone per speaker. Never add speaker names to the translation
 - NEVER output subtitles in any language other than ${target_language}
 - Do NOT output anything other than the JSON object
 - If a subtitle has no issue at all (nothing to mark, confidence 0.8 or higher), output only {"translation": ..., "confidence": ...} for it

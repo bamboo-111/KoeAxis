@@ -33,6 +33,7 @@ output/
 scratch/
 .playwright-cli/
 experiments/*/runs/
+experiments/**/*.wav
 samples/*.mp3
 samples/*.wav
 samples/test.srt

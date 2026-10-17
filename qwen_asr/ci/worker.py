@@ -426,6 +426,9 @@ class RunExecutor(threading.Thread):
             uploads.append((export_path, export_path.name, "subtitle"))
             subtitle_count = sum(1 for line in export_path.read_text(encoding="utf-8-sig").splitlines() if "-->" in line)
             self.state.metrics["subtitle_count"] = subtitle_count
+            speaker_ass = export_path.with_suffix(".ass")  # speaker-styled ASS, written when --speaker-enroll is set
+            if speaker_ass.exists():
+                uploads.append((speaker_ass, speaker_ass.name, "subtitle"))
         work = self.paths["work"]
         paths = self._work_paths()
         bundles = {"reports.zip": [work / "reports", work / "diagnostics", work / "logs", paths.progress_path,

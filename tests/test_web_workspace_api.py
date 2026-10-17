@@ -172,6 +172,22 @@ def test_export_file_path_must_come_from_inventory(tmp_path: Path, monkeypatch: 
     assert exc_info.value.code == "EXPORT_PATH_OUT_OF_SCOPE"
 
 
+def test_speaker_ass_is_listed_and_downloadable(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    workdir = _workspace(tmp_path, monkeypatch)
+    cache = workdir / "export-cache"
+    cache.mkdir()
+    (cache / "subtitles.srt").write_text("1\n00:00:00,000 --> 00:00:01,000\nx\n", encoding="utf-8")
+    ass = cache / "subtitles.ass"
+    ass.write_text("[Script Info]\n", encoding="utf-8")
+
+    exports = workspace_api.get_exports(str(workdir))["data"]
+
+    assert {item["format"] for item in exports} == {"srt", "ass"}
+    assert workspace_api.get_export_file_path(str(workdir), str(ass)) == ass.resolve()
+    assert _content_type_for_path(ass) == "text/x-ssa; charset=utf-8"
+    assert _subtitle_preview_content_type(ass) == "text/plain; charset=utf-8"
+
+
 def test_quality_uses_live_music_excluded_alignment_check(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     workdir = _workspace(tmp_path, monkeypatch)
     (workdir / "manifests" / "aligned_segments.json").write_text(

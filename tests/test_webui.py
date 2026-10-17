@@ -217,6 +217,61 @@ def test_webui_build_run_includes_integrated_mimo_proofread_mode() -> None:
     assert "--with-mimo-proofread" in command
 
 
+def _speaker_stage_payloads(enroll: str) -> dict[str, dict]:
+    common = {
+        "workdir": "work-test",
+        "media_path": "input.mp3",
+        "asr_model": "asr",
+        "align_model": "align",
+        "dtype": "fp16",
+        "device": "cuda:0",
+        "format": "srt",
+        "source": "auto",
+        "normalize_source": "auto",
+        "speaker_enroll": enroll,
+        "speakers": "理名,朱李",
+    }
+    return {
+        stage: {**common, "stage": stage, **({"media_paths": ["a.mp3", "b.mp3"]} if stage == "batch-run" else {})}
+        for stage in ("align", "split", "export", "run", "batch-run")
+    }
+
+
+def test_webui_speaker_enroll_is_passed_to_speaker_stages(tmp_path: Path) -> None:
+    from qwen_asr.cli import build_parser
+
+    enroll = tmp_path / "enroll.json"
+    enroll.write_text("{}", encoding="utf-8")
+    for stage, payload in _speaker_stage_payloads(str(enroll)).items():
+        command = build_command(payload)
+        assert command[command.index("--speaker-enroll") + 1] == str(enroll), stage
+        assert command[command.index("--speakers") + 1] == "理名,朱李", stage
+        args = build_parser().parse_args(command[2:])  # the real CLI must accept every flag the Web UI sends
+        assert str(args.speaker_enroll) == str(enroll), stage
+        assert args.speakers == "理名,朱李", stage
+
+
+def test_webui_speaker_enroll_is_optional_and_validated(tmp_path: Path) -> None:
+    for stage, payload in _speaker_stage_payloads("").items():
+        command = build_command(payload)
+        assert "--speaker-enroll" not in command and "--speakers" not in command, stage
+    missing = _speaker_stage_payloads(str(tmp_path / "missing.json"))["run"]
+    with pytest.raises(ValueError, match="Speaker enrollment file not found"):
+        build_command(missing)
+
+
+def test_webui_index_has_speaker_controls() -> None:
+    for snippet in (
+        'id="speakerEnroll"',
+        'id="speakers"',
+        "/api/pick-speaker-enroll",
+        "speaker_enroll: document.getElementById('speakerEnroll').value",
+        "'speakerEnroll', 'speakers'",
+        "['srt', 'vtt', 'ass']",
+    ):
+        assert snippet in INDEX_HTML, snippet
+
+
 def test_webui_build_align_command_uses_cleanup_interval_default() -> None:
     command = build_command(
         {

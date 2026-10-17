@@ -10,11 +10,13 @@ from qwen_asr.subtitle_layout import content_key, reflow_subtitle_segments, stri
 @pytest.mark.parametrize(
     ("source", "expected"),
     [
-        ("「你好，世界！」……（再见。）", "你好 世界 再见"),
-        ("スバルと撮った？バイバイ。", "スバルと撮った バイバイ"),
-        ("イエー！", "イエー"),
+        ("「你好，世界！」……（再见。）", "「你好 世界！」……（再见）"),
+        ("スバルと撮った？バイバイ。", "スバルと撮った？バイバイ"),
+        ("イエー！", "イエー！"),
+        ("えっ、そうなの。「本当」、すごい。", "えっ そうなの「本当」すごい"),
+        ("リナ・ジマ、Hello, world.", "リナ・ジマ Hello world"),
         ("价格是2.5，邮箱a.b@example.com。", "价格是2.5 邮箱a.b@example.com"),
-        ("Don't re-write this!", "Don't re-write this"),
+        ("Don't re-write this!", "Don't re-write this!"),
         ("See https://example.com/a?x=1.", "See https://example.com/a?x=1"),
         ("土下座 at interfm.jp まで。", "土下座 at interfm.jp まで"),
     ],
@@ -22,6 +24,7 @@ from qwen_asr.subtitle_layout import content_key, reflow_subtitle_segments, stri
 def test_display_punctuation_preserves_lexical_spelling(source: str, expected: str) -> None:
     assert strip_display_punctuation(source) == expected
     assert content_key(source) == content_key(expected)
+    assert not any(mark in strip_display_punctuation(source) for mark in "、，。")
 
 
 def test_layout_merges_japanese_compound_and_its_continuation() -> None:
@@ -111,9 +114,9 @@ def test_normalize_cleans_both_lines_and_preserves_bilingual_content() -> None:
         ASRDataSeg("はい。", 3200, 3320, "好。"),
         ASRDataSeg("次です。", 3320, 4500, "下一位。"),
     ])
-    result = normalize_asr_data(source)
-    assert result.segments[0].text == "ぜひ楽しんでね"
-    assert result.segments[0].translated_text == "一定要玩得开心哦"
+    result = normalize_asr_data(source, NormalizeParams(join_fragments=True))
+    assert result.segments[0].text == "ぜひ楽しんでね！"
+    assert result.segments[0].translated_text == "一定要玩得开心哦！"
     assert result.segments[1].text == "はい"
     assert result.segments[1].end_time - result.segments[1].start_time >= 500
     for field in ("text", "translated_text"):
@@ -147,3 +150,23 @@ def test_layout_does_not_create_dangling_demonstrative() -> None:
     assert len(result.segments) == 1
     assert result.segments[0].text == "これ できた"
     assert result.segments[0].translated_text == "这个 拍好了"
+
+
+def test_normalize_keeps_input_boundaries_by_default_but_still_extends_display() -> None:
+    # A speaker change after a tail particle must survive normalize (the rule-based join cannot see speakers).
+    source = ASRData([
+        ASRDataSeg("ハッシュタグトゲトゲ系音部と", 1000, 2600, "话题标签刺刺系音部和"),
+        ASRDataSeg("あそうそう", 2650, 3300, "啊对对"),
+        ASRDataSeg("次の話です。", 5000, 7000, "下一个话题。"),
+    ])
+    result = normalize_asr_data(source)
+    assert [item.text for item in result.segments] == ["ハッシュタグトゲトゲ系音部と", "あそうそう", "次の話です"]
+    assert result.segments[0].end_time == 2650  # gap < snap_gap_ms: snapped to the next start
+    assert result.segments[1].end_time == 3300 + 350  # display extension still applied
+    assert result.segments[2].end_time == 7000 + 350
+
+
+def test_reflow_join_switch() -> None:
+    source = [ASRDataSeg("この", 0, 1000, "这个"), ASRDataSeg("写真です。", 1100, 2500, "照片。")]
+    assert len(reflow_subtitle_segments(source)) == 1
+    assert len(reflow_subtitle_segments(source, join_fragments=False)) == 2

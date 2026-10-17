@@ -244,6 +244,7 @@ def build_parser() -> argparse.ArgumentParser:
     align.add_argument("--align-fallback", choices=["off", "asr-short-window"], default="off")
     align.add_argument("--align-fallback-window-seconds", type=float, default=3.0)
     _add_align_timing_arguments(align)
+    _add_speaker_arguments(align)
     align.add_argument("--asr-reference-model", default=DEFAULT_ASR_MODEL)
     align.add_argument("--asr-reference-max-new-tokens", type=int, default=512)
     align.add_argument("--asr-reference-language", default=None)
@@ -281,6 +282,11 @@ def build_parser() -> argparse.ArgumentParser:
     normalize.add_argument("--extend-ms", type=int, default=350)
     normalize.add_argument("--snap-gap-ms", type=int, default=200)
     normalize.add_argument("--min-blank-ms", type=int, default=300)
+    normalize.add_argument(
+        "--join-fragments",
+        action="store_true",
+        help="Re-enable the rule-based fragment join in normalize (off: it ignores speaker turns).",
+    )
     normalize.add_argument(
         "--program-memory-file",
         default=None,
@@ -357,6 +363,7 @@ def build_parser() -> argparse.ArgumentParser:
     export.add_argument("--pause-split-seconds", type=float, default=0.8)
     export.add_argument("--coarse-subtitles", action="store_true")
     export.add_argument("--optimizer-root", default=str(DEFAULT_OPTIMIZER_ROOT))
+    _add_speaker_arguments(export)
     export.set_defaults(func=cmd_export)
 
     split = subparsers.add_parser("split", parents=[common])
@@ -375,6 +382,7 @@ def build_parser() -> argparse.ArgumentParser:
         default=None,
         help="Model for the split semantic-merge requests; defaults to mimo-v2.6-flash when --llm-model is a MiMo model, else --llm-model.",
     )
+    _add_speaker_arguments(split)
     split.set_defaults(
         split_mode="rule",
         prompt_limit_ratio=0.8,
@@ -471,6 +479,7 @@ def build_parser() -> argparse.ArgumentParser:
     run.add_argument("--align-fallback", choices=["off", "asr-short-window"], default="off")
     run.add_argument("--align-fallback-window-seconds", type=float, default=3.0)
     _add_align_timing_arguments(run)
+    _add_speaker_arguments(run)
     run.add_argument("--proofread-realign-model", default=DEFAULT_ALIGN_MODEL)
     run.add_argument("--proofread-realign-padding-ms", type=int, default=800)
     run.add_argument("--proofread-realign-language", default="Japanese")
@@ -542,6 +551,11 @@ def build_parser() -> argparse.ArgumentParser:
     run.add_argument("--snap-gap-ms", type=int, default=200)
     run.add_argument("--min-blank-ms", type=int, default=300)
     run.add_argument(
+        "--join-fragments",
+        action="store_true",
+        help="Re-enable the rule-based fragment join in normalize (off: it ignores speaker turns).",
+    )
+    run.add_argument(
         "--program-memory-file",
         default=None,
         help="JSON rules for per-show recurring misrecognitions, applied cue by cue to the normalized subtitles (see samples/program-memory-togeradi.json); report in reports/program_memory.json.",
@@ -571,6 +585,7 @@ def build_parser() -> argparse.ArgumentParser:
     batch.add_argument("--align-fallback", choices=["off", "asr-short-window"], default="off")
     batch.add_argument("--align-fallback-window-seconds", type=float, default=3.0)
     _add_align_timing_arguments(batch)
+    _add_speaker_arguments(batch)
     batch.add_argument("--proofread-realign-model", default=DEFAULT_ALIGN_MODEL)
     batch.add_argument("--proofread-realign-padding-ms", type=int, default=800)
     batch.add_argument("--proofread-realign-language", default="Japanese")
@@ -641,6 +656,11 @@ def build_parser() -> argparse.ArgumentParser:
     batch.add_argument("--extend-ms", type=int, default=350)
     batch.add_argument("--snap-gap-ms", type=int, default=200)
     batch.add_argument("--min-blank-ms", type=int, default=300)
+    batch.add_argument(
+        "--join-fragments",
+        action="store_true",
+        help="Re-enable the rule-based fragment join in normalize (off: it ignores speaker turns).",
+    )
     batch.add_argument(
         "--program-memory-file",
         default=None,
@@ -738,6 +758,29 @@ def _add_llm_arguments(
     parser.add_argument("--disable-thinking", action=argparse.BooleanOptionalAction, default=disable_thinking_default)
     parser.add_argument("--llm-extra-body-json", default=DEFAULT_LLM_EXTRA_BODY_JSON)
     parser.add_argument("--timeout", type=float, default=DEFAULT_LLM_TIMEOUT)
+
+
+def _add_speaker_arguments(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument(
+        "--speaker-enroll",
+        default=None,
+        help="Enrolled member voiceprints (json, e.g. samples/speaker-enroll-togeradi.json). Enables speaker "
+        "identification after align; split then cuts at confident speaker changes, never merges different "
+        "speakers, and translate gets the speaker as a hint.",
+    )
+    parser.add_argument(
+        "--speakers",
+        default=None,
+        help="Comma-separated members present in this episode (default: detected from the audio).",
+    )
+    parser.add_argument(
+        "--speaker-min-margin",
+        type=float,
+        default=0.1,
+        help="Minimum score margin (best minus runner-up cosine) for a speaker decision to count.",
+    )
+    parser.add_argument("--speaker-model-path", default=None, help="ReDimNet-M weights (.pt); default .model-cache.")
+    parser.add_argument("--speaker-device", default="auto", help="auto, cuda or cpu.")
 
 
 def _add_align_timing_arguments(parser: argparse.ArgumentParser) -> None:

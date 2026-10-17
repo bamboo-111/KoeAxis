@@ -455,17 +455,18 @@ def _build_quality_gate(work_paths: WorkPaths) -> dict[str, Any]:
 
 def _build_exports(work_paths: WorkPaths, metadata: dict[str, Any]) -> dict[str, Any]:
     candidates: set[Path] = set()
-    for path in (work_paths.subtitles_srt, work_paths.subtitles_vtt, work_paths.normalized_srt):
+    speaker_ass = work_paths.subtitles_srt.with_suffix(".ass")
+    for path in (work_paths.subtitles_srt, work_paths.subtitles_vtt, speaker_ass, work_paths.normalized_srt):
         if path.exists():
             candidates.add(path.resolve())
     for directory in (work_paths.workdir / "exports", work_paths.workdir / "export-cache"):
         if directory.is_dir():
-            candidates.update(path.resolve() for path in directory.iterdir() if path.is_file() and path.suffix.lower() in {".srt", ".vtt"})
+            candidates.update(path.resolve() for path in directory.iterdir() if path.is_file() and path.suffix.lower() in {".srt", ".vtt", ".ass"})
     last_exported = metadata.get("last_exported", {})
     if isinstance(last_exported, dict):
         for raw in last_exported.values():
             path = Path(str(raw)).resolve()
-            if path.exists() and path.is_file() and path.suffix.lower() in {".srt", ".vtt"}:
+            if path.exists() and path.is_file() and path.suffix.lower() in {".srt", ".vtt", ".ass"}:
                 candidates.add(path)
     quality = _build_quality_gate(work_paths)["data"]
     items = []

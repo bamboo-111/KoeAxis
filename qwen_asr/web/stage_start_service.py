@@ -163,6 +163,8 @@ def _base_payload(
         "target_language": value("targetLanguage", "简体中文"),
         "translate_custom_prompt": value("translateCustomPrompt", ""),
         "glossary_xlsx": value("glossaryXlsx", ""),
+        "speaker_enroll": value("speakerEnroll", ""),
+        "speakers": value("speakers", ""),
         "mimo_proofread_mode": value("mimoProofreadMode", "segment-audio"),
         "mimo_audio_review_scope": value("mimoAudioReviewScope", "suspects"),
         "mimo_proofread_workers": value("mimoProofreadWorkers", DEFAULT_MIMO_CONCURRENCY),

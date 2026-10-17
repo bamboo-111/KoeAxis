@@ -23,6 +23,18 @@ def resolve_split_llm_model(args: argparse.Namespace) -> str | None:
     return llm_model
 
 
+def speaker_stage_options(args: argparse.Namespace) -> dict:
+    from qwen_asr.speaker.voiceprint import parse_speakers
+
+    return {
+        "speaker_enroll": getattr(args, "speaker_enroll", None) or None,
+        "speakers": parse_speakers(getattr(args, "speakers", None)),
+        "speaker_min_margin": float(getattr(args, "speaker_min_margin", 0.1)),
+        "speaker_weights": getattr(args, "speaker_model_path", None) or None,
+        "speaker_device": getattr(args, "speaker_device", "auto") or "auto",
+    }
+
+
 def cmd_split(args: argparse.Namespace, work_paths: WorkPaths) -> int:
     from qwen_asr.commands import stages as stage_helpers
 
@@ -55,6 +67,7 @@ def cmd_split(args: argparse.Namespace, work_paths: WorkPaths) -> int:
         timeout=args.timeout,
         split_mode=getattr(args, "split_mode", "rule"),
         split_boundaries=getattr(args, "split_boundaries", "bunsetsu"),
+        **speaker_stage_options(args),
     )
     count = stage_helpers._read_json_dict_count(work_paths.split_manifest)
     write_progress(

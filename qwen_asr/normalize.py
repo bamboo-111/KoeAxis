@@ -5,7 +5,7 @@ from typing import Any
 
 from optimizer.asr_data import ASRData, ASRDataSeg
 from optimizer.splitter_display import DisplayDurationConfig, redistribute_zero_gap_short_display_durations
-from qwen_asr.subtitle_layout import reflow_subtitle_segments, strip_display_punctuation
+from qwen_asr.subtitle_layout import content_key, reflow_subtitle_segments, strip_display_punctuation
 
 
 @dataclass(slots=True)
@@ -14,6 +14,9 @@ class NormalizeParams:
     snap_gap_ms: int = 200
     min_blank_ms: int = 300
     min_duration_ms: int = 500
+    # Rule-based fragment joining (tail particle / head word) runs after the LLM merge and ignores speaker turns;
+    # on the 30-episode hand gold (2026-10-17) it broke 10 correct cues and added 5 missed speaker changes.
+    join_fragments: bool = False
 
 
 def normalize_asr_data(
@@ -34,6 +37,7 @@ def normalize_asr_data(
         timing_tokens=timing_tokens,
         events=layout_events,
         display_extension_ms=params.extend_ms,
+        join_fragments=params.join_fragments,
     )
 
     normalized = []
@@ -114,7 +118,7 @@ def normalize_asr_data(
     for segment in result:
         segment.text = strip_display_punctuation(segment.text)
         segment.translated_text = strip_display_punctuation(segment.translated_text)
-    return ASRData([segment for segment in result if segment.text or segment.translated_text])
+    return ASRData([segment for segment in result if content_key(segment.text) or content_key(segment.translated_text)])
 
 
 def _borrow_short_display_from_previous(segments: list[ASRDataSeg], minimum: int) -> None:

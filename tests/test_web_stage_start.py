@@ -40,6 +40,29 @@ def test_stage_start_builds_shared_cli_payload_without_credentials(
     assert "--disable-thinking" in command
 
 
+def test_stage_start_passes_saved_speaker_settings(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    paths = WorkPaths.from_workdir(tmp_path / "work")
+    write_json_atomic(paths.aligned_manifest, [{"segment_id": "1", "status": "completed"}])
+    monkeypatch.setenv("MIMO_API_KEY", "environment-value")
+    enroll = tmp_path / "enroll.json"
+    enroll.write_text("{}", encoding="utf-8")
+
+    payload = build_workspace_stage_payload(
+        paths,
+        stage="split",
+        settings={
+            "llmModel": "mimo-v2.5",
+            "llmBaseUrl": "https://api.xiaomimimo.com/v1",
+            "speakerEnroll": str(enroll),
+            "speakers": "理名,夕莉",
+        },
+    )
+    command = build_command(payload)
+
+    assert command[command.index("--speaker-enroll") + 1] == str(enroll)
+    assert command[command.index("--speakers") + 1] == "理名,夕莉"
+
+
 def test_stage_start_rejects_nested_credentials_and_missing_inputs(tmp_path: Path) -> None:
     paths = WorkPaths.from_workdir(tmp_path)
 

@@ -249,3 +249,25 @@ def test_clearing_normalize_outputs_also_drops_the_stale_export(tmp_path):
     assert not paths.normalized_srt.exists()
     assert not paths.subtitles_srt.exists()
     assert paths.mimo_proofread_manifest.exists()
+
+
+def test_rules_apply_across_adjacent_cue_boundary():
+    from qwen_asr.program_memory import apply_to_manifest, parse_program_memory
+
+    memory = parse_program_memory({"rules": [
+        {"id": "fes", "field": "source", "pattern": "赤色の共済", "replace": "赤色の響祭"},
+        {"id": "span", "field": "source", "pattern": "ABCD", "replace": "XYZ"},
+    ]})
+    manifest = {
+        "1": {"original_subtitle": "ライブ赤色の", "translated_subtitle": "演唱会 红色的"},
+        "2": {"original_subtitle": "共済を", "translated_subtitle": "共济"},
+        "3": {"original_subtitle": "AB", "translated_subtitle": ""},
+        "4": {"original_subtitle": "CDです", "translated_subtitle": ""},
+    }
+    report = apply_to_manifest(manifest, memory)
+    assert [manifest[k]["original_subtitle"] for k in "1234"] == ["ライブ赤色の", "響祭を", "XYZ", "です"]
+    assert report["changed_cue_count"] == 3
+    hit = next(c for c in report["changes"] if c["id"] == "2")["hits"][0]
+    assert (hit["before"], hit["after"], hit["across_cue"]) == ("共済を", "響祭を", "1")
+    # idempotent: a second pass changes nothing
+    assert apply_to_manifest(manifest, memory)["changed_cue_count"] == 0

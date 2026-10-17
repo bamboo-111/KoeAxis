@@ -14,6 +14,37 @@ LOGGER = logging.getLogger(__name__)
 
 
 def cmd_align(args: argparse.Namespace, work_paths: WorkPaths) -> int:
+    code = _cmd_align(args, work_paths)
+    prepare_speaker_track(args, work_paths)
+    return code
+
+
+def prepare_speaker_track(args: argparse.Namespace, work_paths: WorkPaths) -> None:
+    """Score enrolled voiceprints over the episode while the GPU phase still holds the GPU (cached for split).
+
+    Speaker labels are auxiliary: any failure is logged and split runs without them (or retries on its own).
+    """
+    enroll = getattr(args, "speaker_enroll", None)
+    if not enroll or not work_paths.audio_path.exists():
+        return
+    from qwen_asr.speaker.voiceprint import ensure_speaker_track, parse_speakers
+
+    try:
+        track = ensure_speaker_track(
+            work_paths.audio_path,
+            work_paths.aligned_manifest.parent,
+            enroll,
+            speakers=parse_speakers(getattr(args, "speakers", None)),
+            weights=getattr(args, "speaker_model_path", None) or None,
+            device=getattr(args, "speaker_device", "auto") or "auto",
+        )
+    except Exception as exc:  # noqa: BLE001 - never fail align because of the auxiliary speaker track
+        LOGGER.warning("Speaker identification failed (split will run without it): %s", exc)
+        return
+    LOGGER.info("Speaker track ready: %s", ", ".join(track.members))
+
+
+def _cmd_align(args: argparse.Namespace, work_paths: WorkPaths) -> int:
     from qwen_asr.commands import stages as stage_helpers
 
     stage_helpers.ensure_preflight(args, work_paths, "align")

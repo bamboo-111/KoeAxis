@@ -23,6 +23,7 @@ All listed conditions of a flag must hold for the cue to be reported.
 
 from __future__ import annotations
 
+import difflib
 import json
 import logging
 import re
@@ -154,12 +155,17 @@ def apply_to_cue(source: str, translation: str, memory: ProgramMemory) -> CueRes
 
 
 def apply_to_manifest(manifest: dict[str, Any], memory: ProgramMemory) -> dict[str, Any]:
-    """Fix ``original_subtitle``/``translated_subtitle`` in a proofread manifest in place; return a report."""
-    changes: list[dict[str, Any]] = []
+    """Fix ``original_subtitle``/``translated_subtitle`` in a proofread manifest in place; return a report.
+
+    Rules run per cue first, then once more on each pair of adjacent cues joined together, so a term split
+    across a cue boundary (``赤色の`` | ``共済を``; normalize no longer joins fragments by default) is still
+    fixed. The joined result is cut back at the original boundary, a replaced span that straddles it goes to
+    the left cue, and each cue records its own before/after text.
+    """
+    changes: dict[str, dict[str, Any]] = {}
     flagged: list[dict[str, Any]] = []
-    for key, item in manifest.items():
-        if not isinstance(item, dict):
-            continue
+    items = [(str(key), item) for key, item in manifest.items() if isinstance(item, dict)]
+    for key, item in items:
         result = apply_to_cue(
             str(item.get("original_subtitle") or ""),
             str(item.get("translated_subtitle") or ""),
@@ -168,11 +174,49 @@ def apply_to_manifest(manifest: dict[str, Any], memory: ProgramMemory) -> dict[s
         if result.hits:
             item["original_subtitle"] = result.source
             item["translated_subtitle"] = result.translation
-            changes.append({"id": str(key), "hits": result.hits})
+            changes[key] = {"id": key, "hits": result.hits}
         if result.flags:
-            flagged.append({"id": str(key), "source": result.source, "translation": result.translation,
+            flagged.append({"id": key, "source": result.source, "translation": result.translation,
                             "flags": result.flags})
-    return build_report(changes, flagged)
+    for (left_key, left), (right_key, right) in zip(items, items[1:], strict=False):
+        _apply_across_boundary(left_key, left, right_key, right, memory, changes)
+    return build_report(list(changes.values()), flagged)
+
+
+def _apply_across_boundary(
+    left_key: str, left: dict[str, Any], right_key: str, right: dict[str, Any],
+    memory: ProgramMemory, changes: dict[str, dict[str, Any]],
+) -> None:
+    fields = {"source": "original_subtitle", "translation": "translated_subtitle"}
+    old = {name: (str(left.get(attr) or ""), str(right.get(attr) or "")) for name, attr in fields.items()}
+    result = apply_to_cue(old["source"][0] + old["source"][1], old["translation"][0] + old["translation"][1], memory)
+    if not result.hits:
+        return
+    rules = "+".join(dict.fromkeys(hit["rule"] for hit in result.hits))
+    for name, attr in fields.items():
+        before_left, before_right = old[name]
+        joined_after = getattr(result, name)
+        cut = _map_boundary(before_left + before_right, joined_after, len(before_left))
+        for key, item, before, after, partner in (
+            (left_key, left, before_left, joined_after[:cut], right_key),
+            (right_key, right, before_right, joined_after[cut:], left_key),
+        ):
+            if after == before:
+                continue
+            item[attr] = after
+            changes.setdefault(key, {"id": key, "hits": []})["hits"].append(
+                {"rule": rules, "field": name, "before": before, "after": after, "across_cue": partner}
+            )
+
+
+def _map_boundary(old: str, new: str, boundary: int) -> int:
+    """Position in ``new`` of the cut at ``old[boundary]``; a changed span containing the cut goes left."""
+    for tag, i1, i2, j1, j2 in difflib.SequenceMatcher(None, old, new, autojunk=False).get_opcodes():
+        if tag == "equal" and i1 <= boundary <= i2:
+            return j1 + (boundary - i1)
+        if i1 <= boundary < i2 or (i1 == i2 == boundary):
+            return j2 if i1 < boundary else j1
+    return len(new)
 
 
 _SRT_TIMING = re.compile(r"^\d{2}:\d{2}:\d{2}[,.]\d{3}\s*-->\s*\d{2}:\d{2}:\d{2}[,.]\d{3}")

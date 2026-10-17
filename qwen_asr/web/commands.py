@@ -195,6 +195,7 @@ def build_command(payload: dict) -> list[str]:
                 ]
             )
         command.append("--local-files-only" if payload.get("local_files_only", True) else "--no-local-files-only")
+        command.extend(_speaker_args(payload))
     elif stage == "normalize":
         command.extend(
             [
@@ -224,6 +225,7 @@ def build_command(payload: dict) -> list[str]:
                 str(max(1, int(payload.get("split_max_word_count_english", 18)))),
             ]
         )
+        command.extend(_speaker_args(payload))
     elif stage == "translate":
         command.extend(
             [
@@ -275,6 +277,7 @@ def build_command(payload: dict) -> list[str]:
             command.extend(["--export-path", str(payload["export_path"]).strip()])
         if str(payload.get("media_path", "")).strip():
             command.extend(["--media-path", str(payload["media_path"]).strip()])
+        command.extend(_speaker_args(payload))
     elif stage == "run":
         command.extend(
             [
@@ -380,6 +383,7 @@ def build_command(payload: dict) -> list[str]:
             )
         if payload.get("with_normalize"):
             command.append("--with-normalize")
+        command.extend(_speaker_args(payload))
     elif stage == "batch-run":
         command = [python_runtime(), str(ROOT / "main.py"), "batch-run", "--workdir", workdir, "--log-level", "INFO"]
         command.extend(model_cache_args)
@@ -463,6 +467,7 @@ def build_command(payload: dict) -> list[str]:
             command.extend(["--llm-extra-body-json", llm_extra_body_json])
         if str(payload.get("glossary_xlsx", "")).strip():
             command.extend(["--glossary-xlsx", str(payload["glossary_xlsx"]).strip()])
+        command.extend(_speaker_args(payload))
         if str(payload.get("export_path", "")).strip():
             command.extend(["--export-path", str(payload["export_path"]).strip()])
         if str(payload.get("batch_manifest", "")).strip():
@@ -496,6 +501,20 @@ def _asr_context_args(payload: dict) -> list[str]:
         value = str(payload.get(key) or "").strip()
         if value:
             args.extend([flag, value])
+    return args
+
+
+def _speaker_args(payload: dict) -> list[str]:
+    """Optional voiceprint speaker identification (align computes scores; split/export use them)."""
+    enroll = str(payload.get("speaker_enroll") or "").strip()
+    if not enroll:
+        return []
+    if not Path(enroll).is_file():
+        raise ValueError(f"Speaker enrollment file not found: {enroll}")
+    args = ["--speaker-enroll", enroll]
+    speakers = str(payload.get("speakers") or "").strip()
+    if speakers:
+        args.extend(["--speakers", speakers])
     return args
 
 

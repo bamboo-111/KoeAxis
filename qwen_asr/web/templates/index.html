@@ -686,6 +686,9 @@
                 <div class="field"><label for="targetLanguage">目标语言</label><input id="targetLanguage" value="简体中文"></div>
                 <div class="field wide"><label for="llmExtraBodyJson">LLM Extra Body JSON</label><input id="llmExtraBodyJson" value='{"thinking":{"type":"disabled"}}' placeholder='{"thinking":{"type":"disabled"}}'></div>
                 <div class="field wide"><label for="glossaryXlsx">翻译对照 XLSX</label><div class="inline"><div class="path-combo"><input id="glossaryXlsx" placeholder="选择或输入 glossary.xlsx 路径"><button type="button" class="path-combo-toggle" onclick="togglePathMenu('glossaryHistory')" title="历史路径">⌄</button><div class="path-menu" id="glossaryHistory"></div></div><button type="button" id="pickGlossaryXlsxButton" onclick="pickPath('glossaryXlsx', '/api/pick-glossary-xlsx', 'glossaryHistory')">选择</button><button type="button" id="normalizeGlossaryButton" onclick="normalizeGlossary()">标准化</button></div></div>
+                <div class="field wide"><label for="speakerEnroll">说话人注册 JSON（可选）</label><div class="inline"><div class="path-combo"><input id="speakerEnroll" placeholder="如 samples\speaker-enroll-togeradi.json；留空则不识别说话人"><button type="button" class="path-combo-toggle" onclick="togglePathMenu('speakerEnrollHistory')" title="历史路径">⌄</button><div class="path-menu" id="speakerEnrollHistory"></div></div><button type="button" id="pickSpeakerEnrollButton" onclick="pickPath('speakerEnroll', '/api/pick-speaker-enroll', 'speakerEnrollHistory')">选择</button></div></div>
+                <div class="field"><label for="speakers">在场成员</label><input id="speakers" placeholder="留空自动判断，如 理名,朱李"></div>
+                <div class="field wide"><span>填写注册文件后：对齐时识别说话人，断句在换人处切开，翻译带说话人提示，导出时在 SRT 旁另写同名 .ass（每位成员一个样式）。</span></div>
                 <div class="field wide"><label for="translateCustomPrompt">Translate 自定义 Prompt</label><textarea id="translateCustomPrompt" placeholder="术语表、专有名词翻译偏好、风格要求"></textarea></div>
                 <div class="field"><label for="mimoProofreadMode">MiMo 校对模式</label><select id="mimoProofreadMode"><option value="segment-audio">整段音频</option><option value="two-stage-nearby">分步短音频</option></select></div>
                 <div class="field"><label for="mimoProofreadWorkers">MiMo 线程</label><input id="mimoProofreadWorkers" type="number" min="1" step="1" value="{{DEFAULT_MIMO_CONCURRENCY}}"></div>
@@ -781,6 +784,7 @@
       batchManifestHistory: 'qwen3_asr_batch_manifest_history_v1',
       modelCacheHistory: 'qwen3_asr_model_cache_history_v1',
       glossaryHistory: 'qwen3_asr_glossary_history_v1',
+      speakerEnrollHistory: 'koeaxis_speaker_enroll_history_v1',
       mimoOutputHistory: 'koeaxis_mimo_output_history_v1',
       exportHistory: EXPORT_HISTORY_KEY,
     };
@@ -789,6 +793,7 @@
       batchManifestHistory: 'batchManifestPath',
       modelCacheHistory: 'modelCacheDir',
       glossaryHistory: 'glossaryXlsx',
+      speakerEnrollHistory: 'speakerEnroll',
       mimoOutputHistory: 'mimoProofreadOutputDir',
       exportHistory: 'exportPath',
     };
@@ -805,12 +810,13 @@
       final_quality: 'Quality Gate',
       normalized: 'Normalized',
       srt: 'SRT',
-      vtt: 'VTT'
+      vtt: 'VTT',
+      ass: 'ASS（说话人）'
     };
     const ARTIFACT_GROUPS = [
       ['输入', ['audio']],
       ['中间结果', ['segments', 'transcript', 'corrected', 'aligned', 'split', 'translated', 'proofread_realign', 'final_quality', 'normalized']],
-      ['导出', ['srt', 'vtt']]
+      ['导出', ['srt', 'vtt', 'ass']]
     ];
     const FIELD_GROUPS = {
       mediaPath: 'input',
@@ -820,6 +826,7 @@
       modelCacheDir: 'asr',
       exportPath: 'out',
       glossaryXlsx: 'llm',
+      speakerEnroll: 'llm',
       llmModel: 'llm',
       llmBaseUrl: 'llm',
       proofreadKind: 'llm'
@@ -837,6 +844,7 @@
         'llmModel', 'threadNum', 'splitMaxWordCountCjk', 'splitMaxWordCountEnglish',
         'proofreadKind', 'correctBatchNum', 'translateBatchNum', 'llmTimeout', 'disableThinking', 'llmExtraBodyJson', 'llmBaseUrl',
         'targetLanguage', 'normalizeSource', 'normalizeExtendMs', 'normalizeSnapGapMs', 'normalizeMinBlankMs', 'translateCustomPrompt', 'glossaryXlsx',
+        'speakerEnroll', 'speakers',
         'mimoProofreadMode', 'mimoProofreadWorkers', 'mimoNearbyBatchSize', 'mimoNearbyBatchMaxGapS', 'mimoNearbyPaddingS',
         'mimoNearbyContextSubtitles', 'mimoNearbyAudioWorkers', 'mimoProofreadMaxTokens', 'mimoCompactOutput', 'mimoProofreadOutputDir',
         'source', 'exportMode', 'exportPath', 'withAlign', 'withCorrect', 'withNormalize', 'withSplit', 'withTranslate'
@@ -1036,6 +1044,8 @@
         normalize_min_blank_ms: document.getElementById('normalizeMinBlankMs').value,
         translate_custom_prompt: document.getElementById('translateCustomPrompt').value,
         glossary_xlsx: document.getElementById('glossaryXlsx').value,
+        speaker_enroll: document.getElementById('speakerEnroll').value,
+        speakers: document.getElementById('speakers').value,
         format: 'srt',
         source: document.getElementById('source').value,
         export_mode: document.getElementById('exportMode').value,
@@ -1413,6 +1423,7 @@
       savePathHistoryItem('batchManifestHistory', document.getElementById('batchManifestPath').value);
       savePathHistoryItem('modelCacheHistory', document.getElementById('modelCacheDir').value);
       savePathHistoryItem('glossaryHistory', document.getElementById('glossaryXlsx').value);
+      savePathHistoryItem('speakerEnrollHistory', document.getElementById('speakerEnroll').value);
       savePathHistoryItem('mimoOutputHistory', document.getElementById('mimoProofreadOutputDir').value);
       if (document.getElementById('exportMode').value === 'custom') {
         savePathHistoryItem('exportHistory', document.getElementById('exportPath').value);

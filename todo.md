@@ -45,8 +45,21 @@
 - [ ] 建小型标注集：广岛 #30/#34 + 25 期前 6 分钟的 25 条候选人工判定真 / 假，再加不该切的反例。
 - [ ] 改进 `flag_cues.py` 的误报过滤：按 MOSS 切点到 Qwen 词边界的距离判断，只在切点两侧各有 ≥0.5s 语音时才算。
 - [ ] 决定接入方式：align 之后产出“强制断点”，split / normalize 必须遵守；MOSS 作为可选的 GPU 阶段（约 +9 分钟 / 期）。
-- [ ] 视需要补测 pyannote Community-1（需用户在 HF 同意协议并提供 token）。
+- [x] 补测 pyannote Community-1（2026-10-17）：一期约 30s、显存 1.6GB，广岛两处换人都检出；25 期前 6 分钟对快速接话、短句召回不如 MOSS。详见 `experiments/speaker-change/README.md`。
+- [ ] 标注 `experiments/speaker-change/runs/cici25-full/labels-0-360/label_sheet.tsv`（38 条候选），然后算 pyannote / MOSS 的精确率与召回率，决定是否采用组合策略。
 - [ ] 小样本方案见 `experiments/speaker-change/few-shot-plan.md`（第二版：说话人分离 + 声纹注册匹配，不自训模型）。候选：pyannote Community-1（需 HF token）、pyannoteAI API（付费）、MOSS + 开源嵌入模型。待用户提供：每位主持人 1–3 段 10–30s 单人片段（或确认我挑出的候选），以及 2–3 期各 5–10 分钟的换人测试标注；并确认是否输出说话人标签。
+- [ ] 说话人判定（`enroll_diarize.py`，注册滑窗 + ReDimNet-M）继续提速，现状 30 期整期约 18s（2026-10-17 已从约 78s 优化，详见 `experiments/speaker-change/README.md` 性能优化一节）：
+  - ① pyannote 分割模型导出 ONNX，自己实现切块、多人类别转换、计数聚合，不再导入 pyannote/lightning（约 −4~5s；需逐帧对齐验证；接入生产后如果进程常驻，这项收益变小）；
+  - ② ReDimNet 整段只算一次特征再按窗口汇总（窗口声纹 8s → 约 2s；模型内有自注意力、按窗口做幅度归一化，只能近似，须在 30 期 gold + #15/#16/#18 silver 上重新评测）；
+  - ③ 跳过完全没有人声的窗口（电台静音少，收益有限）。
+  - 注：生产接入（2026-10-18）只用 ReDimNet 滑窗，不再需要 pyannote，①只对实验脚本有意义；生产里 30 期约 12s。
+- [x] 说话人接入生产（2026-10-18）：`--speaker-enroll samples/speaker-enroll-togeradi.json`（togeradi preset 已加）。align 后算分数，split 按高置信换人切开 + LLM 合并禁止跨人，translate 带说话人提示。30 期 gold 正确条 66–71 → 83、漏切 32–35 → 23。详见 `experiments/speaker-change/README.md` 接入生产一节。
+- [x] 导出带说话人的 ASS（2026-10-18）：`--speaker-enroll` 时 export 同目录另写同名 `.ass`，每位成员一个样式（1.理名/2.夕莉/5.朱李，取自已校 #15），低把握行 Name 标“说话人待确认”。30 期逐条准确率约 94.5%。
+- [x] 端到端验收（2026-10-18，54 期，按 CI gpu/api 两阶段跑 togeradi preset，文本 LLM gemini-3.8-flash 并发 4，MiMo mimo-v2.6-pro）：GPU 阶段 1 段对齐失败（节目口号），自动恢复用 MFA 救回；API 阶段约 4 分钟；产出 SRT/ASS 各 661 条，在场成员自动判为 理名+夕莉，待确认 73 行；final quality WARN（与 26/27 期同级）。
+- [x] Gemini 代替 MiMo 做听音校对（2026-10-18，54 期同一译文）：新服务商（ohmyapi）不支持音频（原生接口 400 UNSUPPORTED_BILLING_MODE，OpenAI 兼容接口无此通道），旧服务商 qhaigc 两种接口都支持。用 qhaigc gemini-3.8-flash 跑同样两段式：MiMo 采纳 33 处（修正 #89/#145-146/#512-513 译文错位、#182 漏主语等），Gemini 只 7 处且 2 处改错（年份 2026→2024、直译变生硬），耗时 410s vs 113s。保留 MiMo。
+- [ ] 说话人后续：① 说话人提示让 LLM 合并偏保守（同人未完句不合并，详见实验 README“改坏”分析；弱化提示已试，无改善）；② 翻译带说话人的效果没有评测手段，只做了抽查；③ 重叠处的叠加行、按重叠区提高阈值都试过无效，插话附和只考虑对附和词单独处理；④ ASS 齐声台词目前只出一行（已校稿是每人复制一行）。
+- [x] Web 支持说话人（2026-10-18）：`/legacy` 运行设置加「说话人注册 JSON」「在场成员」，run / batch-run / align / split / export 命令带 `--speaker-enroll`，工作台阶段启动复用保存的设置；导出列表、状态识别 `.ass`。
+- [ ] Web 运行设置还没有 ASR 上下文文件（`--asr-context-file`）和节目记忆（`--program-memory-file`），从 Web 跑的结果与 togeradi preset 不完全一致。
 
 ---
 
