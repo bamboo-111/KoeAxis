@@ -39,6 +39,7 @@ def get_status(workdir_value: str) -> dict:
             "normalized": work_paths.normalized_manifest.exists(),
             "srt": work_paths.subtitles_srt.exists(),
             "vtt": work_paths.subtitles_vtt.exists(),
+            "ass": work_paths.subtitles_srt.with_suffix(".ass").exists(),
         },
         "counts": {},
         "logs": {},
@@ -262,6 +263,8 @@ def build_progress(job: dict) -> dict:
             ready.append("srt")
         if work_paths.subtitles_vtt.exists():
             ready.append("vtt")
+        if work_paths.subtitles_srt.with_suffix(".ass").exists():
+            ready.append("ass")
         progress["current"] = ", ".join(ready) if ready else _find_last_matching(recent_lines, ["No timestamped cues", "Saved"])
         return progress
 

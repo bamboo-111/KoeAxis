@@ -272,6 +272,14 @@ class Handler(BaseHTTPRequestHandler):
                 return
             self._send_json(result)
             return
+        if parsed.path == "/api/pick-speaker-enroll":
+            try:
+                result = pick_speaker_enroll()
+            except RuntimeError as exc:
+                self._send_json({"error": str(exc)}, status=400)
+                return
+            self._send_json(result)
+            return
         if parsed.path == "/api/pick-output-directory":
             try:
                 result = pick_output_directory()
@@ -405,12 +413,14 @@ def _content_type_for_path(path: Path) -> str:
         return "application/x-subrip; charset=utf-8"
     if path.suffix.lower() == ".vtt":
         return "text/vtt; charset=utf-8"
+    if path.suffix.lower() == ".ass":
+        return "text/x-ssa; charset=utf-8"
     guessed = mimetypes.guess_type(path.name)[0] or "application/octet-stream"
     return f"{guessed}; charset=utf-8" if guessed.startswith("text/") else guessed
 
 
 def _subtitle_preview_content_type(path: Path) -> str:
-    if path.suffix.lower() in {".srt", ".vtt"}:
+    if path.suffix.lower() in {".srt", ".vtt", ".ass"}:
         return "text/plain; charset=utf-8"
     return _content_type_for_path(path)
 
@@ -545,6 +555,16 @@ def pick_glossary_xlsx() -> dict:
     selected = _run_tk_file_picker(
         title="Select glossary xlsx",
         filetypes="[('Excel files', '*.xlsx *.xls'), ('All files', '*.*')]",
+    )
+    if not selected:
+        return {"cancelled": True}
+    return {"cancelled": False, "path": str(Path(selected).resolve())}
+
+
+def pick_speaker_enroll() -> dict:
+    selected = _run_tk_file_picker(
+        title="Select speaker enrollment json",
+        filetypes="[('Speaker enrollment', '*.json'), ('All files', '*.*')]",
     )
     if not selected:
         return {"cancelled": True}
