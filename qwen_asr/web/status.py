@@ -35,6 +35,7 @@ def get_status(workdir_value: str) -> dict:
             "split": work_paths.split_manifest.exists(),
             "translated": work_paths.translated_manifest.exists(),
             "proofread_realign": (work_paths.workdir / "reports" / "proofread_realign.json").exists(),
+            "text_proofread": work_paths.text_proofread_manifest.exists(),
             "final_quality": work_paths.final_quality_report.exists(),
             "normalized": work_paths.normalized_manifest.exists(),
             "srt": work_paths.subtitles_srt.exists(),
@@ -54,6 +55,7 @@ def get_status(workdir_value: str) -> dict:
         "split": work_paths.split_manifest,
         "translated": work_paths.translated_manifest,
         "proofread_realign": work_paths.workdir / "reports" / "proofread_realign.json",
+        "text_proofread": work_paths.text_proofread_manifest,
         "final_quality": work_paths.final_quality_report,
         "normalized": work_paths.normalized_manifest,
     }
@@ -80,6 +82,7 @@ def get_status(workdir_value: str) -> dict:
         "split",
         "translate",
         "proofread-realign",
+        "text-proofread",
         "quality-gate",
         "export",
         "mimo-proofread",
@@ -255,6 +258,21 @@ def build_progress(job: dict) -> dict:
         progress["current"] = _find_last_matching(recent_lines, ["proofread-realign", "重对齐", "Command failed"])
         return progress
 
+    if stage == "text-proofread":
+        report = read_json(work_paths.text_proofread_report, default={})
+        if isinstance(report, dict) and report and job["status"] != "running":
+            status = str(report.get("status", "UNKNOWN"))
+            applied = int(report.get("applied_count", 0) or 0)
+            total = int(report.get("request_count", 0) or 0)
+            failed = int(report.get("failed_count", 0) or 0)
+            progress["completed"] = max(0, total - failed)
+            progress["total"] = total
+            progress["summary"] = f"text-proofread {status}: {applied} applied, {failed}/{total} requests failed"
+        else:
+            progress["summary"] = "text-proofread running"
+        progress["current"] = _find_last_matching(recent_lines, ["text-proofread", "Command failed"])
+        return progress
+
     if stage == "export":
         source = "normalized" if work_paths.normalized_manifest.exists() else "translated" if work_paths.translated_manifest.exists() else "split" if work_paths.split_manifest.exists() else "aligned" if work_paths.aligned_manifest.exists() else "transcript"
         progress["summary"] = f"export source: {source}"
@@ -296,6 +314,7 @@ def build_progress(job: dict) -> dict:
                 "translated_segments.json already exists",
                 "proofread-realign",
                 "重对齐",
+                "text-proofread",
                 "Command failed",
             ],
         )
@@ -407,6 +426,8 @@ def _summarize_run(work_paths: WorkPaths) -> str:
         steps.append("split")
     if work_paths.translated_manifest.exists():
         steps.append("translate")
+    if work_paths.text_proofread_manifest.exists():
+        steps.append("text-proofread")
     if work_paths.final_quality_report.exists():
         steps.append("quality-gate")
     if work_paths.normalized_manifest.exists():

@@ -144,6 +144,9 @@ def build_command(payload: dict) -> list[str]:
     if stage == "mimo-proofread":
         command = [python_runtime(), str(ROOT / "main.py"), "mimo-proofread", "--workdir", workdir, "--log-level", "INFO"]
         command.extend(_mimo_proofread_args(payload))
+    elif stage == "text-proofread":
+        command = [python_runtime(), str(ROOT / "main.py"), "text-proofread", "--workdir", workdir, "--log-level", "INFO"]
+        command.extend(_text_proofread_stage_args(payload))
     elif stage == "prepare":
         command.extend(["--media", payload["media_path"]])
         command.extend(segment_args)
@@ -368,6 +371,8 @@ def build_command(payload: dict) -> list[str]:
             command.append("--with-correct")
         if payload.get("with_mimo_proofread"):
             command.append("--with-mimo-proofread")
+        if payload.get("with_text_proofread"):
+            command.append("--with-text-proofread")
         if payload.get("with_split"):
             command.append("--with-split")
         if payload.get("with_translate"):
@@ -441,6 +446,8 @@ def build_command(payload: dict) -> list[str]:
             command.append("--with-correct")
         if payload.get("with_mimo_proofread"):
             command.append("--with-mimo-proofread")
+        if payload.get("with_text_proofread"):
+            command.append("--with-text-proofread")
         if payload.get("with_split"):
             command.append("--with-split")
         if payload.get("with_translate"):
@@ -531,12 +538,53 @@ def _pipeline_parity_args(payload: dict) -> list[str]:
     args: list[str] = []
     if payload.get("with_mimo_proofread"):
         args.extend(_mimo_options(payload))
+    if payload.get("with_text_proofread"):
+        args.extend(_text_proofread_options(payload))
     if payload.get("performance_profile"):
         args.append("--performance-profile")
     if payload.get("align_recovery") in (True, "auto"):
         args.extend(["--align-recovery", "auto"])
     if payload.get("proofread_realign_mfa_fallback") in (True, "local"):
         args.extend(["--proofread-realign-mfa-fallback", "local"])
+    return args
+
+
+def _text_proofread_stage_args(payload: dict) -> list[str]:
+    args = _text_proofread_options(payload)
+    if payload.get("force"):
+        args.append("--force")
+    if payload.get("resume") is False:
+        args.append("--no-resume")
+    if str(payload.get("glossary_xlsx", "")).strip():
+        args.extend(["--glossary-xlsx", str(payload["glossary_xlsx"]).strip()])
+    return args
+
+
+TEXT_PROOFREAD_EFFORTS = ("low", "medium", "high")
+
+
+def _text_proofread_options(payload: dict) -> list[str]:
+    """Gemini text-proofread flags shared by the text-proofread stage and Run / Batch Run."""
+    effort = str(payload.get("text_proofread_effort") or "medium").strip().lower()
+    if effort not in TEXT_PROOFREAD_EFFORTS:
+        raise ValueError(f"Unsupported text proofread effort: {effort}. Choose one of: low, medium, high")
+    args = ["--text-proofread-effort", effort]
+    model = str(payload.get("text_proofread_model") or "").strip()
+    if model:
+        args.extend(["--text-proofread-model", model])
+    if payload.get("text_proofread_concurrency") not in (None, ""):
+        args.extend(["--text-proofread-concurrency", str(max(1, int(payload["text_proofread_concurrency"])))])
+    if payload.get("text_proofread_timeout") not in (None, ""):
+        args.extend(["--text-proofread-timeout", str(max(1.0, float(payload["text_proofread_timeout"])))])
+    if payload.get("text_proofread_apply_threshold") not in (None, ""):
+        threshold = max(0.0, min(1.0, float(payload["text_proofread_apply_threshold"])))
+        args.extend(["--text-proofread-apply-threshold", str(threshold)])
+    program = str(payload.get("text_proofread_program") or "").strip()
+    if program:
+        args.extend(["--text-proofread-program", program])
+    hosts = str(payload.get("text_proofread_hosts") or "").strip()
+    if hosts:
+        args.extend(["--text-proofread-hosts", hosts])
     return args
 
 

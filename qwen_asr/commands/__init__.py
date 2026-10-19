@@ -13,6 +13,7 @@ from qwen_asr.commands.stages import (
     cmd_quality_gate,
     cmd_run,
     cmd_split,
+    cmd_text_proofread,
     cmd_transcribe,
     cmd_translate,
 )
@@ -30,6 +31,7 @@ __all__ = [
     "cmd_quality_gate",
     "cmd_run",
     "cmd_split",
+    "cmd_text_proofread",
     "cmd_transcribe",
     "cmd_translate",
 ]

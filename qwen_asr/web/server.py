@@ -26,6 +26,7 @@ from qwen_asr.web.commands import (
 )
 from qwen_asr.web.static_html import INDEX_HTML, WORKBENCH_HTML, load_static_asset
 from qwen_asr.web.status import build_progress, get_status
+from qwen_asr.web.stage_start_service import gemini_relay_configured
 from qwen_asr.web.job_state import load_job, persist_job, public_job
 from qwen_asr.web.workspace_api import (
     WorkspaceApiError,
@@ -234,6 +235,10 @@ class Handler(BaseHTTPRequestHandler):
             return
         if parsed.path == "/api/start":
             payload = self._read_json()
+            missing_gemini = missing_text_proofread_credential(payload)
+            if missing_gemini:
+                self._send_json({"error": missing_gemini}, status=409)
+                return
             try:
                 job = start_job(payload)
             except (KeyError, TypeError, ValueError) as exc:
@@ -453,6 +458,17 @@ def job_environment(environ: dict[str, str] | None = None) -> dict[str, str]:
     env = dict(os.environ if environ is None else environ)
     env.setdefault("QWEN_ASR_MFA_BACKGROUND_PREFETCH", "1")
     return env
+
+
+def missing_text_proofread_credential(payload: object, environ: dict[str, str] | None = None) -> str:
+    """Error text when a text-proofread stage / run is requested without any Gemini relay key; else ""."""
+    if not isinstance(payload, dict):
+        return ""
+    stage = str(payload.get("stage", ""))
+    wants = stage == "text-proofread" or (stage in {"run", "batch-run"} and bool(payload.get("with_text_proofread")))
+    if not wants or gemini_relay_configured(environ):
+        return ""
+    return "text-proofread requires GEMINI_API_KEY (or GEMINI_API_KEY_1..9) in the Web service environment"
 
 
 def start_job(payload: dict) -> dict:

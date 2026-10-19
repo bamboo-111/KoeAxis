@@ -20,6 +20,7 @@ from qwen_asr.commands import (
     cmd_prepare,
     cmd_proofread_realign,
     cmd_quality_gate,
+    cmd_text_proofread,
     cmd_run,
     cmd_split,
     cmd_transcribe,
@@ -124,6 +125,7 @@ def _run_command_with_progress(args: argparse.Namespace, work_paths: WorkPaths) 
             "translate": cmd_translate,
             "mimo-proofread": cmd_mimo_proofread,
             "proofread-realign": cmd_proofread_realign,
+            "text-proofread": cmd_text_proofread,
             "quality-gate": cmd_quality_gate,
             "normalize": cmd_normalize,
             "export": cmd_export,
@@ -277,7 +279,7 @@ def build_parser() -> argparse.ArgumentParser:
     mfa_align_experiment.set_defaults(func=cmd_mfa_align_experiment)
 
     normalize = subparsers.add_parser("normalize", parents=[common])
-    normalize.add_argument("--source", choices=["auto", "normalized", "mimo", "translated", "split", "transcript"], default="auto")
+    normalize.add_argument("--source", choices=["auto", "normalized", "text", "mimo", "translated", "split", "transcript"], default="auto")
     normalize.add_argument("--optimizer-root", default=str(DEFAULT_OPTIMIZER_ROOT))
     normalize.add_argument("--extend-ms", type=int, default=350)
     normalize.add_argument("--snap-gap-ms", type=int, default=200)
@@ -351,7 +353,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     export = subparsers.add_parser("export", parents=[common])
     export.add_argument("--format", choices=["srt", "vtt", "both"], default="srt")
-    export.add_argument("--source", choices=["auto", "normalized", "mimo", "translated", "split", "aligned", "transcript"], default="auto")
+    export.add_argument("--source", choices=["auto", "normalized", "text", "mimo", "translated", "split", "aligned", "transcript"], default="auto")
     export.add_argument("--export-mode", choices=["source", "custom"], default="source")
     export.add_argument("--export-path", default=None)
     export.add_argument("--media-path", default=None)
@@ -416,6 +418,11 @@ def build_parser() -> argparse.ArgumentParser:
     _add_mimo_proofread_arguments(mimo_proofread)
     mimo_proofread.set_defaults(func=cmd_mimo_proofread)
 
+    text_proofread = subparsers.add_parser("text-proofread", parents=[common])
+    text_proofread.add_argument("--glossary-xlsx", default=None)
+    _add_text_proofread_arguments(text_proofread)
+    text_proofread.set_defaults(func=cmd_text_proofread)
+
     history_glossary = subparsers.add_parser("history-glossary", parents=[common, model_common])
     history_glossary.add_argument("--history-dir", required=True)
     history_glossary.add_argument("--output-xlsx", required=True)
@@ -447,7 +454,7 @@ def build_parser() -> argparse.ArgumentParser:
     ass_quality.add_argument("--ass", required=True)
     ass_quality.add_argument(
         "--source",
-        choices=["transcript", "aligned", "split", "translated", "mimo", "normalized", "export"],
+        choices=["transcript", "aligned", "split", "translated", "mimo", "text", "normalized", "export"],
         default="export",
     )
     ass_quality.add_argument("--optimizer-root", default=str(DEFAULT_OPTIMIZER_ROOT))
@@ -514,12 +521,13 @@ def build_parser() -> argparse.ArgumentParser:
     run.add_argument("--with-split", action="store_true")
     run.add_argument("--with-translate", action="store_true")
     run.add_argument("--with-mimo-proofread", action="store_true")
+    run.add_argument("--with-text-proofread", action="store_true")
     run.add_argument("--with-normalize", action="store_true")
     run.add_argument("--format", choices=["srt", "vtt", "both"], default="srt")
-    run.add_argument("--source", choices=["auto", "normalized", "mimo", "translated", "split", "aligned", "transcript"], default="auto")
+    run.add_argument("--source", choices=["auto", "normalized", "text", "mimo", "translated", "split", "aligned", "transcript"], default="auto")
     run.add_argument("--export-mode", choices=["source", "custom"], default="source")
     run.add_argument("--export-path", default=None)
-    run.add_argument("--normalize-source", choices=["auto", "mimo", "translated", "split", "transcript"], default="auto")
+    run.add_argument("--normalize-source", choices=["auto", "text", "mimo", "translated", "split", "transcript"], default="auto")
     run.add_argument("--max-segment-seconds", type=float, default=DEFAULT_MAX_SEGMENT_SECONDS)
     run.add_argument("--min-segment-seconds", type=float, default=DEFAULT_MIN_SEGMENT_SECONDS)
     run.add_argument("--preferred-silence-ms", type=int, default=800)
@@ -570,6 +578,7 @@ def build_parser() -> argparse.ArgumentParser:
     _add_quality_suspect_arguments(run)
     _add_llm_arguments(run, required=False, disable_thinking_default=True)
     _add_mimo_proofread_arguments(run)
+    _add_text_proofread_arguments(run)
     run.set_defaults(func=cmd_run, split_mode="rule", prompt_limit_ratio=0.8)
 
     batch = subparsers.add_parser("batch-run", parents=[common, model_common])
@@ -627,12 +636,13 @@ def build_parser() -> argparse.ArgumentParser:
     batch.add_argument("--with-split", action="store_true")
     batch.add_argument("--with-translate", action="store_true")
     batch.add_argument("--with-mimo-proofread", action="store_true")
+    batch.add_argument("--with-text-proofread", action="store_true")
     batch.add_argument("--with-normalize", action="store_true")
     batch.add_argument("--format", choices=["srt", "vtt", "both"], default="srt")
-    batch.add_argument("--source", choices=["auto", "normalized", "mimo", "translated", "split", "aligned", "transcript"], default="auto")
+    batch.add_argument("--source", choices=["auto", "normalized", "text", "mimo", "translated", "split", "aligned", "transcript"], default="auto")
     batch.add_argument("--export-mode", choices=["source", "custom"], default="source")
     batch.add_argument("--export-path", default=None)
-    batch.add_argument("--normalize-source", choices=["auto", "mimo", "translated", "split", "transcript"], default="auto")
+    batch.add_argument("--normalize-source", choices=["auto", "text", "mimo", "translated", "split", "transcript"], default="auto")
     batch.add_argument("--max-segment-seconds", type=float, default=DEFAULT_MAX_SEGMENT_SECONDS)
     batch.add_argument("--min-segment-seconds", type=float, default=DEFAULT_MIN_SEGMENT_SECONDS)
     batch.add_argument("--preferred-silence-ms", type=int, default=800)
@@ -683,6 +693,7 @@ def build_parser() -> argparse.ArgumentParser:
     _add_quality_suspect_arguments(batch)
     _add_llm_arguments(batch, required=False, disable_thinking_default=True)
     _add_mimo_proofread_arguments(batch)
+    _add_text_proofread_arguments(batch)
     batch.set_defaults(func=cmd_run, split_mode="rule", prompt_limit_ratio=0.8)
 
     return parser
@@ -864,6 +875,36 @@ def _add_mimo_proofread_arguments(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--mimo-stage2-apply-threshold", type=float, default=0.9)
     parser.add_argument("--mimo-llm-extra-body-json", default=DEFAULT_LLM_EXTRA_BODY_JSON)
     parser.add_argument("--mimo-compact-output", action=argparse.BooleanOptionalAction, default=False)
+
+
+def _add_text_proofread_arguments(parser: argparse.ArgumentParser) -> None:
+    """Gemini text-only proofread of the Chinese lines; relays come from GEMINI_API_KEY / GEMINI_BASE_URL
+    and the numbered GEMINI_API_KEY_1 ... variants (GEMINI_MODEL_n / GEMINI_CONCURRENCY_n per relay)."""
+    parser.add_argument(
+        "--text-proofread-effort",
+        choices=["low", "medium", "high"],
+        default="medium",
+        help="Gemini thinking level. medium: ~4 min per episode; high finds no more with the v6 prompt.",
+    )
+    parser.add_argument(
+        "--text-proofread-model",
+        default="gemini-3.8-flash",
+        help="Model for relays without their own GEMINI_MODEL_n.",
+    )
+    parser.add_argument(
+        "--text-proofread-concurrency",
+        type=int,
+        default=4,
+        help="In-flight requests per relay without its own GEMINI_CONCURRENCY_n.",
+    )
+    parser.add_argument("--text-proofread-timeout", type=float, default=600.0)
+    parser.add_argument("--text-proofread-apply-threshold", type=float, default=0.8)
+    parser.add_argument(
+        "--text-proofread-program",
+        default="日语节目",
+        help='Show description for the prompt, e.g. "日语电台节目《刺刺广播》（トゲラジ）".',
+    )
+    parser.add_argument("--text-proofread-hosts", default="", help="Hosts / members named in the prompt.")
 
 
 if __name__ == "__main__":

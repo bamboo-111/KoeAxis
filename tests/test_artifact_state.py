@@ -69,7 +69,7 @@ def test_artifact_state_any_input_groups_and_force_delete_paths(tmp_path: Path) 
     state = ArtifactState(paths)
 
     assert state.missing_inputs("normalize") == [
-        "mimo_proofread_manifest|translated_manifest|split_manifest|transcript_manifest"
+        "text_proofread_manifest|mimo_proofread_manifest|translated_manifest|split_manifest|transcript_manifest"
     ]
 
     write_json_atomic(paths.split_manifest, {"1": {"subtitle": "hello"}})

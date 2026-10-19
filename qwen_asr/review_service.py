@@ -415,6 +415,7 @@ def _actor(value: str) -> str:
 def _select_cue_source(work_paths: WorkPaths) -> tuple[Path | None, dict[str, Any], str | None]:
     candidates = (
         work_paths.normalized_manifest,
+        work_paths.text_proofread_manifest,
         work_paths.mimo_proofread_manifest,
         work_paths.translated_manifest,
         work_paths.split_manifest,

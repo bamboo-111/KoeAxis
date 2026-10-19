@@ -17,6 +17,7 @@ def stage_checkpoint_check(work_paths: WorkPaths) -> dict[str, object]:
         "translate",
         "mimo-proofread",
         "proofread-realign",
+        "text-proofread",
         "normalize",
         "export",
     ):
@@ -54,6 +55,8 @@ def has_checkpoint_artifact(work_paths: WorkPaths, stage: str) -> bool:
         return work_paths.mimo_proofread_report.exists()
     if stage == "proofread-realign":
         return (work_paths.workdir / "reports" / "proofread_realign.json").exists()
+    if stage == "text-proofread":
+        return work_paths.text_proofread_report.exists()
     if stage == "normalize":
         return work_paths.normalized_manifest.exists() or work_paths.normalized_srt.exists()
     if stage == "export":

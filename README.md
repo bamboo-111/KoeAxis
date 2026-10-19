@@ -16,6 +16,7 @@ KoeAxis 是面向本地音频转写、时间轴、翻译与人工审阅字幕候
 - 内置本地 `optimizer/` 断句与翻译逻辑
 - 文本 LLM（split / correct / translate）默认 `gemini-3.8-flash`，走 Gemini 原生 `generateContent`（Base URL 以 `/v1beta` 结尾；`GEMINI_BASE_URL` 可指向中转站，否则用 Google 官方），默认并发 4（常见中转单 Key 同时 ≤5 个请求）；MiMo 听音校对仍用 `mimo-v2.6-pro`，并发 10。依据见第 30 期对比（2026-10）
 - 改回 MiMo 文本模型：`--llm-model mimo-v2.6-pro --llm-base-url https://api.xiaomimimo.com/v1 --thread-num 10`
+- 可选 Gemini 文本校对（`--with-text-proofread`）：MiMo 听音校对之后再用 Gemini 只读译文检查误译、漏译、术语，只改中文；支持多中转站池（`GEMINI_API_KEY_n`）
 - 提供本地网页控制台处理全流程与中间继续
 
 ## 推荐环境
@@ -271,7 +272,22 @@ python main.py translate ^
   --target-language 简体中文
 ```
 
-凭据只从环境变量读取：MiMo 使用 `MIMO_API_KEY`，DeepSeek 官方接口使用 `DEEPSEEK_API_KEY`，其他通用兼容接口使用 `LLM_API_KEY`。Web 页面不会显示、保存或提交凭据。
+凭据只从环境变量读取：MiMo 使用 `MIMO_API_KEY`，DeepSeek 官方接口使用 `DEEPSEEK_API_KEY`，Gemini 使用 `GEMINI_API_KEY`（文本校对另支持 `GEMINI_API_KEY_1`…`_9`），其他通用兼容接口使用 `LLM_API_KEY`。Web 页面不会显示、保存或提交凭据。
+
+文本校对（text-proofread，可选，只改中文译文）：
+
+```bash
+python main.py text-proofread --workdir .\work --glossary-xlsx samples\翻译对照.xlsx ^
+  --text-proofread-program "日语电台节目《刺刺广播》（トゲラジ）" ^
+  --text-proofread-hosts "理名、夕莉、朱李（乐队「无刺有刺」）"
+```
+
+- 位置：`proofread-realign` 之后、`quality-gate` 之前；`run` / `batch-run` 加 `--with-text-proofread` 启用（togeradi / japanese-generic CI 预设已默认开启）。输入优先 MiMo 校对结果，否则翻译结果；只改 `translated_text`，不改日文、时间轴和说话人。
+- 做法：把译文按 MiMo 片段分组（前后各 3 行只读上下文，附翻译阶段的可疑原因和本段命中的术语表条目）发给 Gemini，模型只返回需要改的行。采纳条件：置信度 ≥ `--text-proofread-apply-threshold`（默认 0.8）、类型为误译/漏译/多译/重复/术语/假名、改后不含假名、不等于相邻行译文；相邻行只允许修复重复。被改的行写入 `text_proofread` 元数据（原译文、类型、理由、置信度）。
+- 产物：`experiments/text-proofread/`（`text_proofread_segments.json`、`text_proofread_report.json`、`subtitles.text-proofread.srt`、`requests.jsonl` 检查点，断点续跑按提示词哈希复用）。部分请求失败为 WARN（失败片段不改，已成功的照常采纳）；全部失败为 FAIL，不写结果、阶段退出码 1（run 停止，可直接重跑该阶段续跑，或去掉 `--with-text-proofread` 用 MiMo 结果继续）。normalize / export 的 `--source auto` 优先级：normalized > text > mimo > translated。
+- 基线：v6 提示词 + `--text-proofread-effort medium`（`thinkingLevel`）。54 期实验：零误改，术语表行 9/9，跨片段成对错误能修；`high` 没有额外收益且更慢。已知限制：词义选错、漏谓语一类（如「背带裤」「灯」）medium 与 high 都抓不到，仍需人工。
+- 凭据与中转（只读环境变量）：`GEMINI_API_KEY` + `GEMINI_BASE_URL`，可再加 `GEMINI_API_KEY_1`…`_9` 与对应的 `GEMINI_BASE_URL_n`、`GEMINI_MODEL_n`（默认用 `--text-proofread-model`）、`GEMINI_CONCURRENCY_n`（默认 `--text-proofread-concurrency`）。多个中转组成池，按各自并发分发请求，失败自动换下一个；相同 Key + URL 只算一个。
+- Web：`/legacy` Run 勾选「文本校对（Gemini）」，LLM 组可设 effort / 模型 / 并发 / 超时 / 采纳阈值 / 节目 / 成员；工作台时间线有「文本校对」阶段可单独重跑。未设置任何 `GEMINI_API_KEY*` 时拒绝启动。
 
 导出时会优先使用：
 

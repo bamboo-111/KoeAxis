@@ -42,6 +42,8 @@ _NATIVE_TOP_LEVEL_FIELDS = {
     "labels",
 }
 DISABLED_THINKING_LEVEL = "low"
+THINKING_LEVELS = ("low", "medium", "high")
+AUDIO_MIME_SUBTYPES = {"mp3": "mpeg", "m4a": "mp4"}
 
 
 def is_gemini_native_url(base_url: str | None) -> bool:
@@ -86,6 +88,28 @@ def _message_text(content: Any) -> str:
     return "" if content is None else str(content)
 
 
+def _message_parts(content: Any) -> list[dict[str, Any]]:
+    """Native parts of one message: text items joined as before, OpenAI ``input_audio`` as ``inlineData``."""
+    if not isinstance(content, list):
+        return [{"text": _message_text(content)}]
+    parts: list[dict[str, Any]] = []
+    texts: list[str] = []
+    for item in content:
+        audio = item.get("input_audio") if isinstance(item, dict) and item.get("type") == "input_audio" else None
+        if not isinstance(audio, dict):
+            texts.append(_message_text([item]))
+            continue
+        if texts:
+            parts.append({"text": "\n".join(texts)})
+            texts = []
+        audio_format = str(audio.get("format") or "wav").lower().lstrip(".")
+        parts.append({"inlineData": {"mimeType": f"audio/{AUDIO_MIME_SUBTYPES.get(audio_format, audio_format)}",
+                                     "data": str(audio.get("data", ""))}})
+    if texts or not parts:
+        parts.append({"text": "\n".join(texts)})
+    return parts
+
+
 def _deep_merge(base: dict[str, Any], override: dict[str, Any]) -> dict[str, Any]:
     merged = dict(base)
     for key, value in override.items():
@@ -109,16 +133,17 @@ def build_payload(
     contents: list[dict[str, Any]] = []
     for message in messages:
         role = message.get("role")
-        text = _message_text(message.get("content"))
         if role in {"system", "developer"}:
+            text = _message_text(message.get("content"))
             if text:
                 system_parts.append({"text": text})
             continue
         gemini_role = "model" if role == "assistant" else "user"
+        parts = _message_parts(message.get("content"))
         if contents and contents[-1]["role"] == gemini_role:
-            contents[-1]["parts"].append({"text": text})
+            contents[-1]["parts"].extend(parts)
         else:
-            contents.append({"role": gemini_role, "parts": [{"text": text}]})
+            contents.append({"role": gemini_role, "parts": parts})
 
     generation_config: dict[str, Any] = {"temperature": temperature}
     if require_json:
@@ -130,6 +155,10 @@ def build_payload(
     thinking = extra.pop("thinking", None)
     if disable_thinking or (isinstance(thinking, dict) and thinking.get("type") == "disabled"):
         generation_config["thinkingConfig"] = {"thinkingLevel": DISABLED_THINKING_LEVEL}
+    # OpenAI-style effort (what the OpenAI-compatible relays honour) wins over the generic disable flag.
+    effort = str(extra.pop("reasoning_effort", "") or "").strip().lower()
+    if effort in THINKING_LEVELS:
+        generation_config["thinkingConfig"] = {"thinkingLevel": effort}
 
     payload: dict[str, Any] = {"contents": contents, "generationConfig": generation_config}
     if system_parts:

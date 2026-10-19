@@ -125,6 +125,7 @@ def run_phase(spec: dict[str, Any], phase: str, gpu_lock_path: str | None) -> in
         "translate": stage_helpers.cmd_translate,
         "mimo-proofread": stage_helpers.cmd_mimo_proofread,
         "proofread-realign": stage_helpers.cmd_proofread_realign,
+        "text-proofread": stage_helpers.cmd_text_proofread,
         "normalize": stage_helpers.cmd_normalize,
         "export": stage_helpers.cmd_export,
     }

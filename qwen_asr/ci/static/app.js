@@ -5,6 +5,7 @@ const API = "api/v1";
 const STAGE_LABELS = {
   prepare: "准备", transcribe: "识别", correct: "纠错", align: "对齐", "align-recovery": "对齐恢复",
   split: "断句", translate: "翻译", "mimo-proofread": "听音校对", "proofread-realign": "校对重对齐",
+  "text-proofread": "文本校对",
   "quality-gate": "质量门", normalize: "规范化", export: "导出",
 };
 const STATUS_LABELS = {

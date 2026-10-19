@@ -150,6 +150,12 @@ class ArtifactState:
             return completed >= candidate_count
         return True
 
+    def _is_text_proofread_complete(self) -> bool:
+        if not self.work_paths.text_proofread_manifest.exists():
+            return False
+        report = read_json(self.work_paths.text_proofread_report, default=None)
+        return isinstance(report, dict) and str(report.get("status", "")).upper() in {"PASS", "WARN"}
+
     def _is_export_complete(self) -> bool:
         return _quality_gate_allows_formal_outputs(self.work_paths) and (
             self.work_paths.subtitles_srt.exists() or self.work_paths.subtitles_vtt.exists()

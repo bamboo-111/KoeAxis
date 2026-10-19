@@ -43,6 +43,7 @@ STAGES: tuple[tuple[str, str], ...] = (
     ("translate", API_PHASE),
     ("mimo-proofread", API_PHASE),
     ("proofread-realign", API_PHASE),
+    ("text-proofread", API_PHASE),
     ("quality-gate", API_PHASE),
     ("normalize", API_PHASE),
     ("export", API_PHASE),
@@ -50,10 +51,11 @@ STAGES: tuple[tuple[str, str], ...] = (
 STAGE_NAMES = tuple(name for name, _ in STAGES)
 STAGE_PHASE = dict(STAGES)
 PIPELINE_GPU_STAGES = ("prepare", "transcribe", "correct", "align")
-PIPELINE_API_STAGES = ("split", "translate", "mimo-proofread", "proofread-realign", "quality-gate", "normalize", "export")
+PIPELINE_API_STAGES = ("split", "translate", "mimo-proofread", "proofread-realign", "text-proofread", "quality-gate",
+                       "normalize", "export")
 # Stages that may be used as a retry starting point (their outputs and everything downstream are discarded).
 RETRY_STAGES = ("prepare", "transcribe", "correct", "align", "split", "translate", "mimo-proofread",
-                "proofread-realign", "normalize", "export")
+                "proofread-realign", "text-proofread", "normalize", "export")
 
 # Options a user may set per run; each maps to one CLI flag of `main.py run`.
 OPTION_FLAGS: dict[str, str] = {

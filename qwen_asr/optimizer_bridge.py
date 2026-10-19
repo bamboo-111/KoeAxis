@@ -142,6 +142,8 @@ def load_best_asr_data(
     ASRData, ASRDataSeg, *_ = _load_optimizer_types(optimizer_root)
     if work_paths.normalized_manifest.exists():
         return ASRData.from_json(read_json(work_paths.normalized_manifest, default={}))
+    if work_paths.text_proofread_manifest.exists():
+        return ASRData.from_json(read_json(work_paths.text_proofread_manifest, default={}))
     if work_paths.mimo_proofread_manifest.exists():
         return ASRData.from_json(read_json(work_paths.mimo_proofread_manifest, default={}))
     if work_paths.translated_manifest.exists():
@@ -161,6 +163,8 @@ def load_specific_asr_data(
     ASRData, ASRDataSeg, *_ = _load_optimizer_types(optimizer_root)
     if source == "normalized" and work_paths.normalized_manifest.exists():
         return ASRData.from_json(read_json(work_paths.normalized_manifest, default={}))
+    if source == "text" and work_paths.text_proofread_manifest.exists():
+        return ASRData.from_json(read_json(work_paths.text_proofread_manifest, default={}))
     if source == "mimo" and work_paths.mimo_proofread_manifest.exists():
         return ASRData.from_json(read_json(work_paths.mimo_proofread_manifest, default={}))
     if source == "translated" and work_paths.translated_manifest.exists():

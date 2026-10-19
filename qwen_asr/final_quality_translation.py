@@ -44,10 +44,13 @@ def translation_structure_check(work_paths: WorkPaths) -> dict[str, Any]:
             missing_translation=missing_translation,
             invalid_suspect_fields=invalid_suspect_fields,
         )
-    effective_path = (
-        work_paths.mimo_proofread_manifest
-        if work_paths.mimo_proofread_manifest.exists()
-        else work_paths.translated_manifest
+    effective_path = next(
+        (
+            path
+            for path in (work_paths.text_proofread_manifest, work_paths.mimo_proofread_manifest)
+            if path.exists()
+        ),
+        work_paths.translated_manifest,
     )
     effective_payload = read_json(effective_path, default={})
     kana_keys = []

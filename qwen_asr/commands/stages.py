@@ -206,6 +206,12 @@ def cmd_proofread_realign(args: argparse.Namespace, work_paths: WorkPaths) -> in
     return _cmd_proofread_realign(args, work_paths)
 
 
+def cmd_text_proofread(args: argparse.Namespace, work_paths: WorkPaths) -> int:
+    from qwen_asr.text_proofread import cmd_text_proofread as _cmd_text_proofread
+
+    return _cmd_text_proofread(args, work_paths)
+
+
 def _translated_manifest_has_content(path: Path) -> bool:
     payload = read_json(path, default={})
     return isinstance(payload, dict) and bool(payload) and all(
@@ -323,14 +329,14 @@ def _chunked(items: list[AudioSegment], size: int) -> list[list[AudioSegment]]:
 
 
 def _load_optimizer_export_source(source: str, work_paths: WorkPaths, optimizer_root: Path):
-    if source in {"normalized", "mimo", "translated", "split", "transcript"}:
+    if source in {"normalized", "text", "mimo", "translated", "split", "transcript"}:
         return load_specific_asr_data(work_paths, source=source, optimizer_root=optimizer_root)
     return load_best_asr_data(work_paths, optimizer_root=optimizer_root)
 
 
 def _load_normalize_source(source: str, work_paths: WorkPaths, optimizer_root: Path):
     if source == "auto":
-        for candidate in ("mimo", "translated", "split", "transcript"):
+        for candidate in ("text", "mimo", "translated", "split", "transcript"):
             data = load_specific_asr_data(work_paths, source=candidate, optimizer_root=optimizer_root)
             if data is not None and getattr(data, "segments", None):
                 return data

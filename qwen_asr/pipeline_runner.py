@@ -41,6 +41,7 @@ class PipelineRunner:
             with_split=bool(args.with_split),
             with_translate=bool(args.with_translate),
             with_mimo_proofread=bool(getattr(args, "with_mimo_proofread", False)),
+            with_text_proofread=bool(getattr(args, "with_text_proofread", False)),
             with_normalize=bool(args.with_normalize),
         )
         invocations: list[StageInvocation] = []
@@ -134,7 +135,7 @@ class PipelineRunner:
                 status = self._recover_alignment(args, recorder)
             if status != 0:
                 return status
-            if invocation.name in {"align", "split", "mimo-proofread", "proofread-realign"}:
+            if invocation.name in {"align", "split", "mimo-proofread", "proofread-realign", "text-proofread"}:
                 self._record_content_gate(include_export=False)
         return 0
 

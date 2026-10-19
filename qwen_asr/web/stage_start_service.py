@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import os
 import re
+from collections.abc import Mapping
 from pathlib import Path
 from typing import Any
 
@@ -23,6 +25,9 @@ from qwen_asr.models import WorkPaths
 from qwen_asr.storage import read_json
 from qwen_asr.web.commands import SENSITIVE_PAYLOAD_FIELDS
 
+# Relay slots text-proofread reads: GEMINI_API_KEY, then GEMINI_API_KEY_1 ... GEMINI_API_KEY_9.
+GEMINI_KEY_SUFFIXES = ("",) + tuple(f"_{index}" for index in range(1, 10))
+
 STARTABLE_STAGES = frozenset(
     {
         "prepare",
@@ -32,6 +37,7 @@ STARTABLE_STAGES = frozenset(
         "split",
         "translate",
         "mimo-proofread",
+        "text-proofread",
         "quality-gate",
         "normalize",
         "export",
@@ -181,6 +187,14 @@ def _base_payload(
         "mimo_proofread_max_tokens": value("mimoProofreadMaxTokens", 4096),
         "mimo_compact_output": bool(value("mimoCompactOutput", False)),
         "mimo_proofread_output_dir": value("mimoProofreadOutputDir", ""),
+        "with_text_proofread": bool(value("withTextProofread", False)),
+        "text_proofread_effort": value("textProofreadEffort", "medium"),
+        "text_proofread_model": value("textProofreadModel", ""),
+        "text_proofread_concurrency": _optional(value("textProofreadConcurrency")),
+        "text_proofread_timeout": _optional(value("textProofreadTimeout")),
+        "text_proofread_apply_threshold": _optional(value("textProofreadApplyThreshold")),
+        "text_proofread_program": value("textProofreadProgram", ""),
+        "text_proofread_hosts": value("textProofreadHosts", ""),
         "quality_gate_include_export": bool(value("qualityGateIncludeExport", False)),
         "quality_gate_require_srt": bool(value("qualityGateRequireSrt", False)),
         "normalize_source": value("normalizeSource", "auto"),
@@ -218,6 +232,18 @@ def _validate_stage_environment(stage: str, payload: dict[str, Any]) -> None:
             "MIMO_API_KEY is not configured in the Web service environment",
             status=409,
         )
+    if stage == "text-proofread" and not gemini_relay_configured():
+        raise StageStartError(
+            "STAGE_CREDENTIAL_MISSING",
+            "GEMINI_API_KEY (or GEMINI_API_KEY_1..9) is not configured in the Web service environment",
+            status=409,
+        )
+
+
+def gemini_relay_configured(environ: Mapping[str, str] | None = None) -> bool:
+    """True when a Gemini relay key for text-proofread is set (GEMINI_API_KEY or GEMINI_API_KEY_1..9)."""
+    env = os.environ if environ is None else environ
+    return any(str(env.get(f"GEMINI_API_KEY{suffix}", "") or "").strip() for suffix in GEMINI_KEY_SUFFIXES)
 
 
 def _metadata(work_paths: WorkPaths) -> dict[str, Any]:

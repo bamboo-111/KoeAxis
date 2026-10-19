@@ -583,6 +583,7 @@
               <label class="check"><input type="checkbox" id="withCorrect"> 校对</label>
               <label class="check"><input type="checkbox" id="withSplit" checked> Split</label>
               <label class="check"><input type="checkbox" id="withTranslate"> Translate</label>
+              <label class="check"><input type="checkbox" id="withTextProofread"> 文本校对（Gemini）</label>
               <label class="check"><input type="checkbox" id="withNormalize" checked> Normalize</label>
             </div>
           </div>
@@ -706,15 +707,23 @@
                 <label class="check field"><input id="mimoCompactOutput" type="checkbox"> 精简输出</label>
                 <label class="check field wide"><input id="proofreadRealignMfaFallback" type="checkbox"> 校对后重对齐失败时用本地 MFA 回退（Run / Batch Run，同 CI）</label>
                 <div class="field wide"><label for="mimoProofreadOutputDir">MiMo 输出目录</label><div class="inline"><div class="path-combo"><input id="mimoProofreadOutputDir" placeholder="留空则写入 workdir\\experiments\\mimo-proofread"><button type="button" class="path-combo-toggle" onclick="togglePathMenu('mimoOutputHistory')" title="历史路径">⌄</button><div class="path-menu" id="mimoOutputHistory"></div></div><button type="button" id="pickMiMoOutputDirButton" onclick="pickPath('mimoProofreadOutputDir', '/api/pick-output-directory', 'mimoOutputHistory')">选择</button></div></div>
+                <div class="field wide"><span>文本校对（Gemini）：在听音校对 / 重对齐之后只校对中文译文，不改日文和时间轴；中转地址与密钥从环境变量 GEMINI_API_KEY / GEMINI_BASE_URL（或 GEMINI_API_KEY_1..9）读取。Run / Batch Run 勾选上方「文本校对（Gemini）」启用。</span></div>
+                <div class="field"><label for="textProofreadEffort">文本校对思考强度</label><select id="textProofreadEffort"><option value="low">low</option><option value="medium" selected>medium</option><option value="high">high</option></select></div>
+                <div class="field"><label for="textProofreadModel">文本校对模型</label><input id="textProofreadModel" value="gemini-3.8-flash" placeholder="未单独设置 GEMINI_MODEL_n 的中转使用此模型"></div>
+                <div class="field"><label for="textProofreadConcurrency">文本校对并发</label><input id="textProofreadConcurrency" type="number" min="1" step="1" value="4"></div>
+                <div class="field"><label for="textProofreadTimeout">文本校对超时(秒)</label><input id="textProofreadTimeout" type="number" min="1" step="1" value="600"></div>
+                <div class="field"><label for="textProofreadApplyThreshold">应用置信度阈值</label><input id="textProofreadApplyThreshold" type="number" min="0" max="1" step="0.05" value="0.8"></div>
+                <div class="field"><label for="textProofreadProgram">节目描述</label><input id="textProofreadProgram" value="日语节目" placeholder="如 日语电台节目《刺刺广播》（トゲラジ）"></div>
+                <div class="field wide"><label for="textProofreadHosts">主持成员</label><input id="textProofreadHosts" placeholder="如 理名、夕莉、朱李（乐队「无刺有刺」）"></div>
               </div>
             </details>
 
             <details class="config-group" data-group="out">
               <summary>Normalize / Export</summary>
               <div class="group-body form-grid">
-                <div class="field"><label for="normalizeSource">Normalize 来源</label><select id="normalizeSource"><option value="auto">auto</option><option value="translated">translated</option><option value="split">split</option><option value="transcript">transcript</option></select></div>
+                <div class="field"><label for="normalizeSource">Normalize 来源</label><select id="normalizeSource"><option value="auto">auto</option><option value="text">text</option><option value="mimo">mimo</option><option value="translated">translated</option><option value="split">split</option><option value="transcript">transcript</option></select></div>
                 <div class="field"><label>导出格式</label><input value="SRT" disabled></div>
-                <div class="field"><label for="source">导出源</label><select id="source"><option value="auto">auto</option><option value="normalized">normalized</option><option value="translated">translated</option><option value="split">split</option><option value="aligned">aligned</option><option value="transcript">transcript</option></select></div>
+                <div class="field"><label for="source">导出源</label><select id="source"><option value="auto">auto</option><option value="normalized">normalized</option><option value="text">text</option><option value="mimo">mimo</option><option value="translated">translated</option><option value="split">split</option><option value="aligned">aligned</option><option value="transcript">transcript</option></select></div>
                 <div class="field"><label for="exportMode">导出位置</label><select id="exportMode" onchange="syncExportMode()"><option value="source">源文件同级</option><option value="custom">自定义路径</option></select></div>
                 <div class="field wide"><label for="exportPath">自定义导出路径</label><div class="inline"><div class="path-combo"><input id="exportPath" placeholder="目录或 .srt 文件"><button type="button" class="path-combo-toggle" onclick="togglePathMenu('exportHistory')" title="历史路径">⌄</button><div class="path-menu" id="exportHistory"></div></div><button type="button" id="pickExportDirButton" onclick="pickPath('exportPath', '/api/pick-output-directory', 'exportHistory')">目录</button><button type="button" id="pickExportFileButton" onclick="pickPath('exportPath', '/api/pick-export-file', 'exportHistory')">文件</button></div></div>
                 <div class="field"><label for="normalizeExtendMs">后端延伸(ms)</label><input id="normalizeExtendMs" type="number" min="0" step="10" value="350"></div>
@@ -809,7 +818,7 @@
       mimoOutputHistory: 'mimoProofreadOutputDir',
       exportHistory: 'exportPath',
     };
-    const STAGES = ['prepare', 'transcribe', 'correct', 'align', 'split', 'translate', 'mimo-proofread', 'proofread-realign', 'quality-gate', 'normalize', 'export'];
+    const STAGES = ['prepare', 'transcribe', 'correct', 'align', 'split', 'translate', 'mimo-proofread', 'proofread-realign', 'text-proofread', 'quality-gate', 'normalize', 'export'];
     const FILE_LABELS = {
       audio: 'Audio',
       segments: 'Segments',
@@ -819,6 +828,7 @@
       split: 'Split',
       translated: 'Translated',
       proofread_realign: 'Proofread Realign',
+      text_proofread: 'Text Proofread（文本校对）',
       final_quality: 'Quality Gate',
       normalized: 'Normalized',
       srt: 'SRT',
@@ -827,7 +837,7 @@
     };
     const ARTIFACT_GROUPS = [
       ['输入', ['audio']],
-      ['中间结果', ['segments', 'transcript', 'corrected', 'aligned', 'split', 'translated', 'proofread_realign', 'final_quality', 'normalized']],
+      ['中间结果', ['segments', 'transcript', 'corrected', 'aligned', 'split', 'translated', 'proofread_realign', 'text_proofread', 'final_quality', 'normalized']],
       ['导出', ['srt', 'vtt', 'ass']]
     ];
     const FIELD_GROUPS = {
@@ -862,6 +872,8 @@
         'alignFallback', 'alignFallbackWindowSeconds', 'performanceProfile',
         'mimoProofreadMode', 'mimoAudioReviewScope', 'mimoProofreadWorkers', 'mimoNearbyBatchSize', 'mimoNearbyBatchMaxGapS', 'mimoNearbyPaddingS',
         'mimoNearbyContextSubtitles', 'mimoNearbyAudioWorkers', 'mimoProofreadMaxTokens', 'mimoCompactOutput', 'mimoProofreadOutputDir',
+        'withTextProofread', 'textProofreadEffort', 'textProofreadModel', 'textProofreadConcurrency', 'textProofreadTimeout',
+        'textProofreadApplyThreshold', 'textProofreadProgram', 'textProofreadHosts',
         'source', 'exportMode', 'exportPath', 'withAlign', 'withCorrect', 'withNormalize', 'withSplit', 'withTranslate'
       ];
     }
@@ -1087,6 +1099,13 @@
         mimo_proofread_max_tokens: document.getElementById('mimoProofreadMaxTokens').value,
         mimo_compact_output: document.getElementById('mimoCompactOutput').checked,
         mimo_proofread_output_dir: document.getElementById('mimoProofreadOutputDir').value,
+        text_proofread_effort: document.getElementById('textProofreadEffort').value,
+        text_proofread_model: document.getElementById('textProofreadModel').value,
+        text_proofread_concurrency: document.getElementById('textProofreadConcurrency').value,
+        text_proofread_timeout: document.getElementById('textProofreadTimeout').value,
+        text_proofread_apply_threshold: document.getElementById('textProofreadApplyThreshold').value,
+        text_proofread_program: document.getElementById('textProofreadProgram').value,
+        text_proofread_hosts: document.getElementById('textProofreadHosts').value,
         target_language: document.getElementById('targetLanguage').value,
         normalize_source: document.getElementById('normalizeSource').value,
         normalize_extend_ms: document.getElementById('normalizeExtendMs').value,
@@ -1112,6 +1131,7 @@
         with_align: document.getElementById('withAlign').checked,
         with_correct: document.getElementById('withCorrect').checked && ['normal', 'both'].includes(document.getElementById('proofreadKind').value),
         with_mimo_proofread: document.getElementById('withCorrect').checked && ['mimo-audio', 'both'].includes(document.getElementById('proofreadKind').value),
+        with_text_proofread: document.getElementById('withTextProofread').checked,
         with_normalize: document.getElementById('withNormalize').checked,
         with_split: document.getElementById('withSplit').checked,
         with_translate: document.getElementById('withTranslate').checked

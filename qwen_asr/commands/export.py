@@ -51,7 +51,7 @@ def cmd_export(args: argparse.Namespace, work_paths: WorkPaths) -> int:
     if speaker_ass.exists():
         speaker_ass.unlink()
     optimizer_asr_data = None
-    if args.source in {"auto", "normalized", "mimo", "translated", "split", "transcript"}:
+    if args.source in {"auto", "normalized", "text", "mimo", "translated", "split", "transcript"}:
         optimizer_asr_data = stage_helpers._load_optimizer_export_source(args.source, work_paths, optimizer_root)
 
     if optimizer_asr_data is not None:

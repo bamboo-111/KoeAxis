@@ -44,6 +44,10 @@ class WorkPaths:
     mimo_proofread_manifest: Path
     mimo_proofread_report: Path
     mimo_proofread_srt: Path
+    text_proofread_dir: Path
+    text_proofread_manifest: Path
+    text_proofread_report: Path
+    text_proofread_srt: Path
     normalized_manifest: Path
     normalized_srt: Path
     transcript_text: Path
@@ -81,6 +85,10 @@ class WorkPaths:
                 mimo_proofread_manifest=workdir / "experiments" / "mimo-proofread" / "mimo_proofread_segments.json",
                 mimo_proofread_report=workdir / "experiments" / "mimo-proofread" / "mimo_proofread_report.json",
                 mimo_proofread_srt=workdir / "experiments" / "mimo-proofread" / "subtitles.mimo-proofread.srt",
+                text_proofread_dir=workdir / "experiments" / "text-proofread",
+                text_proofread_manifest=workdir / "experiments" / "text-proofread" / "text_proofread_segments.json",
+                text_proofread_report=workdir / "experiments" / "text-proofread" / "text_proofread_report.json",
+                text_proofread_srt=workdir / "experiments" / "text-proofread" / "subtitles.text-proofread.srt",
                 normalized_manifest=workdir / "manifests" / "normalized_segments.json",
                 normalized_srt=workdir / "drafts" / "subtitles.normalized.srt",
                 transcript_text=workdir / "drafts" / "transcript.txt",
@@ -114,6 +122,10 @@ class WorkPaths:
             mimo_proofread_manifest=workdir / "experiments" / "mimo-proofread" / "mimo_proofread_segments.json",
             mimo_proofread_report=workdir / "experiments" / "mimo-proofread" / "mimo_proofread_report.json",
             mimo_proofread_srt=workdir / "experiments" / "mimo-proofread" / "subtitles.mimo-proofread.srt",
+            text_proofread_dir=workdir / "experiments" / "text-proofread",
+            text_proofread_manifest=workdir / "experiments" / "text-proofread" / "text_proofread_segments.json",
+            text_proofread_report=workdir / "experiments" / "text-proofread" / "text_proofread_report.json",
+            text_proofread_srt=workdir / "experiments" / "text-proofread" / "subtitles.text-proofread.srt",
             normalized_manifest=workdir / "normalized_segments.json",
             normalized_srt=workdir / "subtitles.normalized.srt",
             transcript_text=workdir / "transcript.txt",

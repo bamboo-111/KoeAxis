@@ -16,7 +16,8 @@
 
 - Worker **主动拉取**（`claim`），服务端不需要访问 Worker，Worker 可在家用网络/内网。
 - 一个 run = 一次 `main.py run`，分两个 phase 子进程：`gpu`（prepare→transcribe→correct→align→align-recovery）
-  和 `api`（split→translate→mimo-proofread→proofread-realign→quality-gate→normalize→export）。
+  和 `api`（split→translate→mimo-proofread→proofread-realign→text-proofread→quality-gate→normalize→export；
+  text-proofread 需 Worker 环境有 `GEMINI_API_KEY` 或 `GEMINI_API_KEY_1..9`）。
   Worker 同时最多 `--max-runs` 个 run，但**仅当自己没有 run 处于 GPU 阶段时才会 claim 新任务**，
   因此 GPU 串行、API 阶段可与下一个 run 的 GPU 阶段重叠。
 - 重跑（retry）默认复用同一 `workspace_key` 的工作目录，并在一段时间内优先派给持有该工作区的 Worker
