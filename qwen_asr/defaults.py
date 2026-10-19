@@ -11,7 +11,9 @@ DEFAULT_ALIGN_MODEL = "Qwen/Qwen3-ForcedAligner-0.6B"
 # episode 30: gemini-3.8-flash recovered ASR-garbled names better, produced fewer mid-word split cuts and
 # no shifted translation batch. The native Gemini endpoint is selected by the ``/v1beta`` URL
 # (optimizer.gemini_native); point ``GEMINI_BASE_URL`` at a relay, otherwise Google is used.
-DEFAULT_LLM_MODEL = "gemini-3.8-flash"
+# 2026-10-19: the project relay (https://113.20.8.48) serves this model only as ``gemini-3.8-flash-high``;
+# it still honours ``thinkingLevel`` (low/medium/high), and without one it thinks like the plain name did.
+DEFAULT_LLM_MODEL = "gemini-3.8-flash-high"
 GOOGLE_GEMINI_BASE_URL = "https://generativelanguage.googleapis.com/v1beta"
 
 

@@ -14,7 +14,7 @@ KoeAxis 是面向本地音频转写、时间轴、翻译与人工审阅字幕候
 - 导出 `JSON / TXT / SRT / VTT`
 - 支持全局时间戳 offset 处理
 - 内置本地 `optimizer/` 断句与翻译逻辑
-- 文本 LLM（split / correct / translate）默认 `gemini-3.8-flash`，走 Gemini 原生 `generateContent`（Base URL 以 `/v1beta` 结尾；`GEMINI_BASE_URL` 可指向中转站，否则用 Google 官方），默认并发 4（常见中转单 Key 同时 ≤5 个请求）；MiMo 听音校对仍用 `mimo-v2.6-pro`，并发 10。依据见第 30 期对比（2026-10）
+- 文本 LLM（split / correct / translate / text-proofread）默认 `gemini-3.8-flash-high`（2026-10-19 起统一走项目中转 `GEMINI_BASE_URL=https://113.20.8.48`，该中转只提供带 `-high` 后缀的名称，仍按请求的 `thinkingLevel` 执行；用 Google 官方或其他中转时请改 `--llm-model gemini-3.8-flash`），走 Gemini 原生 `generateContent`（Base URL 以 `/v1beta` 结尾；`GEMINI_BASE_URL` 可指向中转站，否则用 Google 官方），默认并发 4（常见中转单 Key 同时 ≤5 个请求）；MiMo 听音校对仍用 `mimo-v2.6-pro`，并发 10。依据见第 30 期对比（2026-10）
 - 改回 MiMo 文本模型：`--llm-model mimo-v2.6-pro --llm-base-url https://api.xiaomimimo.com/v1 --thread-num 10`
 - 可选 Gemini 文本校对（`--with-text-proofread`）：MiMo 听音校对之后再用 Gemini 只读译文检查误译、漏译、术语，只改中文；支持多中转站池（`GEMINI_API_KEY_n`）
 - 提供本地网页控制台处理全流程与中间继续

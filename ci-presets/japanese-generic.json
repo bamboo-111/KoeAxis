@@ -13,5 +13,5 @@
   ],
   "files": [],
   "env": {"QWEN_ASR_MFA_BACKGROUND_PREFETCH": "1"},
-  "options": {"llm_model": "gemini-3.8-flash"}
+  "options": {"llm_model": "gemini-3.8-flash-high"}
 }

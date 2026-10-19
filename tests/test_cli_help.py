@@ -132,7 +132,7 @@ def test_translate_defaults_to_gemini_38_flash_and_allows_model_override() -> No
     args = parser.parse_args(arguments)
     override = parser.parse_args([*arguments, "--llm-model", "custom-model"])
 
-    assert args.llm_model == "gemini-3.8-flash"
+    assert args.llm_model == "gemini-3.8-flash-high"
     assert args.llm_base_url == DEFAULT_LLM_BASE_URL
     assert args.thread_num == 4
     assert override.llm_model == "custom-model"

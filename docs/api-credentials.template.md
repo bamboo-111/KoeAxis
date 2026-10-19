@@ -5,11 +5,12 @@ or a local untracked `.env` file.
 
 ## Gemini (default text LLM: split / correct / translate)
 
-- Model: `gemini-3.8-flash` (default since 2026-10)
+- Model: `gemini-3.8-flash-high` (default since 2026-10-19; the project relay only serves the `-high`
+  name and still honours `thinkingLevel`. Use `gemini-3.8-flash` with Google or other relays)
 - Protocol: native `generateContent`; the base URL must end with `/v1beta`
 - Default Base URL: `$GEMINI_BASE_URL` + `/v1beta` when set (e.g. a relay), else
   `https://generativelanguage.googleapis.com/v1beta`
-- Environment variables: `GEMINI_API_KEY`, optional `GEMINI_BASE_URL`
+- Environment variables: `GEMINI_API_KEY`, optional `GEMINI_BASE_URL` (project relay: `https://113.20.8.48`)
 - Default concurrency: 4 (`--thread-num`); many relays allow at most ~5 in-flight requests per key
 - Key value: `<set this only in your environment>`
 

@@ -139,10 +139,10 @@ def test_translate_stage_defaults_to_gemini_38_flash(tmp_path: Path, monkeypatch
     payload = build_workspace_stage_payload(paths, stage="translate", settings={})
     command = build_command(payload)
 
-    assert payload["llm_model"] == "gemini-3.8-flash"
+    assert payload["llm_model"] == "gemini-3.8-flash-high"
     assert payload["llm_base_url"] == DEFAULT_LLM_BASE_URL
     assert "/v1beta" in payload["llm_base_url"]
     assert str(payload["thread_num"]) == "4"
-    assert command[command.index("--llm-model") + 1] == "gemini-3.8-flash"
+    assert command[command.index("--llm-model") + 1] == "gemini-3.8-flash-high"
     assert "llm_api_key" not in payload
     assert "--llm-api-key" not in command

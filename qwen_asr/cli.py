@@ -888,7 +888,7 @@ def _add_text_proofread_arguments(parser: argparse.ArgumentParser) -> None:
     )
     parser.add_argument(
         "--text-proofread-model",
-        default="gemini-3.8-flash",
+        default=DEFAULT_LLM_MODEL,
         help="Model for relays without their own GEMINI_MODEL_n.",
     )
     parser.add_argument(

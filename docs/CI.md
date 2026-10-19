@@ -35,8 +35,8 @@ python -m qwen_asr.ci server --host 0.0.0.0 --port 8710
 
 # Worker（GPU 机器，项目根目录）
 export KOEAXIS_WORKER_TOKEN=kxw_...
-export GEMINI_API_KEY=...          # 文本 LLM（默认 gemini-3.8-flash）；密钥只放在 Worker 环境里，服务端不保存
-export GEMINI_BASE_URL=https://relay.example/   # 可选：中转站；不设则用 Google 官方
+export GEMINI_API_KEY=...          # 文本 LLM（默认 gemini-3.8-flash-high）；密钥只放在 Worker 环境里，服务端不保存
+export GEMINI_BASE_URL=https://113.20.8.48   # 项目中转（公网 HTTPS）；不设则用 Google 官方（需改 llm_model 为 gemini-3.8-flash）
 export MIMO_API_KEY=...            # MiMo 听音校对
 python -m qwen_asr.ci worker --server https://ci.example.com --id gpu-1 \
     --data-dir ci-worker --model-cache-dir .model-cache
@@ -106,7 +106,7 @@ python -m qwen_asr.ci worker --server https://ci.example.com --id gpu-1 \
   "preset_id": "togeradi",
   "media_blob_id": "<blobs 返回的 id>",
   "title": "第30期",
-  "options": {"llm_model": "gemini-3.8-flash"},
+  "options": {"llm_model": "gemini-3.8-flash-high"},
   "inputs": [{"flag": "--glossary-xlsx", "blob_id": "<id>"}],
   "labels": {"batch": "2026-10"},
   "priority": 0
@@ -165,7 +165,7 @@ checks:  [{"name":"final_quality","status":"<质量报告原样状态>","message
   "run_args": ["--with-correct", "--with-align", "..."],
   "files": [{"flag": "--glossary-xlsx", "path": "../samples/翻译对照.xlsx"}],
   "env": {"QWEN_ASR_MFA_BACKGROUND_PREFETCH": "1"},
-  "options": {"llm_model": "gemini-3.8-flash"}
+  "options": {"llm_model": "gemini-3.8-flash-high"}
 }
 ```
 

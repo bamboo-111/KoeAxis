@@ -31,7 +31,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from qwen_asr.defaults import default_gemini_base_url
+from qwen_asr.defaults import DEFAULT_LLM_MODEL, default_gemini_base_url
 from qwen_asr.gemini_pool import GeminiEndpoint, GeminiRelayPool
 from qwen_asr.mimo_audio import filter_glossary, load_glossary, subtitle_entries_for_segment
 from qwen_asr.mimo_outputs import to_srt
@@ -45,7 +45,7 @@ LOGGER = logging.getLogger(__name__)
 
 PROMPT_VERSION = "v6"
 DEFAULT_EFFORT = "medium"
-DEFAULT_MODEL = "gemini-3.8-flash"
+DEFAULT_MODEL = DEFAULT_LLM_MODEL
 DEFAULT_CONCURRENCY = 4
 DEFAULT_APPLY_THRESHOLD = 0.8
 CONTEXT_LINES = 3

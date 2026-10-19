@@ -13,7 +13,7 @@ A preset is a JSON file (``<presets_dir>/<id>.json`` or ``<presets_dir>/<id>/pre
       "run_args": ["--with-correct", ...],   # extra arguments for `main.py run` (open: any CLI flag)
       "files": [{"flag": "--glossary-xlsx", "path": "翻译对照.xlsx"}],  # shipped to the worker
       "env": {"QWEN_ASR_MFA_BACKGROUND_PREFETCH": "1"},              # worker-side environment
-      "options": {"asr_model": "", "llm_model": "gemini-3.8-flash"} # defaults users may override
+      "options": {"asr_model": "", "llm_model": "gemini-3.8-flash-high"} # defaults users may override
     }
 
 File paths are relative to the preset file (or absolute). The server serves them to workers, so a
