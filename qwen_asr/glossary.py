@@ -339,8 +339,17 @@ def _detect_canonical_columns(headers: list[str]) -> tuple[int, int, int, int | 
 
 
 def _detect_note_columns(headers: list[str], source_col: int, target_col: int) -> list[int]:
+    """Note columns of one source/target block; the lookahead stops at the next block's source column.
+
+    Glossary sheets put several blocks side by side (source | 中文 | 注释 | 备注 | gap | next source ...);
+    without the stop a block picked up the 注释 column of the block to its right.
+    """
     note_cols: list[int] = []
     end = min(len(headers), target_col + MAX_LOOKAHEAD_COLUMNS + 1)
+    for col in range(target_col + 1, end):
+        if _is_source_header(headers[col]):
+            end = col
+            break
     for col in range(source_col + 1, end):
         if col == target_col:
             continue

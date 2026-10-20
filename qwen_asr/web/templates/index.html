@@ -715,6 +715,12 @@
                 <div class="field"><label for="textProofreadApplyThreshold">应用置信度阈值</label><input id="textProofreadApplyThreshold" type="number" min="0" max="1" step="0.05" value="0.8"></div>
                 <div class="field"><label for="textProofreadProgram">节目描述</label><input id="textProofreadProgram" value="日语节目" placeholder="如 日语电台节目《刺刺广播》（トゲラジ）"></div>
                 <div class="field wide"><label for="textProofreadHosts">主持成员</label><input id="textProofreadHosts" placeholder="如 理名、夕莉、朱李（乐队「无刺有刺」）"></div>
+                <div class="field wide"><span>节目背景提示词：每行一个文件，按顺序合并后加入纠错 / 翻译 / 文本校对的提示词；本期标题 auto = 媒体文件名</span></div>
+                <div class="field wide"><label for="programContextFiles">节目背景提示词文件（可选，每行一个）</label><textarea id="programContextFiles" placeholder="如 samples\program-context\togeradi.md&#10;samples\program-context\girls-band-cry.md"></textarea></div>
+                <div class="field"><label for="episodeTitle">本期标题</label><input id="episodeTitle" value="auto" placeholder="auto = 媒体文件名；off = 不加"></div>
+                <div class="field"><label for="translatePrompt">翻译 Prompt 版本</label><select id="translatePrompt"><option value="v1"{{SELECTED_TRANSLATE_PROMPT_V1}}>v1</option><option value="v2"{{SELECTED_TRANSLATE_PROMPT_V2}}>v2</option></select></div>
+                <div class="field"><label for="translateContextLines">翻译上下文行数</label><input id="translateContextLines" type="number" min="0" step="1" value="{{DEFAULT_TRANSLATE_CONTEXT_LINES}}"></div>
+                <div class="field"><label for="correctMode">纠错模式</label><select id="correctMode"><option value="rules"{{SELECTED_CORRECT_MODE_RULES}}>rules</option><option value="llm"{{SELECTED_CORRECT_MODE_LLM}}>llm</option></select></div>
               </div>
             </details>
 
@@ -874,6 +880,7 @@
         'mimoNearbyContextSubtitles', 'mimoNearbyAudioWorkers', 'mimoProofreadMaxTokens', 'mimoCompactOutput', 'mimoProofreadOutputDir',
         'withTextProofread', 'textProofreadEffort', 'textProofreadModel', 'textProofreadConcurrency', 'textProofreadTimeout',
         'textProofreadApplyThreshold', 'textProofreadProgram', 'textProofreadHosts',
+        'programContextFiles', 'episodeTitle', 'translatePrompt', 'translateContextLines', 'correctMode',
         'source', 'exportMode', 'exportPath', 'withAlign', 'withCorrect', 'withNormalize', 'withSplit', 'withTranslate'
       ];
     }
@@ -1106,6 +1113,11 @@
         text_proofread_apply_threshold: document.getElementById('textProofreadApplyThreshold').value,
         text_proofread_program: document.getElementById('textProofreadProgram').value,
         text_proofread_hosts: document.getElementById('textProofreadHosts').value,
+        program_context_files: document.getElementById('programContextFiles').value.split('\n').map(item => item.trim()).filter(Boolean),
+        episode_title: document.getElementById('episodeTitle').value.trim(),
+        translate_prompt: document.getElementById('translatePrompt').value,
+        translate_context_lines: document.getElementById('translateContextLines').value,
+        correct_mode: document.getElementById('correctMode').value,
         target_language: document.getElementById('targetLanguage').value,
         normalize_source: document.getElementById('normalizeSource').value,
         normalize_extend_ms: document.getElementById('normalizeExtendMs').value,

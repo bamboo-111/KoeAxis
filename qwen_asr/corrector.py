@@ -12,8 +12,10 @@ from typing import Any
 
 import json_repair
 
+from qwen_asr.credentials import resolve_llm_api_key
 from qwen_asr.glossary import build_glossary_prompt
 from qwen_asr.models import TranscriptSegment, WorkPaths
+from qwen_asr.program_context import program_context_block
 from optimizer.exceptions import LLMConnectionError, LLMRateLimitError
 from optimizer.llm_config import LLMConfig
 from optimizer.llm_client import DEFAULT_TIMEOUT, call_llm
@@ -54,6 +56,7 @@ class ASRCorrector:
         disable_thinking: bool = True,
         llm_extra_body: dict[str, Any] | None = None,
         timeout: float = DEFAULT_TIMEOUT,
+        program_context: str = "",
     ) -> None:
         self.model = model
         self.base_url = base_url
@@ -72,6 +75,7 @@ class ASRCorrector:
         self.llm_extra_body = llm_extra_body
         self.timeout = timeout
         self.glossary_prompt = build_glossary_prompt(glossary_xlsx) if glossary_xlsx else ""
+        self.program_context = program_context or ""
         self.is_running = True
         self.executor: ThreadPoolExecutor | None = ThreadPoolExecutor(max_workers=self.thread_num)
         self._cooldown_until = 0.0
@@ -297,6 +301,8 @@ class ASRCorrector:
 
     def _build_system_prompt(self) -> str:
         glossary = self.glossary_prompt.strip() or "No glossary supplied."
+        context = program_context_block(self.program_context)
+        context = f"{context}\n" if context else ""
         return f"""You are an ASR post-correction engine for subtitle transcripts.
 
 Your ONLY task is to fix obvious speech recognition mistakes in the original transcript language.
@@ -310,18 +316,13 @@ ABSOLUTE REQUIREMENTS:
 6. Each value must be an object with "corrected_text" and "reason".
 
 Fix only high-confidence issues:
-- misrecognized proper nouns, show names, song titles, member names, venues, fixed phrases
+- misrecognized proper nouns, show names, song titles, member names, venues, fixed phrases (check the glossary
+  and the program context; a misheard name usually sounds similar to the real one)
 - broken dates/numbers, spelled-out English letters, emails, URLs, hashtags
 - obvious katakana or homophone ASR errors when context is clear
+Keep plausible spoken Japanese as it is: fillers, repetitions, casual or broken grammar are not errors.
 
-High-priority fixed terms for this project:
-- トゲナシトゲアリ, トゲラジ, ハッシュタグトゲラジ
-- 仁菜, 朱李, ルパ, ダイヤモンドダスト
-- InterFM / interfm.jp
-- The program address is togeraji@interfm.jp. Correct split or misheard forms such as "t o g e r a j i at interfm jp",
-  "d o g e a d i at interfm jp", "トゲラジ at intfm.jp", and similar variants to "togeraji@interfm.jp".
-
-Use this glossary as recognition guidance, not as translation instructions:
+{context}Use this glossary as recognition guidance, not as translation instructions:
 <glossary>
 {glossary}
 </glossary>
@@ -388,12 +389,45 @@ def run_correction_stage(
     disable_thinking: bool = True,
     llm_extra_body: dict[str, Any] | None = None,
     timeout: float = DEFAULT_TIMEOUT,
+    mode: str = "rules",
+    program_context: str = "",
 ) -> tuple[list[TranscriptSegment], list[CorrectionReportItem]]:
+    """``rules``: deterministic cleanup only. ``llm``: ASRCorrector fixes obvious misrecognitions first."""
     if not work_paths.raw_transcript_manifest.exists():
         shutil.copy2(work_paths.transcript_manifest, work_paths.raw_transcript_manifest)
 
-    del llm_model, base_url, api_key, thread_num, batch_num
-    del glossary_xlsx, disable_thinking, llm_extra_body, timeout
+    original_text = {item.segment_id: item.text for item in transcripts}
+    llm_reports: dict[str, CorrectionReportItem] = {}
+    if mode == "llm":
+        resolved_key = resolve_llm_api_key(api_key, base_url)
+        if not (llm_model and base_url and resolved_key):
+            raise RuntimeError("correct --correct-mode llm needs --llm-model, --llm-base-url and an API key")
+        corrector = ASRCorrector(
+            model=llm_model,
+            base_url=base_url,
+            api_key=resolved_key,
+            thread_num=thread_num,
+            batch_num=batch_num,
+            glossary_xlsx=glossary_xlsx,
+            disable_thinking=disable_thinking,
+            llm_extra_body=llm_extra_body,
+            timeout=timeout,
+            program_context=program_context,
+        )
+        try:
+            transcripts_llm, llm_report = corrector.correct(transcripts)
+        finally:
+            corrector.stop()
+        llm_reports = {item.segment_id: item for item in llm_report}
+        LOGGER.info(
+            "LLM correction: %d changed, %d failed, %d total",
+            sum(item.changed for item in llm_report),
+            sum(item.status != "completed" for item in llm_report),
+            len(llm_report),
+        )
+        transcripts = transcripts_llm
+    elif mode != "rules":
+        raise ValueError(f"unknown correct mode: {mode}")
 
     corrected: list[TranscriptSegment] = []
     report: list[CorrectionReportItem] = []
@@ -401,19 +435,24 @@ def run_correction_stage(
         clone = TranscriptSegment(**asdict(item))
         if clone.status == "completed" and clone.text.strip():
             cleaned = clean_asr_correction_text(clone.text).strip() or clone.text
-            changed = cleaned != clone.text
+            cleanup_changed = cleaned != clone.text
             clone.text = cleaned
+            before = original_text.get(clone.segment_id, item.text)
+            llm_item = llm_reports.get(clone.segment_id)
+            reasons = []
+            if llm_item is not None and llm_item.changed:
+                reasons.append(f"llm: {llm_item.reason or 'corrected'}")
+            if cleanup_changed:
+                reasons.append("deterministic text cleanup")
             report.append(
                 CorrectionReportItem(
                     segment_id=clone.segment_id,
-                    original_text=item.text,
+                    original_text=before,
                     corrected_text=cleaned,
-                    changed=changed,
-                    reason=(
-                        "deterministic text cleanup"
-                        if changed
-                        else "kept; no deterministic cleanup needed"
-                    ),
+                    changed=cleaned != before,
+                    reason="; ".join(reasons) or "kept; no deterministic cleanup needed",
+                    status=llm_item.status if llm_item is not None else "completed",
+                    error=llm_item.error if llm_item is not None else None,
                 )
             )
         corrected.append(clone)

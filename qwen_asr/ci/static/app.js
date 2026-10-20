@@ -271,7 +271,7 @@ async function viewNew() {
         <label class="field"><span>目标语言 (--target-language)</span><input id="opt-target_language"></label>
       </div>
       <h2>替换预设文件（可选）</h2>
-      <div class="form-grid">${state.meta.input_flags.map((flag) => `<label class="field"><span class="mono">${esc(flag)}</span><input type="file" data-flag="${esc(flag)}"></label>`).join("")}</div>
+      <div class="form-grid">${state.meta.input_flags.map((flag) => `<label class="field"><span class="mono">${esc(flag)}</span><input type="file" data-flag="${esc(flag)}"${flag === "--program-context" ? " multiple" : ""}></label>`).join("")}</div>
       ${isAdmin || state.meta.member_extra_args ? `<label class="field"><span>额外 CLI 参数（每行一个，原样追加到 main.py run）</span><textarea id="extra" placeholder="--mimo-nearby-batch-size&#10;3"></textarea></label>` : ""}
       <label class="field"><span>标签（key=value，逗号分隔，便于筛选/对比）</span><input id="labels" placeholder="episode=29, variant=ja-asr"></label>
       <div id="upload-progress"></div>
@@ -294,7 +294,7 @@ async function viewNew() {
       for (const key of ["asr_model", "align_model", "llm_model", "language", "target_language"]) { const v = document.getElementById(`opt-${key}`).value.trim(); if (v) options[key] = v; }
       const inputs = [];
       for (const el of document.querySelectorAll("input[data-flag]")) {
-        if (el.files.length) { const blob = await upload(el.files[0], () => {}); inputs.push({ flag: el.dataset.flag, blob_id: blob.id }); }
+        for (const file of el.files) { const blob = await upload(file, () => {}); inputs.push({ flag: el.dataset.flag, blob_id: blob.id }); }
       }
       const extraEl = document.getElementById("extra");
       const extraArgs = extraEl ? extraEl.value.split("\n").map((s) => s.trim()).filter(Boolean) : [];

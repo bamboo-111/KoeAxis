@@ -18,7 +18,15 @@
 - 术语表 `samples/翻译对照.xlsx` 补充：声ログ/コエログ → 声log，トゲ占いの館/トゲウラナイノヤカタ → 刺刺占卜馆（53 期起由青春咨询所改版）。
 - [ ] 词义选错、漏谓语（54 期 364 背带裤、333 灯、416、589、368、399）仍漏改，需新思路（如对照音频或二次问答）。
 - [x] 2026-10-19 全部 Gemini 调用（split / correct / translate / text-proofread）改走项目中转公网 HTTPS（`GEMINI_BASE_URL=https://113.20.8.48`，默认模型 `gemini-3.8-flash-high`，`GEMINI_CONCURRENCY=5`，无需 SSH 隧道）；旧中转 ohmyapi（连接失败约 38%、并发 4 时 429）停用，凭据留在 `GEMINI_API_KEY_OLD` / `GEMINI_BASE_URL_OLD`。新中转偶发 TLS EOF（54 期 90 次中 3 次），由重试 / 中转池处理。
-- [ ] 术语表「广播用」列备注会拼上右侧「动画职位」列内容（发送时截 24 字），待修。
+- [x] 术语表「广播用」列备注会拼上右侧「动画职位」列内容：2026-10-20 已修（注释列遇到下一块原文列即停）。
+
+### 节目背景提示词 / 翻译提示词 v2 / LLM 纠错（2026-10-20，默认均未启用）
+- 新增 `--program-context FILE`（可重复，自动拼进 correct / translate / text-proofread 的系统提示词，上限 8000 字）与 `--episode-title`（auto＝媒体文件名，仅在给了背景文件时附加；off；或直接写标题）。示例：`samples/program-context/togeradi.md`、`girls-band-cry.md`；预设未默认带（需要时在预设 `files` 里加 `{"flag": "--program-context", "path": ...}`，可多条）。Web `/legacy`「LLM / 翻译 / 校正」组可填（一行一个路径）。
+- 新增 `--translate-prompt v2`（明显误听按本意翻并标 asr_suspect、跨条不重复、短附和/双关规则）与 `--translate-context-lines N`（每批前后 N 行只读上下文）；新增 `--correct-mode llm`（恢复 ASRCorrector：带背景 + 术语表的 LLM 纠错，再做规则清理；默认 rules 仍只做规则清理）。
+- #15 / #18 对照（同一断句，各配置 2 次，claude-sonnet-4-6 盲评 2 遍，422 行）：严重错误（两期之和）v1 23.0、v1+背景 22.5、v2+5 行上下文 21.5、v2+上下文+背景 24.2；综合分（3×严重+一般）100.7 / 96.0 / 95.3 / 102.3。同配置两次之间最多差 13 分，**差异不显著，默认保持 v1、0 行上下文、rules**。耗时无明显差别（约 35–47 s / 期）。
+- 个例：背景文件修好了「絶筆ツアー→Zepp 巡演」，v2 修好了「優秀勉強→备考」；「マニュイ」（招糕了）四种配置都没翻对；v2+背景在 #18 两次都把「三日神さん」改成「三香神」（背景和术语表里都没有，属模型乱改）。asr_suspect 数量 v2/背景略降（如 #18 124 → 113）。
+- [ ] 主要错误来源仍是 ASR 误识别被照字面翻译（约 70%）：下一步试 `--correct-mode llm` + 背景从 correct 起重跑（需重新对齐 / 断句，评审要按时间窗对齐），或改进 ASR 上下文。
+- 实验脚本：scratch `think_tr2.py`、`think_judge2.py`、`think_agg2.py`、`keylines2.py`。
 
 ### 30 期 Gemini 对比结论与待办（2026-10-17）
 - 翻译：3.8-flash 对 ASR 错字/专名的还原明显好于 MiMo（打首獄門同好会、東京ガーデンシアター、声ログ）；MiMo 第 6–19 条整批译文错位一条且无任何检查报警。日常句两者接近。

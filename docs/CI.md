@@ -171,6 +171,8 @@ checks:  [{"name":"final_quality","status":"<质量报告原样状态>","message
 
 - `files` 路径相对预设文件；入队时服务端把文件内容**快照**进 BlobStore，之后修改预设不影响已有 run
   （重跑时 `refresh_preset=true` 才取新版本）。
+- `--program-context` 可在 `files` 里重复多条（节目背景提示词，按顺序拼接）；用户上传同一 flag 的文件时只替换预设自带的那几条，
+  多次上传的都会保留。
 - 参数合并顺序（argparse 后者覆盖前者）：预设 `run_args` < Worker `--default-run-args` < run `options` < run `extra_args`。
 - `options` 键：`asr_model`、`align_model`、`llm_model`、`target_language`、`language`。
   Worker 用 `--model-cache-dir` 把 `org/name` 形式的模型 id 解析为本地快照路径。

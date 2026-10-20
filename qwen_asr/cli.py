@@ -31,6 +31,7 @@ from qwen_asr.credentials import resolve_llm_api_key, resolve_llm_base_url
 from qwen_asr.defaults import (
     DEFAULT_ALIGN_MODEL,
     DEFAULT_ASR_MODEL,
+    DEFAULT_CORRECT_MODE,
     DEFAULT_LLM_BASE_URL,
     DEFAULT_LLM_CONCURRENCY,
     DEFAULT_LLM_EXTRA_BODY_JSON,
@@ -40,6 +41,9 @@ from qwen_asr.defaults import (
     DEFAULT_MIMO_CONCURRENCY,
     DEFAULT_MIN_SEGMENT_SECONDS,
     DEFAULT_MODEL_CACHE_DIR,
+    DEFAULT_TRANSLATE_CONTEXT_LINES,
+    DEFAULT_TRANSLATE_PROMPT,
+    TRANSLATE_PROMPT_VERSIONS,
 )
 from qwen_asr.glossary import write_normalized_glossary_xlsx
 from qwen_asr.history_glossary import cmd_history_glossary
@@ -405,6 +409,7 @@ def build_parser() -> argparse.ArgumentParser:
     translate.add_argument("--custom-prompt", default="")
     translate.add_argument("--glossary-xlsx", default=None)
     _add_llm_arguments(translate, required=True, disable_thinking_default=True)
+    _add_prompt_context_arguments(translate, translate=True)
     translate.set_defaults(func=cmd_translate)
 
     correct = subparsers.add_parser("correct", parents=[common])
@@ -412,6 +417,7 @@ def build_parser() -> argparse.ArgumentParser:
     correct.add_argument("--batch-num", type=int, default=8)
     correct.add_argument("--glossary-xlsx", default=None)
     _add_llm_arguments(correct, required=False, disable_thinking_default=True)
+    _add_prompt_context_arguments(correct, correct=True)
     correct.set_defaults(func=cmd_correct)
 
     mimo_proofread = subparsers.add_parser("mimo-proofread", parents=[common])
@@ -421,6 +427,7 @@ def build_parser() -> argparse.ArgumentParser:
     text_proofread = subparsers.add_parser("text-proofread", parents=[common])
     text_proofread.add_argument("--glossary-xlsx", default=None)
     _add_text_proofread_arguments(text_proofread)
+    _add_prompt_context_arguments(text_proofread)
     text_proofread.set_defaults(func=cmd_text_proofread)
 
     history_glossary = subparsers.add_parser("history-glossary", parents=[common, model_common])
@@ -579,6 +586,7 @@ def build_parser() -> argparse.ArgumentParser:
     _add_llm_arguments(run, required=False, disable_thinking_default=True)
     _add_mimo_proofread_arguments(run)
     _add_text_proofread_arguments(run)
+    _add_prompt_context_arguments(run, translate=True, correct=True)
     run.set_defaults(func=cmd_run, split_mode="rule", prompt_limit_ratio=0.8)
 
     batch = subparsers.add_parser("batch-run", parents=[common, model_common])
@@ -694,6 +702,7 @@ def build_parser() -> argparse.ArgumentParser:
     _add_llm_arguments(batch, required=False, disable_thinking_default=True)
     _add_mimo_proofread_arguments(batch)
     _add_text_proofread_arguments(batch)
+    _add_prompt_context_arguments(batch, translate=True, correct=True)
     batch.set_defaults(func=cmd_run, split_mode="rule", prompt_limit_ratio=0.8)
 
     return parser
@@ -875,6 +884,51 @@ def _add_mimo_proofread_arguments(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--mimo-stage2-apply-threshold", type=float, default=0.9)
     parser.add_argument("--mimo-llm-extra-body-json", default=DEFAULT_LLM_EXTRA_BODY_JSON)
     parser.add_argument("--mimo-compact-output", action=argparse.BooleanOptionalAction, default=False)
+
+
+def _add_prompt_context_arguments(
+    parser: argparse.ArgumentParser,
+    *,
+    translate: bool = False,
+    correct: bool = False,
+) -> None:
+    """Program background prompts (qwen_asr.program_context) and prompt options of the text LLM stages."""
+    parser.add_argument(
+        "--program-context",
+        action="append",
+        default=None,
+        metavar="FILE",
+        help="Program background prompt file (text/Markdown, e.g. samples/program-context/togeradi.md). "
+        "Repeatable; files are joined in order and merged into the correct / translate / text-proofread prompts.",
+    )
+    parser.add_argument(
+        "--episode-title",
+        default="auto",
+        help="Episode title added to the program context: auto (media file name, only with --program-context), "
+        "off, or literal text.",
+    )
+    if translate:
+        parser.add_argument(
+            "--translate-prompt",
+            choices=sorted(TRANSLATE_PROMPT_VERSIONS),
+            default=DEFAULT_TRANSLATE_PROMPT,
+            help="Translate prompt version (v1: original; v2: intended meaning for obvious ASR mishearings, "
+            "split-sentence rule, read-only neighbour context).",
+        )
+        parser.add_argument(
+            "--translate-context-lines",
+            type=int,
+            default=DEFAULT_TRANSLATE_CONTEXT_LINES,
+            help="Read-only source lines sent before and after each translate batch (0 = none).",
+        )
+    if correct:
+        parser.add_argument(
+            "--correct-mode",
+            choices=["rules", "llm"],
+            default=DEFAULT_CORRECT_MODE,
+            help="rules: deterministic text cleanup only; llm: LLM fixes obvious misrecognitions (glossary + "
+            "program context), then the same cleanup.",
+        )
 
 
 def _add_text_proofread_arguments(parser: argparse.ArgumentParser) -> None:

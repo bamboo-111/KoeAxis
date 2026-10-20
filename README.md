@@ -289,6 +289,20 @@ python main.py text-proofread --workdir .\work --glossary-xlsx samples\翻译对
 - 凭据与中转（只读环境变量）：`GEMINI_API_KEY` + `GEMINI_BASE_URL`，可再加 `GEMINI_API_KEY_1`…`_9` 与对应的 `GEMINI_BASE_URL_n`、`GEMINI_MODEL_n`（默认用 `--text-proofread-model`）、`GEMINI_CONCURRENCY_n`（默认 `--text-proofread-concurrency`）。多个中转组成池，按各自并发分发请求，失败自动换下一个；相同 Key + URL 只算一个。
 - Web：`/legacy` Run 勾选「文本校对（Gemini）」，LLM 组可设 effort / 模型 / 并发 / 超时 / 采纳阈值 / 节目 / 成员；工作台时间线有「文本校对」阶段可单独重跑。未设置任何 `GEMINI_API_KEY*` 时拒绝启动。
 
+节目背景提示词（可选，可多个）：
+
+```bash
+python main.py run --media .\ep.mp3 --workdir .\work ... ^
+  --program-context samples\program-context\togeradi.md ^
+  --program-context samples\program-context\girls-band-cry.md ^
+  --episode-title auto
+```
+
+- 每个文件是一段自由文本（节目、成员、栏目、常见误听等，示例见 `samples/program-context/`），按顺序拼接后放进 correct（LLM 模式）/ translate / text-proofread 的系统提示词，位于术语表之前，上限 8000 字。`--episode-title auto`（默认）只在给了背景文件时附上本期标题（媒体文件名），`off` 关闭，也可直接写标题。
+- 可选开关（默认关闭）：`--translate-prompt v2`（明显误听按本意翻并标可疑、跨条不重复、短附和/双关规则）、`--translate-context-lines N`（每批前后 N 行只读上下文）、`--correct-mode llm`（带背景与术语表的 LLM 纠错，然后规则清理；默认 `rules` 只做规则清理）。
+- #15 / #18 对照（各 2 次，盲评）：v1、v1+背景、v2+上下文、v2+上下文+背景的错误数差别小于同配置两次之间的波动，故默认不变；背景能修好个别专名（如 Zepp 巡演），但 ASR 误识别仍是主要错误来源。
+- Web：`/legacy`「LLM / 翻译 / 校正」组填「节目背景文件」（一行一个路径，缺文件拒绝启动）、本期标题、翻译提示词版本、上下文行数、纠错模式；CI 预设的 `files` 里可写多条 `--program-context`，载入时一并填入。
+
 导出时会优先使用：
 
 1. `translated_segments.json`

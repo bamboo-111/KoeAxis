@@ -27,7 +27,7 @@ from concurrent.futures import (  # pylint: disable=no-name-in-module
     ThreadPoolExecutor,
     as_completed,
 )
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
 import json_repair
 
@@ -36,6 +36,7 @@ from optimizer.exceptions import LLMRateLimitError, LLMConnectionError
 from optimizer.llm_config import LLMConfig
 from optimizer.llm_client import DEFAULT_TIMEOUT, call_llm
 from optimizer.prompts import get_prompt
+from qwen_asr.program_context import program_context_block
 
 logger = logging.getLogger("optimizer.translator")
 
@@ -52,6 +53,9 @@ GLOBAL_COOLDOWN_SECONDS = 10.0   # 收到 429 后全局冷却秒数
 SUBMIT_INTERVAL = 0.5            # 批次提交间隔秒数（避免瞬时并发）
 # 缓存预热：并发前先发一个只含 system prompt（模板 + 术语表）的极小请求，让服务端缓存这段公共前缀，
 # 再并发提交全部批次。实测 MiMo 缓存在请求完成后 1-3 秒可用；预热请求即使返回空内容也能建立缓存。
+# Translate prompt versions. v2 (2026-10-20) adds: translate obvious ASR mishearings by intended meaning,
+# split-sentence rule (no repeated content across cues), read-only neighbour context, puns / backchannels.
+TRANSLATE_PROMPTS = {"v1": "translate/standard", "v2": "translate/standard_v2"}
 PREWARM_DELAY = 2.0
 PREWARM_MAX_TOKENS = 16
 
@@ -124,6 +128,9 @@ class SubtitleTranslator:
         llm_extra_body: Optional[dict] = None,
         timeout: float = DEFAULT_TIMEOUT,
         progress_callback: Optional[Callable[[int, int, str], None]] = None,
+        prompt_version: str = "v1",
+        context_lines: int = 0,
+        program_context: str = "",
     ) -> None:
         """初始化翻译器。
 
@@ -138,6 +145,9 @@ class SubtitleTranslator:
             disable_thinking: 是否注入 /no_think 指令
             llm_extra_body: 原样透传到 OpenAI 兼容接口 extra_body 的 JSON
             timeout: LLM 请求超时秒数（默认 120s）
+            prompt_version: 翻译提示词版本（v1 = translate/standard，v2 = translate/standard_v2）
+            context_lines: 每批前后各附带多少条只读上下文（0 = 不附带）
+            program_context: 节目背景（qwen_asr.program_context），插入主提示词
         """
         self.thread_num = thread_num
         self.batch_num = batch_num
@@ -158,6 +168,12 @@ class SubtitleTranslator:
         self.llm_extra_body = llm_extra_body
         self.timeout = timeout
         self.progress_callback = progress_callback
+        if prompt_version not in TRANSLATE_PROMPTS:
+            raise ValueError(f"unknown translate prompt version: {prompt_version}")
+        self.prompt_version = prompt_version
+        self.context_lines = max(0, int(context_lines))
+        self.program_context = program_context or ""
+        self._chunk_context: Dict[int, Tuple[List[str], List[str]]] = {}
 
         self.is_running = True
         self.prewarm_cache = True
@@ -219,6 +235,7 @@ class SubtitleTranslator:
 
         # 分批
         chunks = self._split_chunks(asr_data.segments)
+        self._chunk_context = self._context_for_chunks(chunks)
 
         # 并发翻译
         success_count = self._parallel_translate(chunks, len(asr_data.segments))
@@ -248,6 +265,23 @@ class SubtitleTranslator:
             segments[i : i + self.batch_num]
             for i in range(0, len(segments), self.batch_num)
         ]
+
+    def _context_for_chunks(
+        self, chunks: List[List[ASRDataSeg]],
+    ) -> Dict[int, Tuple[List[str], List[str]]]:
+        """每批前后各 context_lines 条原文（只读上下文），按批次对象 id 存放。"""
+        if self.context_lines <= 0:
+            return {}
+        flat = [seg for chunk in chunks for seg in chunk]
+        context: Dict[int, Tuple[List[str], List[str]]] = {}
+        start = 0
+        for chunk in chunks:
+            end = start + len(chunk)
+            before = [seg.text for seg in flat[max(0, start - self.context_lines):start]]
+            after = [seg.text for seg in flat[end:end + self.context_lines]]
+            context[id(chunk)] = (before, after)
+            start = end
+        return context
 
     def _parallel_translate(
         self, chunks: List[List[ASRDataSeg]],
@@ -304,11 +338,15 @@ class SubtitleTranslator:
         return success_count
 
     def _system_prompt(self) -> str:
-        return get_prompt(
-            "translate/standard",
+        prompt = get_prompt(
+            TRANSLATE_PROMPTS[self.prompt_version],
             target_language=self.target_language,
             custom_prompt=self.custom_prompt,
         )
+        block = program_context_block(self.program_context)
+        if block:
+            prompt = prompt.replace("<terminology>", block + "\n<terminology>", 1)
+        return prompt
 
     def _prewarm_prompt_cache(self) -> None:
         """发送与正式批次相同前缀的极小请求；失败不影响翻译。"""
@@ -373,10 +411,14 @@ class SubtitleTranslator:
             for i, seg in enumerate(chunk, 1)
             if getattr(seg, "speaker", "")
         }
+        before, after = self._chunk_context.get(id(chunk), ([], []))
+        extra: Dict[str, Any] = {}
+        if before or after:
+            extra["context"] = (before, after)
         if speakers:
-            result_dict = self._agent_loop(system_prompt, subtitle_dict, speakers=speakers)
+            result_dict = self._agent_loop(system_prompt, subtitle_dict, speakers=speakers, **extra)
         else:
-            result_dict = self._agent_loop(system_prompt, subtitle_dict)
+            result_dict = self._agent_loop(system_prompt, subtitle_dict, **extra)
 
         if result_dict is None:
             raise RuntimeError(
@@ -398,6 +440,7 @@ class SubtitleTranslator:
         system_prompt: str,
         subtitle_dict: Dict[str, str],
         speakers: Optional[Dict[str, str]] = None,
+        context: Optional[Tuple[List[str], List[str]]] = None,
     ) -> Optional[Dict[str, Any]]:
         """Agent loop 翻译字幕批次。
 
@@ -418,6 +461,12 @@ class SubtitleTranslator:
         )
         if speakers:
             user_content += f"<speakers>{json.dumps(speakers, ensure_ascii=False)}</speakers>"
+        if context:
+            before, after = context
+            if before:
+                user_content += f"<context_before>{json.dumps(before, ensure_ascii=False)}</context_before>"
+            if after:
+                user_content += f"<context_after>{json.dumps(after, ensure_ascii=False)}</context_after>"
 
         messages: list[dict[str, str]] = [
             {"role": "system", "content": system_prompt},

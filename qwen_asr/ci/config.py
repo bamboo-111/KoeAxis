@@ -15,6 +15,7 @@ DEFAULT_INPUT_FLAGS = (
     "--glossary-xlsx",
     "--asr-context-file",
     "--program-memory-file",
+    "--program-context",
 )
 
 

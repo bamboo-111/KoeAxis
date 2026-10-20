@@ -70,6 +70,10 @@ DIRECT_FIELDS = {
     "glossary_xlsx": "glossaryXlsx",
     "asr_context_file": "asrContextFile",
     "program_memory_file": "programMemoryFile",
+    "episode_title": "episodeTitle",
+    "translate_prompt": "translatePrompt",
+    "translate_context_lines": "translateContextLines",
+    "correct_mode": "correctMode",
     "speaker_enroll": "speakerEnroll",
     "speakers": "speakers",
     "llm_model": "llmModel",
@@ -87,7 +91,10 @@ DIRECT_FIELDS = {
     "source": "source",
 }
 # Handled specially below, or per-run / per-machine values a preset must not override.
-SPECIAL_DESTS = {"with_correct", "with_mimo_proofread", "proofread_realign_mfa_fallback", "language", "align_recovery"}
+SPECIAL_DESTS = {
+    "with_correct", "with_mimo_proofread", "proofread_realign_mfa_fallback", "language", "align_recovery",
+    "program_context",
+}
 IGNORED_DESTS = {"workdir", "media", "export_mode", "export_path", "format", "command", "func", "device", "mdx_model_dir", "model_cache_dir"}
 
 _DUMMY = {"workdir": Path("ci-preset-workdir"), "media": Path("ci-preset-media.mp3"), "export_path": Path("ci-preset.srt")}
@@ -121,6 +128,8 @@ def preset_web_settings(preset: Preset) -> dict[str, Any]:
     settings["proofreadKind"] = "both" if correct and mimo else "mimo-audio" if mimo else "normal"
     settings["proofreadRealignMfaFallback"] = args.proofread_realign_mfa_fallback == "local"
     settings["asrLanguage"] = str(args.language or "")
+    # every --program-context entry (preset files and run_args), in order, one path per line
+    settings["programContextFiles"] = "\n".join(str(item) for item in (args.program_context or []))
     settings["alignRecovery"] = True  # CI always runs alignment recovery after align
     unmapped = sorted(
         dest

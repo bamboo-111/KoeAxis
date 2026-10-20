@@ -10,6 +10,7 @@ from qwen_asr.defaults import (
     DEFAULT_MIMO_CONCURRENCY,
     DEFAULT_MIN_SEGMENT_SECONDS,
     DEFAULT_MODEL_CACHE_DIR,
+    TRANSLATE_PROMPT_VERSIONS,
 )
 
 HOST = "127.0.0.1"
@@ -254,6 +255,7 @@ def build_command(payload: dict) -> list[str]:
             command.extend(["--llm-extra-body-json", llm_extra_body_json])
         if str(payload.get("glossary_xlsx", "")).strip():
             command.extend(["--glossary-xlsx", str(payload["glossary_xlsx"]).strip()])
+        command.extend(_prompt_context_args(payload, translate=True))
     elif stage == "correct":
         command.extend(
             [
@@ -274,6 +276,7 @@ def build_command(payload: dict) -> list[str]:
             command.extend(["--llm-extra-body-json", llm_extra_body_json])
         if str(payload.get("glossary_xlsx", "")).strip():
             command.extend(["--glossary-xlsx", str(payload["glossary_xlsx"]).strip()])
+        command.extend(_prompt_context_args(payload, correct=True))
     elif stage == "export":
         command.extend(["--format", payload["format"], "--source", payload["source"]])
         command.extend(["--export-mode", payload.get("export_mode", "source")])
@@ -546,6 +549,48 @@ def _pipeline_parity_args(payload: dict) -> list[str]:
         args.extend(["--align-recovery", "auto"])
     if payload.get("proofread_realign_mfa_fallback") in (True, "local"):
         args.extend(["--proofread-realign-mfa-fallback", "local"])
+    args.extend(_prompt_context_args(payload, translate=True, correct=True))
+    return args
+
+
+CORRECT_MODES = ("rules", "llm")
+
+
+def program_context_files(payload: dict) -> list[str]:
+    """`program_context_files` as a list of non-empty paths (a list, or one path per line)."""
+    raw = payload.get("program_context_files")
+    if raw is None:
+        return []
+    items = raw.splitlines() if isinstance(raw, str) else list(raw) if isinstance(raw, (list, tuple)) else [raw]
+    return [str(item).strip() for item in items if str(item or "").strip()]
+
+
+def _prompt_context_args(payload: dict, *, translate: bool = False, correct: bool = False) -> list[str]:
+    """Program background prompts + prompt options of correct / translate / text-proofread (and Run / Batch Run)."""
+    args: list[str] = []
+    for path in program_context_files(payload):
+        if not Path(path).is_file():
+            raise ValueError(f"Program context file not found: {path}")
+        args.extend(["--program-context", path])
+    title = str(payload.get("episode_title") or "").strip()
+    if title:
+        args.extend(["--episode-title", title])
+    if translate:
+        prompt = str(payload.get("translate_prompt") or "").strip().lower()
+        if prompt:
+            if prompt not in TRANSLATE_PROMPT_VERSIONS:
+                raise ValueError(
+                    f"Unsupported translate prompt: {prompt}. Choose one of: {', '.join(TRANSLATE_PROMPT_VERSIONS)}"
+                )
+            args.extend(["--translate-prompt", prompt])
+        if payload.get("translate_context_lines") not in (None, ""):
+            args.extend(["--translate-context-lines", str(max(0, int(payload["translate_context_lines"])))])
+    if correct:
+        mode = str(payload.get("correct_mode") or "").strip().lower()
+        if mode:
+            if mode not in CORRECT_MODES:
+                raise ValueError(f"Unsupported correct mode: {mode}. Choose one of: {', '.join(CORRECT_MODES)}")
+            args.extend(["--correct-mode", mode])
     return args
 
 
@@ -557,6 +602,7 @@ def _text_proofread_stage_args(payload: dict) -> list[str]:
         args.append("--no-resume")
     if str(payload.get("glossary_xlsx", "")).strip():
         args.extend(["--glossary-xlsx", str(payload["glossary_xlsx"]).strip()])
+    args.extend(_prompt_context_args(payload))
     return args
 
 

@@ -34,6 +34,13 @@ DEFAULT_LLM_BASE_URL = default_gemini_base_url()
 # Most Gemini relays cap a key at ~5 in-flight requests; 4 kept episode 30 free of HTTP 429.
 DEFAULT_LLM_CONCURRENCY = 4
 
+# Translate prompt versions (optimizer/prompts/translate/*.md) and read-only neighbour context per batch.
+TRANSLATE_PROMPT_VERSIONS = ("v1", "v2")
+DEFAULT_TRANSLATE_PROMPT = "v1"
+DEFAULT_TRANSLATE_CONTEXT_LINES = 0
+# correct: "rules" = deterministic cleanup only (default since 2026-07); "llm" = ASRCorrector first.
+DEFAULT_CORRECT_MODE = "rules"
+
 # MiMo audio proofread stays on MiMo (separate key, endpoint and concurrency).
 DEFAULT_MIMO_MODEL = "mimo-v2.6-pro"
 DEFAULT_MIMO_BASE_URL = "https://api.xiaomimimo.com/v1"

@@ -398,8 +398,9 @@ def create_app(settings: Settings | None = None, *, store: Store | None = None,
             blob = store.get_blob(ref.blob_id)
             if not blob:
                 raise HTTPException(400, f"unknown blob {ref.blob_id}")
-            # a user file replaces the preset file passed with the same flag
-            inputs = [entry for entry in inputs if entry["flag"] != ref.flag]
+            # a user file replaces the preset file(s) passed with the same flag; several user files with a
+            # repeatable flag (e.g. --program-context) are all kept, in upload order
+            inputs = [entry for entry in inputs if not (entry["flag"] == ref.flag and entry["source"] == "preset")]
             inputs.append({"flag": ref.flag, "blob_id": blob["id"], "name": blob["name"], "sha256": blob["sha256"],
                            "size": blob["size"], "source": "user"})
         for index, entry in enumerate(inputs):

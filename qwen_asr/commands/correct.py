@@ -5,6 +5,7 @@ import logging
 from pathlib import Path
 
 from qwen_asr.models import WorkPaths
+from qwen_asr.program_context import program_context_from_args
 from qwen_asr.progress import write_progress
 
 LOGGER = logging.getLogger(__name__)
@@ -49,6 +50,8 @@ def cmd_correct(args: argparse.Namespace, work_paths: WorkPaths) -> int:
         disable_thinking=args.disable_thinking,
         llm_extra_body=stage_helpers._parse_json_object_argument("llm_extra_body_json", args.llm_extra_body_json),
         timeout=args.timeout,
+        mode=str(getattr(args, "correct_mode", "rules") or "rules"),
+        program_context=program_context_from_args(args, work_paths),
     )
     stage_helpers.write_transcript_text(work_paths.transcript_text, corrected)
     changed_count = sum(1 for item in report if item.changed)

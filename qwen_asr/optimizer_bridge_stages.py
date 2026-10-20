@@ -244,6 +244,9 @@ def run_translate_stage(
     disable_thinking: bool = True,
     llm_extra_body: dict[str, Any] | None = None,
     timeout: float = 120.0,
+    prompt_version: str = "v1",
+    context_lines: int = 0,
+    program_context: str = "",
 ) -> None:
     ASRData, _, _, SubtitleTranslator = load_optimizer_types(
         optimizer_root,
@@ -272,6 +275,9 @@ def run_translate_stage(
         disable_thinking=disable_thinking,
         llm_extra_body=llm_extra_body,
         timeout=timeout,
+        prompt_version=prompt_version,
+        context_lines=context_lines,
+        program_context=program_context,
         progress_callback=lambda done, total, current: write_progress(
             work_paths,
             stage="translate",

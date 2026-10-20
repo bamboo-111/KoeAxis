@@ -19,6 +19,7 @@ MiMo branch. Evaluated on episode 54 (2026-10-19): ~4 min at medium effort with 
 from __future__ import annotations
 
 import copy
+import dataclasses
 import hashlib
 import json
 import logging
@@ -37,6 +38,7 @@ from qwen_asr.mimo_audio import filter_glossary, load_glossary, subtitle_entries
 from qwen_asr.mimo_outputs import to_srt
 from qwen_asr.mimo_requests import is_transient_error, parse_suggestions, prompt_json
 from qwen_asr.models import WorkPaths
+from qwen_asr.program_context import program_context_block, program_context_from_args
 from qwen_asr.performance import record_network_request, usage_cached_tokens, usage_tokens
 from qwen_asr.progress import write_progress
 from qwen_asr.storage import read_json, write_json_atomic
@@ -96,6 +98,7 @@ class TextProofreadConfig:
     apply_threshold: float = DEFAULT_APPLY_THRESHOLD
     program: str = "日语节目"
     hosts: str = ""
+    program_context: str = ""  # qwen_asr.program_context block text (--program-context files + episode title)
     glossary_xlsx: str | None = None
     resume: bool = True
     max_attempts: int = 3
@@ -119,6 +122,7 @@ def build_prompt(
 ) -> str:
     return (
         build_prompt_header(config.program, config.hosts)
+        + program_context_block(config.program_context)
         + _PROMPT_BODY
         + f"术语表 JSON：{prompt_json(glossary)}\n"
         + f"前文（只读）：{prompt_json(before)}\n"
@@ -568,6 +572,7 @@ def cmd_text_proofread(args: Any, work_paths: WorkPaths) -> int:
     from qwen_asr.artifact_state import ArtifactState
 
     config = config_from_args(args)
+    config = dataclasses.replace(config, program_context=program_context_from_args(args, work_paths))
     state = ArtifactState(work_paths)
     previous = read_json(work_paths.text_proofread_report, default={})
     if (

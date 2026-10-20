@@ -4,11 +4,17 @@ import html
 from pathlib import Path
 
 from qwen_asr.defaults import (
+    DEFAULT_CORRECT_MODE,
     DEFAULT_LLM_BASE_URL,
     DEFAULT_LLM_CONCURRENCY,
     DEFAULT_LLM_MODEL,
     DEFAULT_MIMO_CONCURRENCY,
+    DEFAULT_TRANSLATE_CONTEXT_LINES,
+    DEFAULT_TRANSLATE_PROMPT,
+    TRANSLATE_PROMPT_VERSIONS,
 )
+
+CORRECT_MODES = ("rules", "llm")
 
 TEMPLATE_DIR = Path(__file__).resolve().parent / "templates"
 STATIC_DIR = Path(__file__).resolve().parent / "static"
@@ -18,12 +24,19 @@ WORKBENCH_TEMPLATE_PATH = TEMPLATE_DIR / "workbench.html"
 
 def index_template_defaults() -> dict[str, str]:
     """Values substituted into ``{{NAME}}`` placeholders so the page shares the CLI defaults."""
-    return {
+    values = {
         "DEFAULT_LLM_MODEL": DEFAULT_LLM_MODEL,
         "DEFAULT_LLM_BASE_URL": DEFAULT_LLM_BASE_URL,
         "DEFAULT_LLM_CONCURRENCY": str(DEFAULT_LLM_CONCURRENCY),
         "DEFAULT_MIMO_CONCURRENCY": str(DEFAULT_MIMO_CONCURRENCY),
+        "DEFAULT_TRANSLATE_CONTEXT_LINES": str(DEFAULT_TRANSLATE_CONTEXT_LINES),
     }
+    # `<option value="x"{{SELECTED_..._X}}>` marks the CLI default of a select as selected.
+    for version in TRANSLATE_PROMPT_VERSIONS:
+        values[f"SELECTED_TRANSLATE_PROMPT_{version.upper()}"] = " selected" if version == DEFAULT_TRANSLATE_PROMPT else ""
+    for mode in CORRECT_MODES:
+        values[f"SELECTED_CORRECT_MODE_{mode.upper()}"] = " selected" if mode == DEFAULT_CORRECT_MODE else ""
+    return values
 
 
 def load_index_html() -> str:

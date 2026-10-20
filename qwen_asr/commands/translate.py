@@ -5,6 +5,7 @@ import logging
 from pathlib import Path
 
 from qwen_asr.models import WorkPaths
+from qwen_asr.program_context import program_context_from_args
 from qwen_asr.progress import write_progress
 
 LOGGER = logging.getLogger(__name__)
@@ -42,6 +43,9 @@ def cmd_translate(args: argparse.Namespace, work_paths: WorkPaths) -> int:
         disable_thinking=args.disable_thinking,
         llm_extra_body=stage_helpers._parse_json_object_argument("llm_extra_body_json", args.llm_extra_body_json),
         timeout=args.timeout,
+        prompt_version=str(getattr(args, "translate_prompt", "v1") or "v1"),
+        context_lines=int(getattr(args, "translate_context_lines", 0) or 0),
+        program_context=program_context_from_args(args, work_paths),
     )
     total = stage_helpers._read_json_dict_count(work_paths.split_manifest)
     done = stage_helpers._count_translated_items(work_paths.translated_manifest)

@@ -11,6 +11,7 @@ from qwen_asr.credentials import resolve_llm_api_key, resolve_mimo_api_key
 from qwen_asr.defaults import (
     DEFAULT_ALIGN_MODEL,
     DEFAULT_ASR_MODEL,
+    DEFAULT_CORRECT_MODE,
     DEFAULT_LLM_BASE_URL,
     DEFAULT_LLM_CONCURRENCY,
     DEFAULT_LLM_EXTRA_BODY_JSON,
@@ -20,10 +21,12 @@ from qwen_asr.defaults import (
     DEFAULT_MIMO_CONCURRENCY,
     DEFAULT_MIN_SEGMENT_SECONDS,
     DEFAULT_MODEL_CACHE_DIR,
+    DEFAULT_TRANSLATE_CONTEXT_LINES,
+    DEFAULT_TRANSLATE_PROMPT,
 )
 from qwen_asr.models import WorkPaths
 from qwen_asr.storage import read_json
-from qwen_asr.web.commands import SENSITIVE_PAYLOAD_FIELDS
+from qwen_asr.web.commands import SENSITIVE_PAYLOAD_FIELDS, program_context_files
 
 # Relay slots text-proofread reads: GEMINI_API_KEY, then GEMINI_API_KEY_1 ... GEMINI_API_KEY_9.
 GEMINI_KEY_SUFFIXES = ("",) + tuple(f"_{index}" for index in range(1, 10))
@@ -43,6 +46,10 @@ STARTABLE_STAGES = frozenset(
         "export",
     }
 )
+
+
+# Stages whose prompts take the program background files (--program-context).
+PROMPT_CONTEXT_STAGES = frozenset({"translate", "correct", "text-proofread"})
 
 
 class StageStartError(RuntimeError):
@@ -195,6 +202,11 @@ def _base_payload(
         "text_proofread_apply_threshold": _optional(value("textProofreadApplyThreshold")),
         "text_proofread_program": value("textProofreadProgram", ""),
         "text_proofread_hosts": value("textProofreadHosts", ""),
+        "program_context_files": program_context_files({"program_context_files": value("programContextFiles", "")}),
+        "episode_title": value("episodeTitle", "auto"),
+        "translate_prompt": value("translatePrompt", DEFAULT_TRANSLATE_PROMPT),
+        "translate_context_lines": _optional(value("translateContextLines", DEFAULT_TRANSLATE_CONTEXT_LINES)),
+        "correct_mode": value("correctMode", DEFAULT_CORRECT_MODE),
         "quality_gate_include_export": bool(value("qualityGateIncludeExport", False)),
         "quality_gate_require_srt": bool(value("qualityGateRequireSrt", False)),
         "normalize_source": value("normalizeSource", "auto"),
@@ -226,6 +238,14 @@ def _validate_stage_environment(stage: str, payload: dict[str, Any]) -> None:
             "the provider API credential is not configured in the Web service environment",
             status=409,
         )
+    if stage in PROMPT_CONTEXT_STAGES:
+        missing = [path for path in payload.get("program_context_files") or [] if not Path(path).is_file()]
+        if missing:
+            raise StageStartError(
+                "STAGE_PROGRAM_CONTEXT_MISSING",
+                f"Program context file not found: {', '.join(missing)}",
+                status=409,
+            )
     if stage == "mimo-proofread" and not resolve_mimo_api_key():
         raise StageStartError(
             "STAGE_CREDENTIAL_MISSING",
