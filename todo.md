@@ -6,6 +6,12 @@
 旧 MiMo 基线：`output/radio-cici-25-tokenplan-20261016/`（工作区 `workspaces/radio-25-radio-cici-25-tokenplan-20261016/`）。
 第二轮改进后的验证：`output/radio-cici-26-perf-20261017/`（工作区 `workspaces/radio-26-radio-cici-26-perf-20261017/`）。
 
+### 断句 / 翻译思考等级对比（2026-10-20，gemini-3.8-flash-high，生产默认 low）
+- 断句 LLM 合并（30 期 gold 300 s，每档 3 次）：正确条 low 82/82/83、medium 80/81/79、high 80/81/79；错切 15–16 → 13，但漏切换人 21 → 22，正确条时间精度（≤50 ms）43–44 → 40–41。整期合并耗时约 5 s / 70 s / 350 s。**无收益，保持 low。**
+- 翻译（#15 / #18 同一断句，每档 2 次，claude-sonnet-4-6 对照字幕组已校译文盲评 2 遍，共 422 行）：严重错误 low 21.3、medium 17.7、high 19.0；同档两次之间评分差最多 13 分，与档间差同量级；两次都稳定的差别只有 3 行（low 错）对 1 行（medium 错）。耗时（10 分钟音频）约 35 s / 70 s / 170–270 s。**medium 可能略好但不显著，high 无额外收益；默认保持 low。**
+- 注意：`--llm-extra-body-json` 对 run 中的 correct / split / translate 同时生效，单独给翻译调高需新增参数。
+- 实验脚本与产物在会话 scratch（`think_split.py`、`think_tr.py`、`think_judge.py`），#15 / #18 底座工作区 `workspaces/radio-{15,18}-thinking-exp-20261020/`。
+
 ### Gemini 文本校对（text-proofread，2026-10-19）
 - 已加入基线：v6 提示词 + medium，位于 proofread-realign 之后、quality-gate 之前；togeradi / japanese-generic 预设默认开启。54 期实验：零误改、术语表 9/9、跨片段成对错误能修；high 无额外收益。
 - 54 期副本实跑（`workspaces/radio-54-textproofread-verify-20261019/`）：148 个请求 209 s（新中转并发 5 + 旧中转并发 2，旧中转 35 次中 4 次失败后自动转投），0 失败，改 28 行，只改中文、日文与时间轴不变，质量门 0 FAIL / 3 WARN（与正式产物相同）。
@@ -18,7 +24,7 @@
 - 翻译：3.8-flash 对 ASR 错字/专名的还原明显好于 MiMo（打首獄門同好会、東京ガーデンシアター、声ログ）；MiMo 第 6–19 条整批译文错位一条且无任何检查报警。日常句两者接近。
 - 断句：3.8-flash 语义合并后句中悬空 90 vs 107、<1 s 碎片 139 vs 156；MiMo 独有的 48 处切分大多切在词中（「よろしく｜お願いいたします」）。
 - 速度：3.8-flash 并发 4 翻译 102 s（单请求中位 9.1 s），MiMo 并发 10 为 52.6 s；中转站单 Key 同时 5 个请求即 429（中转站自身限流，`retry-after: 60`）。
-- 待办：① 翻译“整批错位”检测（条数对但内容错开时重译）；② 429 时按 `retry-after` 全局冷却而不是几秒内重试；③ 3.8-flash 断句不可切专名（トゲナシトゲアリ）与「&」后；④ 思考强度对比（`--llm-extra-body-json '{"generationConfig":{"thinkingConfig":{"thinkingLevel":"high"}}}'`）；⑤ gemini-4-argon 需更高并发额度后再完整跑一次；⑥ 对齐：念邮箱（togeradi@interfm.jp）的段落 qwen 与短窗回退都失败，需 `recover-align --strategy mfa-local --mfa-padding-ms 200` 手动恢复。
+- 待办：① 翻译“整批错位”检测（条数对但内容错开时重译）；② 429 时按 `retry-after` 全局冷却而不是几秒内重试；③ 3.8-flash 断句不可切专名（トゲナシトゲアリ）与「&」后；④ ~~思考强度对比~~（2026-10-20 已做，见上；`--llm-extra-body-json '{"generationConfig":{"thinkingConfig":{"thinkingLevel":"high"}}}'`）；⑤ gemini-4-argon 需更高并发额度后再完整跑一次；⑥ 对齐：念邮箱（togeradi@interfm.jp）的段落 qwen 与短窗回退都失败，需 `recover-align --strategy mfa-local --mfa-padding-ms 200` 手动恢复。
 
 ---
 
