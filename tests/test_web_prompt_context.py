@@ -10,7 +10,11 @@ from qwen_asr.ci.config import DEFAULT_INPUT_FLAGS, Settings
 from qwen_asr.ci.pipeline import build_run_argv, discover_presets
 from qwen_asr.cli import build_parser
 from qwen_asr.defaults import (
+    DEFAULT_CORRECT_APPLY_THRESHOLD,
+    DEFAULT_CORRECT_CONTEXT_SEGMENTS,
+    DEFAULT_CORRECT_EFFORT,
     DEFAULT_CORRECT_MODE,
+    DEFAULT_CORRECT_PROMPT,
     DEFAULT_TRANSLATE_CONTEXT_LINES,
     DEFAULT_TRANSLATE_PROMPT,
     TRANSLATE_PROMPT_VERSIONS,
@@ -268,3 +272,50 @@ def test_index_has_prompt_context_controls() -> None:
         "节目背景提示词：每行一个文件，按顺序合并后加入纠错 / 翻译 / 文本校对的提示词；本期标题 auto = 媒体文件名",
     ):
         assert snippet in INDEX_HTML, snippet
+
+
+@pytest.mark.parametrize("stage", ["correct", "run", "batch-run"])
+def test_correct_v2_options_reach_the_cli(tmp_path: Path, stage: str) -> None:
+    settings = {"mediaPath": "media.mp3", "correctMode": "llm", "correctPrompt": "v2",
+                "correctContextSegments": "1", "correctApplyThreshold": "0.7", "correctEffort": "medium"}
+    payload = _base_payload(WorkPaths.from_workdir(tmp_path), settings, {})
+    payload.update(stage=stage, media_paths=["media.mp3"], **LLM)
+    args = _parse(build_command(payload))
+    assert (args.correct_mode, args.correct_prompt, args.correct_context_segments) == ("llm", "v2", 1)
+    assert (args.correct_apply_threshold, args.correct_effort) == (0.7, "medium")
+
+
+def test_correct_v2_defaults_and_validation(tmp_path: Path) -> None:
+    payload = _base_payload(WorkPaths.from_workdir(tmp_path), {"mediaPath": "media.mp3"}, {})
+    payload["stage"] = "run"
+    args = _parse(build_command(payload))
+    assert args.correct_prompt == DEFAULT_CORRECT_PROMPT
+    assert args.correct_context_segments == DEFAULT_CORRECT_CONTEXT_SEGMENTS
+    assert args.correct_apply_threshold == DEFAULT_CORRECT_APPLY_THRESHOLD
+    assert args.correct_effort == DEFAULT_CORRECT_EFFORT
+    for bad in ({"correct_prompt": "v9"}, {"correct_effort": "max"}, {"correct_apply_threshold": "1.5"}):
+        with pytest.raises(ValueError):
+            build_command({"stage": "correct", "workdir": str(tmp_path), **LLM, **bad})
+
+
+def test_index_correct_v2_controls_follow_defaults() -> None:
+    assert _selected_option("correctPrompt") == DEFAULT_CORRECT_PROMPT
+    effort = re.search(r'<select id="correctEffort">(.*?)</select>', INDEX_HTML).group(1)
+    assert re.findall(r'<option value="([^"]*)" selected>', effort) == [DEFAULT_CORRECT_EFFORT]
+    segments = re.search(r'<input id="correctContextSegments"[^>]*value="([^"]*)"', INDEX_HTML).group(1)
+    threshold = re.search(r'<input id="correctApplyThreshold"[^>]*value="([^"]*)"', INDEX_HTML).group(1)
+    assert (segments, threshold) == (str(DEFAULT_CORRECT_CONTEXT_SEGMENTS), str(DEFAULT_CORRECT_APPLY_THRESHOLD))
+    for snippet in ("'correctPrompt', 'correctContextSegments', 'correctApplyThreshold', 'correctEffort'",
+                    "correct_effort: document.getElementById('correctEffort').value"):
+        assert snippet in INDEX_HTML
+
+
+def test_preset_run_args_map_correct_v2_options(tmp_path: Path) -> None:
+    (tmp_path / "c.json").write_text(json.dumps({"id": "c", "run_args": [
+        "--correct-mode", "llm", "--correct-prompt", "v2", "--correct-context-segments", "1",
+        "--correct-apply-threshold", "0.8", "--correct-effort", "medium"]}), encoding="utf-8")
+    converted = preset_web_settings(discover_presets([tmp_path])["c"])
+    settings = converted["settings"]
+    assert (settings["correctPrompt"], settings["correctContextSegments"], settings["correctEffort"]) == (
+        "v2", "1", "medium")
+    assert converted["unmapped"] == []

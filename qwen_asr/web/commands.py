@@ -5,6 +5,7 @@ import sys
 from pathlib import Path
 
 from qwen_asr.defaults import (
+    CORRECT_PROMPT_VERSIONS,
     DEFAULT_LLM_CONCURRENCY,
     DEFAULT_MAX_SEGMENT_SECONDS,
     DEFAULT_MIMO_CONCURRENCY,
@@ -591,6 +592,25 @@ def _prompt_context_args(payload: dict, *, translate: bool = False, correct: boo
             if mode not in CORRECT_MODES:
                 raise ValueError(f"Unsupported correct mode: {mode}. Choose one of: {', '.join(CORRECT_MODES)}")
             args.extend(["--correct-mode", mode])
+        prompt = str(payload.get("correct_prompt") or "").strip().lower()
+        if prompt:
+            if prompt not in CORRECT_PROMPT_VERSIONS:
+                raise ValueError(
+                    f"Unsupported correct prompt: {prompt}. Choose one of: {', '.join(CORRECT_PROMPT_VERSIONS)}"
+                )
+            args.extend(["--correct-prompt", prompt])
+        if payload.get("correct_context_segments") not in (None, ""):
+            args.extend(["--correct-context-segments", str(max(0, int(payload["correct_context_segments"])))])
+        if payload.get("correct_apply_threshold") not in (None, ""):
+            threshold = float(payload["correct_apply_threshold"])
+            if not 0.0 <= threshold <= 1.0:
+                raise ValueError(f"correct apply threshold must be between 0 and 1: {threshold}")
+            args.extend(["--correct-apply-threshold", str(threshold)])
+        effort = str(payload.get("correct_effort") or "").strip().lower()
+        if effort:
+            if effort not in ("low", "medium", "high"):
+                raise ValueError(f"Unsupported correct effort: {effort}. Choose one of: low, medium, high")
+            args.extend(["--correct-effort", effort])
     return args
 
 

@@ -40,6 +40,14 @@ DEFAULT_TRANSLATE_PROMPT = "v1"
 DEFAULT_TRANSLATE_CONTEXT_LINES = 0
 # correct: "rules" = deterministic cleanup only (default since 2026-07); "llm" = ASRCorrector first.
 DEFAULT_CORRECT_MODE = "rules"
+# llm correct: v1 = whole-segment rewrite; v2 = span edits with confidence + read-only neighbour segments.
+# #15/#18 end-to-end (2026-10-20): llm correct cut translation errors ~20-25% vs rules; v2 ~= v1, auditable.
+CORRECT_PROMPT_VERSIONS = ("v1", "v2")
+DEFAULT_CORRECT_PROMPT = "v2"
+DEFAULT_CORRECT_CONTEXT_SEGMENTS = 1
+DEFAULT_CORRECT_APPLY_THRESHOLD = 0.8
+# "" = follow --disable-thinking / --llm-extra-body-json; low/medium/high sets thinking for correct only.
+DEFAULT_CORRECT_EFFORT = ""
 
 # MiMo audio proofread stays on MiMo (separate key, endpoint and concurrency).
 DEFAULT_MIMO_MODEL = "mimo-v2.6-pro"

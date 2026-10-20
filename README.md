@@ -299,9 +299,10 @@ python main.py run --media .\ep.mp3 --workdir .\work ... ^
 ```
 
 - 每个文件是一段自由文本（节目、成员、栏目、常见误听等，示例见 `samples/program-context/`），按顺序拼接后放进 correct（LLM 模式）/ translate / text-proofread 的系统提示词，位于术语表之前，上限 8000 字。`--episode-title auto`（默认）只在给了背景文件时附上本期标题（媒体文件名），`off` 关闭，也可直接写标题。
-- 可选开关（默认关闭）：`--translate-prompt v2`（明显误听按本意翻并标可疑、跨条不重复、短附和/双关规则）、`--translate-context-lines N`（每批前后 N 行只读上下文）、`--correct-mode llm`（带背景与术语表的 LLM 纠错，然后规则清理；默认 `rules` 只做规则清理）。
+- 可选开关（默认关闭）：`--translate-prompt v2`（明显误听按本意翻并标可疑、跨条不重复、短附和/双关规则）、`--translate-context-lines N`（每批前后 N 行只读上下文）。
+- LLM 纠错：`--correct-mode llm`（CLI 默认 `rules` 只做规则清理；togeradi 预设已开启）。默认 v2：模型只返回「原片段→改后」局部替换和置信度，程序替换，置信度低于 `--correct-apply-threshold`（0.8）的只写进 `corrected_segments.json` 报告；每批带前后 `--correct-context-segments`（默认 1）段只读上下文，并使用术语表和节目背景；`--correct-effort low|medium|high` 只调纠错的思考等级；`--correct-prompt v1` 恢复整段改写。#15/#18 端到端（从 correct 起重跑，claude-sonnet-4-6 盲评）：译文综合错误分 rules 130.5 → v1 102.3 / v2 100.3，严重错误 30.6 → 23.3 / 21.5。
 - #15 / #18 对照（各 2 次，盲评）：v1、v1+背景、v2+上下文、v2+上下文+背景的错误数差别小于同配置两次之间的波动，故默认不变；背景能修好个别专名（如 Zepp 巡演），但 ASR 误识别仍是主要错误来源。
-- Web：`/legacy`「LLM / 翻译 / 校正」组填「节目背景文件」（一行一个路径，缺文件拒绝启动）、本期标题、翻译提示词版本、上下文行数、纠错模式；CI 预设的 `files` 里可写多条 `--program-context`，载入时一并填入。
+- Web：`/legacy`「LLM / 翻译 / 校正」组填「节目背景文件」（一行一个路径，缺文件拒绝启动）、本期标题、翻译提示词版本、上下文行数、纠错模式 / 纠错 Prompt 版本 / 纠错上下文段数 / 采纳阈值 / 纠错思考等级；CI 预设的 `files` 里可写多条 `--program-context`，载入时一并填入。
 
 导出时会优先使用：
 

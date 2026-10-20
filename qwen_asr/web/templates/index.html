@@ -721,6 +721,10 @@
                 <div class="field"><label for="translatePrompt">翻译 Prompt 版本</label><select id="translatePrompt"><option value="v1"{{SELECTED_TRANSLATE_PROMPT_V1}}>v1</option><option value="v2"{{SELECTED_TRANSLATE_PROMPT_V2}}>v2</option></select></div>
                 <div class="field"><label for="translateContextLines">翻译上下文行数</label><input id="translateContextLines" type="number" min="0" step="1" value="{{DEFAULT_TRANSLATE_CONTEXT_LINES}}"></div>
                 <div class="field"><label for="correctMode">纠错模式</label><select id="correctMode"><option value="rules"{{SELECTED_CORRECT_MODE_RULES}}>rules</option><option value="llm"{{SELECTED_CORRECT_MODE_LLM}}>llm</option></select></div>
+                <div class="field"><label for="correctPrompt">纠错 Prompt 版本（llm）</label><select id="correctPrompt"><option value="v1"{{SELECTED_CORRECT_PROMPT_V1}}>v1 整段改写</option><option value="v2"{{SELECTED_CORRECT_PROMPT_V2}}>v2 局部替换</option></select></div>
+                <div class="field"><label for="correctContextSegments">纠错上下文段数（v2）</label><input id="correctContextSegments" type="number" min="0" step="1" value="{{DEFAULT_CORRECT_CONTEXT_SEGMENTS}}"></div>
+                <div class="field"><label for="correctApplyThreshold">纠错采纳阈值（v2）</label><input id="correctApplyThreshold" type="number" min="0" max="1" step="0.05" value="{{DEFAULT_CORRECT_APPLY_THRESHOLD}}"></div>
+                <div class="field"><label for="correctEffort">纠错思考等级</label><select id="correctEffort"><option value=""{{SELECTED_CORRECT_EFFORT_DEFAULT}}>跟随全局</option><option value="low"{{SELECTED_CORRECT_EFFORT_LOW}}>low</option><option value="medium"{{SELECTED_CORRECT_EFFORT_MEDIUM}}>medium</option><option value="high"{{SELECTED_CORRECT_EFFORT_HIGH}}>high</option></select></div>
               </div>
             </details>
 
@@ -881,6 +885,7 @@
         'withTextProofread', 'textProofreadEffort', 'textProofreadModel', 'textProofreadConcurrency', 'textProofreadTimeout',
         'textProofreadApplyThreshold', 'textProofreadProgram', 'textProofreadHosts',
         'programContextFiles', 'episodeTitle', 'translatePrompt', 'translateContextLines', 'correctMode',
+        'correctPrompt', 'correctContextSegments', 'correctApplyThreshold', 'correctEffort',
         'source', 'exportMode', 'exportPath', 'withAlign', 'withCorrect', 'withNormalize', 'withSplit', 'withTranslate'
       ];
     }
@@ -1118,6 +1123,10 @@
         translate_prompt: document.getElementById('translatePrompt').value,
         translate_context_lines: document.getElementById('translateContextLines').value,
         correct_mode: document.getElementById('correctMode').value,
+        correct_prompt: document.getElementById('correctPrompt').value,
+        correct_context_segments: document.getElementById('correctContextSegments').value,
+        correct_apply_threshold: document.getElementById('correctApplyThreshold').value,
+        correct_effort: document.getElementById('correctEffort').value,
         target_language: document.getElementById('targetLanguage').value,
         normalize_source: document.getElementById('normalizeSource').value,
         normalize_extend_ms: document.getElementById('normalizeExtendMs').value,

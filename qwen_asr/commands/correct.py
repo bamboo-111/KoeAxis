@@ -11,6 +11,15 @@ from qwen_asr.progress import write_progress
 LOGGER = logging.getLogger(__name__)
 
 
+def _correct_extra_body(args: argparse.Namespace, stage_helpers) -> dict | None:
+    """--llm-extra-body-json, with --correct-effort (thinking level for correct only) merged in."""
+    extra = stage_helpers._parse_json_object_argument("llm_extra_body_json", args.llm_extra_body_json)
+    effort = str(getattr(args, "correct_effort", "") or "").strip().lower()
+    if effort:
+        extra = {**(extra or {}), "reasoning_effort": effort}
+    return extra
+
+
 def cmd_correct(args: argparse.Namespace, work_paths: WorkPaths) -> int:
     from qwen_asr.commands import stages as stage_helpers
 
@@ -48,10 +57,13 @@ def cmd_correct(args: argparse.Namespace, work_paths: WorkPaths) -> int:
         batch_num=getattr(args, "correct_batch_num", getattr(args, "batch_num", 8)),
         glossary_xlsx=Path(args.glossary_xlsx) if args.glossary_xlsx else None,
         disable_thinking=args.disable_thinking,
-        llm_extra_body=stage_helpers._parse_json_object_argument("llm_extra_body_json", args.llm_extra_body_json),
+        llm_extra_body=_correct_extra_body(args, stage_helpers),
         timeout=args.timeout,
         mode=str(getattr(args, "correct_mode", "rules") or "rules"),
         program_context=program_context_from_args(args, work_paths),
+        prompt_version=str(getattr(args, "correct_prompt", "v1") or "v1"),
+        context_segments=int(getattr(args, "correct_context_segments", 0) or 0),
+        apply_threshold=float(getattr(args, "correct_apply_threshold", 0.8)),
     )
     stage_helpers.write_transcript_text(work_paths.transcript_text, corrected)
     changed_count = sum(1 for item in report if item.changed)

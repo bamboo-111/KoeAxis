@@ -31,7 +31,12 @@ from qwen_asr.credentials import resolve_llm_api_key, resolve_llm_base_url
 from qwen_asr.defaults import (
     DEFAULT_ALIGN_MODEL,
     DEFAULT_ASR_MODEL,
+    CORRECT_PROMPT_VERSIONS,
+    DEFAULT_CORRECT_APPLY_THRESHOLD,
+    DEFAULT_CORRECT_CONTEXT_SEGMENTS,
+    DEFAULT_CORRECT_EFFORT,
     DEFAULT_CORRECT_MODE,
+    DEFAULT_CORRECT_PROMPT,
     DEFAULT_LLM_BASE_URL,
     DEFAULT_LLM_CONCURRENCY,
     DEFAULT_LLM_EXTRA_BODY_JSON,
@@ -928,6 +933,30 @@ def _add_prompt_context_arguments(
             default=DEFAULT_CORRECT_MODE,
             help="rules: deterministic text cleanup only; llm: LLM fixes obvious misrecognitions (glossary + "
             "program context), then the same cleanup.",
+        )
+        parser.add_argument(
+            "--correct-prompt",
+            choices=list(CORRECT_PROMPT_VERSIONS),
+            default=DEFAULT_CORRECT_PROMPT,
+            help="llm correct prompt: v1 rewrites whole segments; v2 returns minimal span edits with confidence.",
+        )
+        parser.add_argument(
+            "--correct-context-segments",
+            type=int,
+            default=DEFAULT_CORRECT_CONTEXT_SEGMENTS,
+            help="v2: read-only transcript segments sent before and after each correct batch.",
+        )
+        parser.add_argument(
+            "--correct-apply-threshold",
+            type=float,
+            default=DEFAULT_CORRECT_APPLY_THRESHOLD,
+            help="v2: minimum edit confidence to apply (lower ones are listed in the report as skipped).",
+        )
+        parser.add_argument(
+            "--correct-effort",
+            choices=["", "low", "medium", "high"],
+            default=DEFAULT_CORRECT_EFFORT,
+            help="Thinking level for llm correct only (empty = follow --disable-thinking / --llm-extra-body-json).",
         )
 
 
