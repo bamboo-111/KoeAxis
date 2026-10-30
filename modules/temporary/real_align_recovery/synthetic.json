@@ -1,0 +1,5 @@
+[
+  {"segment_id":"a","audio_path":"synthetic-a.wav","global_start_time":0.0,"global_end_time":1.0,"text":"a","language":"Japanese","status":"completed"},
+  {"segment_id":"b","audio_path":"synthetic-b.wav","global_start_time":1.0,"global_end_time":2.0,"text":"b","language":"Japanese","status":"completed"},
+  {"segment_id":"c","audio_path":"synthetic-c.wav","global_start_time":2.0,"global_end_time":3.0,"text":"c","language":"Japanese","status":"completed"}
+]

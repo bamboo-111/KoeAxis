@@ -1,0 +1,10 @@
+{
+  "plan": "experiments/specifications/real-llm-stages.json",
+  "profile": "module-registry/real_llm_stages/contracts-real-llm-stages.json",
+  "catalog": "module-registry/real_llm_stages/catalog-real-llm-stages.json",
+  "entry": {
+    "module_id": "test.real.llm.stages",
+    "operation_id": "run",
+    "interface_version": "0.1.0-real-llm-stages"
+  }
+}

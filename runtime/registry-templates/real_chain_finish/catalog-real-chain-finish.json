@@ -1,0 +1,279 @@
+{
+  "profile": "real-chain-finish-v1",
+  "admission": "temporary",
+  "exemptions": [],
+  "bootstrap": [
+    [
+      "real-chain-finish-realign",
+      "0.1.0-real-chain-finish"
+    ],
+    [
+      "real-chain-finish-quality",
+      "0.1.0-real-chain-finish"
+    ],
+    [
+      "real-chain-finish-normalize",
+      "0.1.0-real-chain-finish"
+    ],
+    [
+      "real-chain-finish-export",
+      "0.1.0-real-chain-finish"
+    ],
+    [
+      "real-chain-finish-root",
+      "0.1.0-real-chain-finish"
+    ]
+  ],
+  "trusted_bootstrap": {
+    "path": "host/__init__.py",
+    "sha256": "18d90bb032b6eedde69e2eb5158f3452fc0c3ea4ba928a0c56de206b260bed22",
+    "scope": "trusted interpreter entry"
+  },
+  "implementations": [
+    {
+      "module_id": "stage.proofread_realign",
+      "implementation_id": "real-chain-finish-realign",
+      "version": "0.1.0-real-chain-finish",
+      "admission": "temporary",
+      "source": "modules/temporary/real_chain_finish/operations.py",
+      "content_files": [
+        {
+          "path": "host/__main__.py",
+          "sha256": "e0e3fe0679860f02a1270a3811048ad096764ed2f4bea01dd4ba87a516a57999"
+        },
+        {
+          "path": "host/contracts.py",
+          "sha256": "fa67f1cde6794ca445bee9d410c31cdba3b22355248d7d339a77641f2cc2ff7d"
+        },
+        {
+          "path": "host/runtime.py",
+          "sha256": "bcc71f07af88a3bdb80d361743a16deb75d9a4301f60740caea328fae9d7dff0"
+        },
+        {
+          "path": "module-registry/real_chain_finish/contracts-real-chain-finish.json",
+          "sha256": "9b65d2413031a17850aacb5ec72eb425a5959c92196433dbb87ad8c6eff47bf0"
+        },
+        {
+          "path": "modules/temporary/real_chain_finish/operations.py",
+          "sha256": "1dadae9a34d753f4cc09fefb2ce87db1e2c169b3cfa5958f758462e11f306dce"
+        },
+        {
+          "path": "modules/temporary/real_chain_finish/legacy.py",
+          "sha256": "a924a9d53bc5206710e2b7e6b64c94f2eaeda1861711b6751a2afdcf5741b809"
+        },
+        {
+          "path": "modules/temporary/real_chain_finish/handoff.py",
+          "sha256": "71260db77884fafe2287fb428d213640ffcf9db1fd0d6edd798fb9d1d6c7a25d"
+        },
+        {
+          "path": "experiments/specifications/real-chain-finish.json",
+          "sha256": "ec49c1a66e6f0b8fad94ddcc5ece88eb7f39ee561e046bd3255e5e7634b3bab7"
+        },
+        {
+          "path": "modules/temporary/verification_gold54/evaluate.py",
+          "sha256": "7e7965bafdf4c30e0d9e47afd238877854889534b70ba603915085c810721c17"
+        }
+      ],
+      "settings": {
+        "role": "realign"
+      },
+      "content_digest": "57ab6cf487356111cc7326be1d6f562cb6d55c395276fba9f2db5631110b1c40"
+    },
+    {
+      "module_id": "quality",
+      "implementation_id": "real-chain-finish-quality",
+      "version": "0.1.0-real-chain-finish",
+      "admission": "temporary",
+      "source": "modules/temporary/real_chain_finish/operations.py",
+      "content_files": [
+        {
+          "path": "host/__main__.py",
+          "sha256": "e0e3fe0679860f02a1270a3811048ad096764ed2f4bea01dd4ba87a516a57999"
+        },
+        {
+          "path": "host/contracts.py",
+          "sha256": "fa67f1cde6794ca445bee9d410c31cdba3b22355248d7d339a77641f2cc2ff7d"
+        },
+        {
+          "path": "host/runtime.py",
+          "sha256": "bcc71f07af88a3bdb80d361743a16deb75d9a4301f60740caea328fae9d7dff0"
+        },
+        {
+          "path": "module-registry/real_chain_finish/contracts-real-chain-finish.json",
+          "sha256": "9b65d2413031a17850aacb5ec72eb425a5959c92196433dbb87ad8c6eff47bf0"
+        },
+        {
+          "path": "modules/temporary/real_chain_finish/operations.py",
+          "sha256": "1dadae9a34d753f4cc09fefb2ce87db1e2c169b3cfa5958f758462e11f306dce"
+        },
+        {
+          "path": "modules/temporary/real_chain_finish/legacy.py",
+          "sha256": "a924a9d53bc5206710e2b7e6b64c94f2eaeda1861711b6751a2afdcf5741b809"
+        },
+        {
+          "path": "modules/temporary/real_chain_finish/handoff.py",
+          "sha256": "71260db77884fafe2287fb428d213640ffcf9db1fd0d6edd798fb9d1d6c7a25d"
+        },
+        {
+          "path": "experiments/specifications/real-chain-finish.json",
+          "sha256": "ec49c1a66e6f0b8fad94ddcc5ece88eb7f39ee561e046bd3255e5e7634b3bab7"
+        },
+        {
+          "path": "modules/temporary/verification_gold54/evaluate.py",
+          "sha256": "7e7965bafdf4c30e0d9e47afd238877854889534b70ba603915085c810721c17"
+        }
+      ],
+      "settings": {
+        "role": "quality"
+      },
+      "content_digest": "d0591b68b509b1078738680dd01262e7be7b6927693435ff28a26bb92613215f"
+    },
+    {
+      "module_id": "stage.normalize",
+      "implementation_id": "real-chain-finish-normalize",
+      "version": "0.1.0-real-chain-finish",
+      "admission": "temporary",
+      "source": "modules/temporary/real_chain_finish/operations.py",
+      "content_files": [
+        {
+          "path": "host/__main__.py",
+          "sha256": "e0e3fe0679860f02a1270a3811048ad096764ed2f4bea01dd4ba87a516a57999"
+        },
+        {
+          "path": "host/contracts.py",
+          "sha256": "fa67f1cde6794ca445bee9d410c31cdba3b22355248d7d339a77641f2cc2ff7d"
+        },
+        {
+          "path": "host/runtime.py",
+          "sha256": "bcc71f07af88a3bdb80d361743a16deb75d9a4301f60740caea328fae9d7dff0"
+        },
+        {
+          "path": "module-registry/real_chain_finish/contracts-real-chain-finish.json",
+          "sha256": "9b65d2413031a17850aacb5ec72eb425a5959c92196433dbb87ad8c6eff47bf0"
+        },
+        {
+          "path": "modules/temporary/real_chain_finish/operations.py",
+          "sha256": "1dadae9a34d753f4cc09fefb2ce87db1e2c169b3cfa5958f758462e11f306dce"
+        },
+        {
+          "path": "modules/temporary/real_chain_finish/legacy.py",
+          "sha256": "a924a9d53bc5206710e2b7e6b64c94f2eaeda1861711b6751a2afdcf5741b809"
+        },
+        {
+          "path": "modules/temporary/real_chain_finish/handoff.py",
+          "sha256": "71260db77884fafe2287fb428d213640ffcf9db1fd0d6edd798fb9d1d6c7a25d"
+        },
+        {
+          "path": "experiments/specifications/real-chain-finish.json",
+          "sha256": "ec49c1a66e6f0b8fad94ddcc5ece88eb7f39ee561e046bd3255e5e7634b3bab7"
+        },
+        {
+          "path": "modules/temporary/verification_gold54/evaluate.py",
+          "sha256": "7e7965bafdf4c30e0d9e47afd238877854889534b70ba603915085c810721c17"
+        }
+      ],
+      "settings": {
+        "role": "normalize"
+      },
+      "content_digest": "9924947698bc78e1f8faae1758fe8cc35827e8cdcf216b248cf0f968e3e94ec5"
+    },
+    {
+      "module_id": "stage.export",
+      "implementation_id": "real-chain-finish-export",
+      "version": "0.1.0-real-chain-finish",
+      "admission": "temporary",
+      "source": "modules/temporary/real_chain_finish/operations.py",
+      "content_files": [
+        {
+          "path": "host/__main__.py",
+          "sha256": "e0e3fe0679860f02a1270a3811048ad096764ed2f4bea01dd4ba87a516a57999"
+        },
+        {
+          "path": "host/contracts.py",
+          "sha256": "fa67f1cde6794ca445bee9d410c31cdba3b22355248d7d339a77641f2cc2ff7d"
+        },
+        {
+          "path": "host/runtime.py",
+          "sha256": "bcc71f07af88a3bdb80d361743a16deb75d9a4301f60740caea328fae9d7dff0"
+        },
+        {
+          "path": "module-registry/real_chain_finish/contracts-real-chain-finish.json",
+          "sha256": "9b65d2413031a17850aacb5ec72eb425a5959c92196433dbb87ad8c6eff47bf0"
+        },
+        {
+          "path": "modules/temporary/real_chain_finish/operations.py",
+          "sha256": "1dadae9a34d753f4cc09fefb2ce87db1e2c169b3cfa5958f758462e11f306dce"
+        },
+        {
+          "path": "modules/temporary/real_chain_finish/legacy.py",
+          "sha256": "a924a9d53bc5206710e2b7e6b64c94f2eaeda1861711b6751a2afdcf5741b809"
+        },
+        {
+          "path": "modules/temporary/real_chain_finish/handoff.py",
+          "sha256": "71260db77884fafe2287fb428d213640ffcf9db1fd0d6edd798fb9d1d6c7a25d"
+        },
+        {
+          "path": "experiments/specifications/real-chain-finish.json",
+          "sha256": "ec49c1a66e6f0b8fad94ddcc5ece88eb7f39ee561e046bd3255e5e7634b3bab7"
+        },
+        {
+          "path": "modules/temporary/verification_gold54/evaluate.py",
+          "sha256": "7e7965bafdf4c30e0d9e47afd238877854889534b70ba603915085c810721c17"
+        }
+      ],
+      "settings": {
+        "role": "export"
+      },
+      "content_digest": "f470b0de8ba63bd19323a96350faf9e685b7c340a3ca1a0fdb5401f369606968"
+    },
+    {
+      "module_id": "test.real.chain.finish",
+      "implementation_id": "real-chain-finish-root",
+      "version": "0.1.0-real-chain-finish",
+      "admission": "temporary",
+      "source": "modules/temporary/real_chain_finish/operations.py",
+      "content_files": [
+        {
+          "path": "host/__main__.py",
+          "sha256": "e0e3fe0679860f02a1270a3811048ad096764ed2f4bea01dd4ba87a516a57999"
+        },
+        {
+          "path": "host/contracts.py",
+          "sha256": "fa67f1cde6794ca445bee9d410c31cdba3b22355248d7d339a77641f2cc2ff7d"
+        },
+        {
+          "path": "host/runtime.py",
+          "sha256": "bcc71f07af88a3bdb80d361743a16deb75d9a4301f60740caea328fae9d7dff0"
+        },
+        {
+          "path": "module-registry/real_chain_finish/contracts-real-chain-finish.json",
+          "sha256": "9b65d2413031a17850aacb5ec72eb425a5959c92196433dbb87ad8c6eff47bf0"
+        },
+        {
+          "path": "modules/temporary/real_chain_finish/operations.py",
+          "sha256": "1dadae9a34d753f4cc09fefb2ce87db1e2c169b3cfa5958f758462e11f306dce"
+        },
+        {
+          "path": "modules/temporary/real_chain_finish/legacy.py",
+          "sha256": "a924a9d53bc5206710e2b7e6b64c94f2eaeda1861711b6751a2afdcf5741b809"
+        },
+        {
+          "path": "modules/temporary/real_chain_finish/handoff.py",
+          "sha256": "71260db77884fafe2287fb428d213640ffcf9db1fd0d6edd798fb9d1d6c7a25d"
+        },
+        {
+          "path": "experiments/specifications/real-chain-finish.json",
+          "sha256": "ec49c1a66e6f0b8fad94ddcc5ece88eb7f39ee561e046bd3255e5e7634b3bab7"
+        },
+        {
+          "path": "modules/temporary/verification_gold54/evaluate.py",
+          "sha256": "7e7965bafdf4c30e0d9e47afd238877854889534b70ba603915085c810721c17"
+        }
+      ],
+      "settings": {
+        "role": "root"
+      },
+      "content_digest": "bc648699307ae69cd54b14dc1a758eeec23cb2e4ec182242509f53ee31874f49"
+    }
+  ]
+}

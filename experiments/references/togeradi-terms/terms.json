@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "program": "トゲラジ",
+  "purpose": "Context hints only; not a transcript or an instruction to force replacements.",
+  "entries": [
+    {"term": "トゲナシトゲアリ", "source": "E:/project/qwen3-asr/samples/asr-context-togeradi.txt", "scope": "トゲラジ", "ambiguous": false, "force_replace": false},
+    {"term": "トゲラジ", "source": "E:/project/qwen3-asr/samples/asr-context-togeradi.txt", "scope": "トゲラジ", "ambiguous": false, "force_replace": false},
+    {"term": "InterFM", "source": "E:/project/qwen3-asr/samples/asr-context-togeradi.txt", "scope": "トゲラジ", "ambiguous": true, "force_replace": false},
+    {"term": "ガールズバンドクライ", "source": "E:/project/qwen3-asr/samples/asr-context-togeradi.txt", "scope": "トゲラジ", "ambiguous": false, "force_replace": false},
+    {"term": "青春相談所", "source": "E:/project/qwen3-asr/samples/asr-context-togeradi.txt", "scope": "トゲラジ", "ambiguous": true, "force_replace": false},
+    {"term": "妄想ガールズセッション", "source": "E:/project/qwen3-asr/samples/asr-context-togeradi.txt", "scope": "トゲラジ", "ambiguous": true, "force_replace": false},
+    {"term": "おつトゲさま", "source": "E:/project/qwen3-asr/samples/asr-context-togeradi.txt", "scope": "トゲラジ", "ambiguous": false, "force_replace": false},
+    {"term": "赤色の響祭", "source": "E:/project/qwen3-asr/samples/asr-context-togeradi.txt", "scope": "トゲラジ", "ambiguous": false, "force_replace": false},
+    {"term": "ぴあアリーナMM", "source": "E:/project/qwen3-asr/samples/asr-context-togeradi.txt", "scope": "トゲラジ", "ambiguous": false, "force_replace": false},
+    {"term": "ダイヤモンドダスト", "source": "E:/project/qwen3-asr/samples/asr-context-togeradi.txt", "scope": "トゲラジ", "ambiguous": true, "force_replace": false},
+    {"term": "togeradi@interfm.jp", "source": "E:/project/qwen3-asr/samples/program-memory-togeradi.json#email-source", "scope": "トゲラジ", "ambiguous": true, "force_replace": false, "note": "Do not inject into ASR; preserve actual email and punctuation; do not infer from partial text."},
+    {"term": "ミニオン / ミリオン", "source": "docs/167-opt54-content-ticket.md", "scope": "トゲラジ", "ambiguous": true, "force_replace": false, "note": "Distinct words; no global substitution."}
+  ]
+}

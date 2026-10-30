@@ -1,0 +1,223 @@
+{
+  "profile": "real-align-recovery-v1",
+  "admission": "temporary",
+  "exemptions": [],
+  "bootstrap": [
+    [
+      "real-align-recovery-artifacts",
+      "0.1.0-real-align-recovery"
+    ],
+    [
+      "real-align-recovery-execution",
+      "0.1.0-real-align-recovery"
+    ],
+    [
+      "real-align-recovery-mfa",
+      "0.1.0-real-align-recovery"
+    ],
+    [
+      "real-align-recovery-stage",
+      "0.1.0-real-align-recovery"
+    ],
+    [
+      "real-align-recovery-suite",
+      "0.1.0-real-align-recovery"
+    ]
+  ],
+  "trusted_bootstrap": {
+    "path": "host/__init__.py",
+    "sha256": "18d90bb032b6eedde69e2eb5158f3452fc0c3ea4ba928a0c56de206b260bed22",
+    "scope": "trusted interpreter entry; audit hash, not a self-attested module source"
+  },
+  "implementations": [
+    {
+      "module_id": "storage.artifacts",
+      "implementation_id": "real-align-recovery-artifacts",
+      "version": "0.1.0-real-align-recovery",
+      "admission": "temporary",
+      "source": "modules/temporary/real_align_recovery/artifacts.py",
+      "content_files": [
+        {
+          "path": "host/__main__.py",
+          "sha256": "e0e3fe0679860f02a1270a3811048ad096764ed2f4bea01dd4ba87a516a57999"
+        },
+        {
+          "path": "host/contracts.py",
+          "sha256": "fa67f1cde6794ca445bee9d410c31cdba3b22355248d7d339a77641f2cc2ff7d"
+        },
+        {
+          "path": "host/runtime.py",
+          "sha256": "bcc71f07af88a3bdb80d361743a16deb75d9a4301f60740caea328fae9d7dff0"
+        },
+        {
+          "path": "module-registry/real_align_recovery/contracts-real-align-recovery.json",
+          "sha256": "dd4cad37d52c48995a889162d42a3423e94fad26beaf5a2fa1f60771c5e3ceaf"
+        },
+        {
+          "path": "modules/temporary/real_align_recovery/artifacts.py",
+          "sha256": "13c4c005c7a09e7f0e4de11b77ae2d2632b74846553fa57dcaefd06a857f1c0f"
+        }
+      ],
+      "settings": {
+        "role": "artifacts"
+      },
+      "content_digest": "fe87c3603465e1aefbbebf89dae7139fb66841a0df2027bb93b8d747c0f10282"
+    },
+    {
+      "module_id": "resource.execution",
+      "implementation_id": "real-align-recovery-execution",
+      "version": "0.1.0-real-align-recovery",
+      "admission": "temporary",
+      "source": "modules/temporary/real_align_recovery/execution.py",
+      "content_files": [
+        {
+          "path": "host/__main__.py",
+          "sha256": "e0e3fe0679860f02a1270a3811048ad096764ed2f4bea01dd4ba87a516a57999"
+        },
+        {
+          "path": "host/contracts.py",
+          "sha256": "fa67f1cde6794ca445bee9d410c31cdba3b22355248d7d339a77641f2cc2ff7d"
+        },
+        {
+          "path": "host/runtime.py",
+          "sha256": "bcc71f07af88a3bdb80d361743a16deb75d9a4301f60740caea328fae9d7dff0"
+        },
+        {
+          "path": "module-registry/real_align_recovery/contracts-real-align-recovery.json",
+          "sha256": "dd4cad37d52c48995a889162d42a3423e94fad26beaf5a2fa1f60771c5e3ceaf"
+        },
+        {
+          "path": "modules/temporary/real_align_recovery/execution.py",
+          "sha256": "ed62b468aa416c606ab1658746ce80fe5185d9a6d23020db65c1a452fa5db4b6"
+        }
+      ],
+      "settings": {
+        "role": "execution"
+      },
+      "content_digest": "86022eac8b53ee8fa097eba0c36153a1f1caa0e4aba6aca6907a8db312b6066c"
+    },
+    {
+      "module_id": "provider.mfa",
+      "implementation_id": "real-align-recovery-mfa",
+      "version": "0.1.0-real-align-recovery",
+      "admission": "temporary",
+      "source": "modules/temporary/real_align_recovery/mfa.py",
+      "content_files": [
+        {
+          "path": "host/__main__.py",
+          "sha256": "e0e3fe0679860f02a1270a3811048ad096764ed2f4bea01dd4ba87a516a57999"
+        },
+        {
+          "path": "host/contracts.py",
+          "sha256": "fa67f1cde6794ca445bee9d410c31cdba3b22355248d7d339a77641f2cc2ff7d"
+        },
+        {
+          "path": "host/runtime.py",
+          "sha256": "bcc71f07af88a3bdb80d361743a16deb75d9a4301f60740caea328fae9d7dff0"
+        },
+        {
+          "path": "module-registry/real_align_recovery/contracts-real-align-recovery.json",
+          "sha256": "dd4cad37d52c48995a889162d42a3423e94fad26beaf5a2fa1f60771c5e3ceaf"
+        },
+        {
+          "path": "modules/temporary/real_align_recovery/mfa.py",
+          "sha256": "b69b7200ebfe99ad07e9f7f8af537510fcefafb87cf97a915c974d060be1302b"
+        },
+        {
+          "path": "modules/temporary/real_align_recovery/recover.py",
+          "sha256": "f7e602cf544a2d8ee81d5c8723e42168e71d338e8584297a3e38141bdaa31cde"
+        }
+      ],
+      "settings": {
+        "role": "mfa"
+      },
+      "content_digest": "f5771bff3689a7032a2fc0ffa239482b8cd2d8f654a4071a271a8a4f1602f844"
+    },
+    {
+      "module_id": "stage.align",
+      "implementation_id": "real-align-recovery-stage",
+      "version": "0.1.0-real-align-recovery",
+      "admission": "temporary",
+      "source": "modules/temporary/real_align_recovery/stage.py",
+      "content_files": [
+        {
+          "path": "host/__main__.py",
+          "sha256": "e0e3fe0679860f02a1270a3811048ad096764ed2f4bea01dd4ba87a516a57999"
+        },
+        {
+          "path": "host/contracts.py",
+          "sha256": "fa67f1cde6794ca445bee9d410c31cdba3b22355248d7d339a77641f2cc2ff7d"
+        },
+        {
+          "path": "host/runtime.py",
+          "sha256": "bcc71f07af88a3bdb80d361743a16deb75d9a4301f60740caea328fae9d7dff0"
+        },
+        {
+          "path": "module-registry/real_align_recovery/contracts-real-align-recovery.json",
+          "sha256": "dd4cad37d52c48995a889162d42a3423e94fad26beaf5a2fa1f60771c5e3ceaf"
+        },
+        {
+          "path": "modules/temporary/real_align_recovery/stage.py",
+          "sha256": "a1f55fdeadb6984ea046f4ff18affbcbd303e12483f91eee1c244cc1ecd95840"
+        },
+        {
+          "path": "modules/temporary/real_align_recovery/recover.py",
+          "sha256": "f7e602cf544a2d8ee81d5c8723e42168e71d338e8584297a3e38141bdaa31cde"
+        },
+        {
+          "path": "modules/temporary/real_align_recovery/chain.py",
+          "sha256": "438c25b2c5269ac35b6b66bf1cdff205a2669ad59690be20f94b045017f420b3"
+        }
+      ],
+      "settings": {
+        "role": "stage"
+      },
+      "content_digest": "affce6b12432d2366bc351779b81400fa341ea0a4499b86b135e99a74cbb1a37"
+    },
+    {
+      "module_id": "test.real.align.recovery",
+      "implementation_id": "real-align-recovery-suite",
+      "version": "0.1.0-real-align-recovery",
+      "admission": "temporary",
+      "source": "modules/temporary/real_align_recovery/suite.py",
+      "content_files": [
+        {
+          "path": "host/__main__.py",
+          "sha256": "e0e3fe0679860f02a1270a3811048ad096764ed2f4bea01dd4ba87a516a57999"
+        },
+        {
+          "path": "host/contracts.py",
+          "sha256": "fa67f1cde6794ca445bee9d410c31cdba3b22355248d7d339a77641f2cc2ff7d"
+        },
+        {
+          "path": "host/runtime.py",
+          "sha256": "bcc71f07af88a3bdb80d361743a16deb75d9a4301f60740caea328fae9d7dff0"
+        },
+        {
+          "path": "module-registry/real_align_recovery/contracts-real-align-recovery.json",
+          "sha256": "dd4cad37d52c48995a889162d42a3423e94fad26beaf5a2fa1f60771c5e3ceaf"
+        },
+        {
+          "path": "modules/temporary/real_align_recovery/suite.py",
+          "sha256": "d10d16688021906b2c082d2500517cd900c36e0ddc8fe8cf4d5c318d939747e2"
+        },
+        {
+          "path": "experiments/specifications/real-align-recovery.json",
+          "sha256": "56dd5f22351d42f07cd3dd3d2f940ccf5146bb76b00d59ad5db586f2818b1726"
+        },
+        {
+          "path": "experiments/specifications/real-chain-align.json",
+          "sha256": "5872ac2aa4adb3c017d864a289c0bb88836d9996d5278d440b17618966caee03"
+        },
+        {
+          "path": "modules/temporary/real_align_recovery/synthetic.json",
+          "sha256": "e75535d28ae17711bf83a4b82c1e4a1a0fc48f6130245edb74edf4b608342108"
+        }
+      ],
+      "settings": {
+        "role": "suite"
+      },
+      "content_digest": "f5fd97b1a778205d4d49f109518d8880d4b0cf63ccbc9287d37ac25f73a977ea"
+    }
+  ]
+}

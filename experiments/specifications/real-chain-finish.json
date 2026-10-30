@@ -1,0 +1,10 @@
+{
+  "id": "REAL-CHAIN-FINISH-001",
+  "version": "1",
+  "entry": {"module_id": "test.real.chain.finish", "operation_id": "run", "interface_version": "0.1.0-real-chain-finish"},
+  "profile": "real-chain-finish-v1",
+  "owner": "test.real.chain.finish",
+  "purpose": "Bind current MiMo handoff to realign, quality, normalize and export; default is synthetic CPU only.",
+  "permissions": {"offline": {"network": false, "credentials": false, "gpu": false}},
+  "required_evidence": ["evidence/report.json", "evidence/cases.json", "evidence/criteria.json"]
+}

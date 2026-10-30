@@ -1,0 +1,15 @@
+{
+  "schema": 1,
+  "programs": {
+    "togeradi-v1": {
+      "terms": "experiments/references/togeradi-terms/terms.json",
+      "context_prefix": "トゲラジ参考用語（不確実な場合は原文を保持し、メールや記号を変更しない）: ",
+      "context_separator": "、",
+      "context_digest_prefix": " [terms sha256=",
+      "context_digest_suffix": "]",
+      "glossary_group": "names",
+      "glossary_target": "",
+      "glossary_note_prefix": "参考非强制 "
+    }
+  }
+}

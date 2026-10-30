@@ -1,0 +1,940 @@
+﻿from __future__ import annotations
+
+import sys
+import subprocess
+from pathlib import Path
+
+import pytest
+import webapp
+from qwen_asr.defaults import (
+    DEFAULT_MAX_SEGMENT_SECONDS,
+    DEFAULT_MIN_SEGMENT_SECONDS,
+    DEFAULT_MODEL_CACHE_DIR,
+)
+from qwen_asr.glossary import _write_single_sheet_xlsx
+from qwen_asr.models import WorkPaths
+from qwen_asr.web import server
+from qwen_asr.web.status import build_progress, get_status
+from qwen_asr.web.commands import (
+    ROOT,
+    build_command,
+    normalize_asr_language,
+    python_runtime,
+    resolve_deletable_workspace,
+    resolve_deletable_workspaces,
+    suggest_workdir,
+)
+from qwen_asr.web.static_html import INDEX_HTML, INDEX_TEMPLATE_PATH, WORKBENCH_HTML, load_index_html
+from qwen_asr.optimizer_bridge import DEFAULT_OPTIMIZER_ROOT
+
+
+def test_webui_build_export_command_uses_project_root() -> None:
+    command = build_command(
+        {
+            "stage": "export",
+            "workdir": "work-test",
+            "format": "srt",
+            "source": "auto",
+            "media_path": "input.mp3",
+            "export_mode": "custom",
+            "export_path": "out",
+        }
+    )
+
+    assert command[:5] == [python_runtime(), str(ROOT / "main.py"), "export", "--workdir", "work-test"]
+    assert command[command.index("--format") + 1] == "srt"
+    assert command[command.index("--source") + 1] == "auto"
+    assert command[command.index("--export-mode") + 1] == "custom"
+    assert command[command.index("--export-path") + 1] == "out"
+    assert command[command.index("--media-path") + 1] == "input.mp3"
+
+
+def test_webui_build_quality_gate_command() -> None:
+    command = build_command(
+        {
+            "stage": "quality-gate",
+            "workdir": "work-test",
+            "quality_gate_include_export": True,
+            "quality_gate_require_srt": True,
+        }
+    )
+
+    assert command[:5] == [python_runtime(), str(ROOT / "main.py"), "quality-gate", "--workdir", "work-test"]
+    assert "--include-export" in command
+    assert "--require-srt" in command
+
+
+def test_webui_build_prepare_command_uses_segment_defaults() -> None:
+    command = build_command({"stage": "prepare", "workdir": "work-test", "media_path": "input.mp3"})
+
+    assert "--max-segment-seconds" in command
+    assert command[command.index("--max-segment-seconds") + 1] == str(DEFAULT_MAX_SEGMENT_SECONDS)
+    assert "--min-segment-seconds" in command
+    assert command[command.index("--min-segment-seconds") + 1] == str(DEFAULT_MIN_SEGMENT_SECONDS)
+    assert command[command.index("--denoise-backend") + 1] == "mdx_net"
+    assert command[command.index("--vad-backend") + 1] == "pyannote_onnx_v3"
+    assert command[command.index("--pyannote-onnx-model") + 1] == "segmentation-3.0"
+
+
+def test_webui_build_mimo_proofread_command() -> None:
+    command = build_command(
+        {
+            "stage": "mimo-proofread",
+            "workdir": "work-test",
+            "llm_model": "mimo-v2.5",
+            "llm_base_url": "https://api.xiaomimimo.com/v1",
+            "llm_timeout": 240,
+            "disable_thinking": True,
+            "mimo_proofread_mode": "two-stage-nearby",
+            "mimo_audio_review_scope": "all",
+            "mimo_proofread_workers": 2,
+            "mimo_nearby_batch_size": 5,
+            "mimo_nearby_batch_max_gap_s": 20,
+            "mimo_nearby_padding_s": 1.5,
+            "mimo_nearby_context_subtitles": 1,
+            "mimo_nearby_audio_workers": 1,
+            "mimo_proofread_max_tokens": 4096,
+            "mimo_compact_output": False,
+            "mimo_proofread_output_dir": "out-mimo",
+            "glossary_xlsx": "glossary.xlsx",
+        }
+    )
+
+    assert command[:3] == [python_runtime(), str(ROOT / "main.py"), "mimo-proofread"]
+    assert command[command.index("--mimo-proofread-mode") + 1] == "two-stage-nearby"
+    assert command[command.index("--mimo-audio-review-scope") + 1] == "all"
+    assert "--mimo-diagnostic-all" in command
+    assert command[command.index("--mimo-nearby-batch-size") + 1] == "5"
+    assert command[command.index("--mimo-nearby-batch-max-gap-s") + 1] == "20.0"
+    assert "--llm-api-key" not in command
+
+
+def test_webui_rejects_credentials_in_start_payload() -> None:
+    with pytest.raises(ValueError, match="process environment"):
+        build_command({"stage": "split", "workdir": "work-test", "llm_api_key": None})
+
+
+def test_webui_start_route_returns_json_400_for_invalid_payload(monkeypatch) -> None:
+    handler = object.__new__(server.Handler)
+    handler.path = "/api/start"
+    responses: list[tuple[dict, int]] = []
+
+    monkeypatch.setattr(handler, "_read_json", lambda: {"stage": "split"})
+    monkeypatch.setattr(handler, "_send_json", lambda payload, status=200: responses.append((payload, status)))
+
+    def reject_start(_payload: dict) -> dict:
+        raise ValueError("API credentials must be configured through process environment variables.")
+
+    monkeypatch.setattr(server, "start_job", reject_start)
+    handler.do_POST()
+
+    assert responses == [
+        ({"error": "API credentials must be configured through process environment variables."}, 400)
+    ]
+
+
+def test_webui_build_run_command_uses_local_model_cache_by_default() -> None:
+    command = build_command(
+        {
+            "stage": "run",
+            "workdir": "work-test",
+            "media_path": "input.mp3",
+            "asr_model": "asr",
+            "align_model": "align",
+            "dtype": "fp16",
+            "device": "cuda:0",
+            "format": "srt",
+            "source": "auto",
+            "normalize_source": "auto",
+        }
+    )
+
+    assert "--local-files-only" in command
+    assert "--no-local-files-only" not in command
+    assert command[command.index("--model-cache-dir") + 1] == str(DEFAULT_MODEL_CACHE_DIR)
+    assert command[command.index("--align-cleanup-interval") + 1] == "4"
+    assert "--split-mode" not in command
+
+
+def test_webui_build_run_command_can_enable_align_diagnostics() -> None:
+    command = build_command(
+        {
+            "stage": "run",
+            "workdir": "work-test",
+            "media_path": "input.mp3",
+            "asr_model": "asr",
+            "align_model": "align",
+            "dtype": "fp16",
+            "device": "cuda:0",
+            "format": "srt",
+            "source": "auto",
+            "normalize_source": "auto",
+            "align_diagnostics_mode": "capture-failed",
+        }
+    )
+
+    assert command[command.index("--align-diagnostics-mode") + 1] == "capture-failed"
+
+
+def test_webui_build_run_command_can_enable_align_fallback() -> None:
+    command = build_command(
+        {
+            "stage": "run",
+            "workdir": "work-test",
+            "media_path": "input.mp3",
+            "asr_model": "asr",
+            "align_model": "align",
+            "dtype": "fp16",
+            "device": "cuda:0",
+            "format": "srt",
+            "source": "auto",
+            "normalize_source": "auto",
+            "align_fallback": "asr-short-window",
+            "align_fallback_window_seconds": 2.5,
+        }
+    )
+
+    assert command[command.index("--align-fallback") + 1] == "asr-short-window"
+    assert command[command.index("--align-fallback-window-seconds") + 1] == "2.5"
+
+
+def test_webui_build_run_includes_integrated_mimo_proofread_mode() -> None:
+    command = build_command(
+        {
+            "stage": "run",
+            "workdir": "work-test",
+            "media_path": "input.mp3",
+            "asr_model": "asr",
+            "align_model": "align",
+            "dtype": "fp16",
+            "device": "cuda:0",
+            "format": "srt",
+            "source": "auto",
+            "normalize_source": "auto",
+            "with_mimo_proofread": True,
+        }
+    )
+    assert "--with-mimo-proofread" in command
+
+
+def _speaker_stage_payloads(enroll: str) -> dict[str, dict]:
+    common = {
+        "workdir": "work-test",
+        "media_path": "input.mp3",
+        "asr_model": "asr",
+        "align_model": "align",
+        "dtype": "fp16",
+        "device": "cuda:0",
+        "format": "srt",
+        "source": "auto",
+        "normalize_source": "auto",
+        "speaker_enroll": enroll,
+        "speakers": "理名,朱李",
+    }
+    return {
+        stage: {**common, "stage": stage, **({"media_paths": ["a.mp3", "b.mp3"]} if stage == "batch-run" else {})}
+        for stage in ("align", "split", "export", "run", "batch-run")
+    }
+
+
+def test_webui_speaker_enroll_is_passed_to_speaker_stages(tmp_path: Path) -> None:
+    from qwen_asr.cli import build_parser
+
+    enroll = tmp_path / "enroll.json"
+    enroll.write_text("{}", encoding="utf-8")
+    for stage, payload in _speaker_stage_payloads(str(enroll)).items():
+        command = build_command(payload)
+        assert command[command.index("--speaker-enroll") + 1] == str(enroll), stage
+        assert command[command.index("--speakers") + 1] == "理名,朱李", stage
+        args = build_parser().parse_args(command[2:])  # the real CLI must accept every flag the Web UI sends
+        assert str(args.speaker_enroll) == str(enroll), stage
+        assert args.speakers == "理名,朱李", stage
+
+
+def test_webui_speaker_enroll_is_optional_and_validated(tmp_path: Path) -> None:
+    for stage, payload in _speaker_stage_payloads("").items():
+        command = build_command(payload)
+        assert "--speaker-enroll" not in command and "--speakers" not in command, stage
+    missing = _speaker_stage_payloads(str(tmp_path / "missing.json"))["run"]
+    with pytest.raises(ValueError, match="Speaker enrollment file not found"):
+        build_command(missing)
+
+
+def test_webui_index_has_speaker_controls() -> None:
+    for snippet in (
+        'id="speakerEnroll"',
+        'id="speakers"',
+        "/api/pick-speaker-enroll",
+        "speaker_enroll: document.getElementById('speakerEnroll').value",
+        "'speakerEnroll', 'speakers'",
+        "['srt', 'vtt', 'ass']",
+    ):
+        assert snippet in INDEX_HTML, snippet
+
+
+def test_webui_ci_preset_files_reach_cli(tmp_path: Path) -> None:
+    """ASR context goes to transcribe/run/batch-run; program memory to normalize/run/batch-run (same as the togeradi CI preset)."""
+    from qwen_asr.cli import build_parser
+
+    context = tmp_path / "context.txt"
+    context.write_text("理名,夕莉", encoding="utf-8")
+    memory = tmp_path / "memory.json"
+    memory.write_text("{}", encoding="utf-8")
+    base = _speaker_stage_payloads("")["run"]
+    extra = {"asr_context_file": str(context), "program_memory_file": str(memory)}
+    for stage, flags in (
+        ("transcribe", {"--asr-context-file"}),
+        ("normalize", {"--program-memory-file"}),
+        ("run", {"--asr-context-file", "--program-memory-file"}),
+        ("batch-run", {"--asr-context-file", "--program-memory-file"}),
+    ):
+        payload = {**base, **extra, "stage": stage, **({"media_paths": ["a.mp3", "b.mp3"]} if stage == "batch-run" else {})}
+        command = build_command(payload)
+        args = build_parser().parse_args(command[2:])
+        for flag in ("--asr-context-file", "--program-memory-file"):
+            assert (flag in command) == (flag in flags), (stage, flag)
+        if "--asr-context-file" in flags:
+            assert args.asr_context_file == str(context), stage
+        if "--program-memory-file" in flags:
+            assert args.program_memory_file == str(memory), stage
+    with pytest.raises(ValueError, match="Program memory file not found"):
+        build_command({**base, "program_memory_file": str(tmp_path / "missing.json")})
+
+
+def test_webui_recovery_options_reach_run_and_batch_run() -> None:
+    from qwen_asr.cli import build_parser
+
+    base = _speaker_stage_payloads("")
+    for stage in ("run", "batch-run"):
+        command = build_command(base[stage])
+        assert "--align-recovery" not in command and "--proofread-realign-mfa-fallback" not in command, stage
+        payload = {**base[stage], "align_recovery": "auto", "proofread_realign_mfa_fallback": "local"}
+        args = build_parser().parse_args(build_command(payload)[2:])
+        assert args.align_recovery == "auto", stage
+        assert args.proofread_realign_mfa_fallback == "local", stage
+
+
+def test_webui_index_has_ci_preset_file_controls() -> None:
+    for snippet in (
+        'id="asrContextFile"',
+        'id="programMemoryFile"',
+        "/api/pick-asr-context-file",
+        "/api/pick-program-memory-file",
+        "asr_context_file: document.getElementById('asrContextFile').value",
+        "program_memory_file: document.getElementById('programMemoryFile').value",
+        "'asrContextFile', 'programMemoryFile', 'alignRecovery', 'proofreadRealignMfaFallback'",
+        'id="alignRecovery"',
+        'id="proofreadRealignMfaFallback"',
+    ):
+        assert snippet in INDEX_HTML, snippet
+
+
+def test_webui_build_align_command_uses_cleanup_interval_default() -> None:
+    command = build_command(
+        {
+            "stage": "align",
+            "workdir": "work-test",
+            "align_model": "align",
+            "dtype": "fp16",
+            "device": "cuda",
+        }
+    )
+
+    assert command[command.index("--cleanup-interval") + 1] == "4"
+    assert command[command.index("--model-cache-dir") + 1] == str(DEFAULT_MODEL_CACHE_DIR)
+
+
+def test_webui_build_align_command_can_enable_diagnostics() -> None:
+    command = build_command(
+        {
+            "stage": "align",
+            "workdir": "work-test",
+            "align_model": "align",
+            "dtype": "fp16",
+            "device": "cuda",
+            "align_diagnostics_mode": "capture-failed",
+        }
+    )
+
+    assert command[command.index("--align-diagnostics-mode") + 1] == "capture-failed"
+
+
+def test_webui_build_align_command_can_enable_asr_short_window_fallback() -> None:
+    command = build_command(
+        {
+            "stage": "align",
+            "workdir": "work-test",
+            "asr_model": "asr",
+            "align_model": "align",
+            "dtype": "fp16",
+            "device": "cuda",
+            "align_fallback": "asr-short-window",
+            "align_fallback_window_seconds": 2.5,
+        }
+    )
+
+    assert command[command.index("--align-fallback") + 1] == "asr-short-window"
+    assert command[command.index("--align-fallback-window-seconds") + 1] == "2.5"
+    assert command[command.index("--asr-reference-model") + 1] == "asr"
+
+
+def test_webui_build_transcribe_command_uses_local_model_cache_by_default() -> None:
+    command = build_command(
+        {
+            "stage": "transcribe",
+            "workdir": "work-test",
+            "asr_model": "asr",
+            "dtype": "fp16",
+            "device": "cuda",
+        }
+    )
+
+    assert command[command.index("--model-cache-dir") + 1] == str(DEFAULT_MODEL_CACHE_DIR)
+    assert "--local-files-only" in command
+    assert "--no-local-files-only" not in command
+
+
+def test_webui_build_batch_run_command_uses_media_list() -> None:
+    command = build_command(
+        {
+            "stage": "batch-run",
+            "workdir": "batch-work",
+            "asr_model": "asr",
+            "align_model": "align",
+            "dtype": "fp16",
+            "device": "cuda:0",
+            "format": "srt",
+            "source": "auto",
+            "normalize_source": "auto",
+            "media_paths": ["a.mp3", "b.mp4"],
+        }
+    )
+
+    assert command[:5] == [python_runtime(), str(ROOT / "main.py"), "batch-run", "--workdir", "batch-work"]
+    assert command[-2:] == ["a.mp3", "b.mp4"]
+    assert command[command.index("--model-cache-dir") + 1] == str(DEFAULT_MODEL_CACHE_DIR)
+
+
+def test_webui_build_batch_run_command_can_enable_align_diagnostics() -> None:
+    command = build_command(
+        {
+            "stage": "batch-run",
+            "workdir": "batch-work",
+            "asr_model": "asr",
+            "align_model": "align",
+            "dtype": "fp16",
+            "device": "cuda:0",
+            "format": "srt",
+            "source": "auto",
+            "normalize_source": "auto",
+            "align_diagnostics_mode": "capture-failed",
+            "media_paths": ["a.mp3"],
+        }
+    )
+
+    assert command[command.index("--align-diagnostics-mode") + 1] == "capture-failed"
+
+
+def test_webui_build_batch_run_command_can_enable_align_fallback() -> None:
+    command = build_command(
+        {
+            "stage": "batch-run",
+            "workdir": "batch-work",
+            "asr_model": "asr",
+            "align_model": "align",
+            "dtype": "fp16",
+            "device": "cuda:0",
+            "format": "srt",
+            "source": "auto",
+            "normalize_source": "auto",
+            "align_fallback": "asr-short-window",
+            "align_fallback_window_seconds": 2.5,
+            "media_paths": ["a.mp3"],
+        }
+    )
+
+    assert command[command.index("--align-fallback") + 1] == "asr-short-window"
+    assert command[command.index("--align-fallback-window-seconds") + 1] == "2.5"
+
+
+def test_webui_build_batch_run_command_supports_manifest() -> None:
+    command = build_command(
+        {
+            "stage": "batch-run",
+            "workdir": "batch-work",
+            "asr_model": "asr",
+            "align_model": "align",
+            "dtype": "fp16",
+            "device": "cuda:0",
+            "format": "srt",
+            "source": "auto",
+            "normalize_source": "auto",
+            "batch_manifest": "tasks.jsonl",
+        }
+    )
+
+    assert command[command.index("--manifest") + 1] == "tasks.jsonl"
+
+
+def test_webui_python_runtime_prefers_project_venv() -> None:
+    expected = ROOT / ".venv312" / "Scripts" / "python.exe"
+    if expected.exists():
+        assert python_runtime() == str(expected)
+    else:
+        assert python_runtime() == sys.executable
+
+
+def test_default_optimizer_root_points_to_project_optimizer() -> None:
+    assert DEFAULT_OPTIMIZER_ROOT == ROOT / "optimizer"
+    assert DEFAULT_OPTIMIZER_ROOT.exists()
+
+
+def test_webapp_root_reexports_dynamic_active_job() -> None:
+    original = server.ACTIVE_JOB
+    try:
+        server.ACTIVE_JOB = {"status": "running"}
+        assert webapp.ACTIVE_JOB == {"status": "running"}
+    finally:
+        server.ACTIVE_JOB = original
+
+
+def test_pick_media_file_runs_dialog_in_child_process(monkeypatch, tmp_path: Path) -> None:
+    selected = tmp_path / "input.mp3"
+
+    def fake_run(*args, **kwargs):
+        return subprocess.CompletedProcess(args=args[0], returncode=0, stdout=f"{selected}\n", stderr="")
+
+    monkeypatch.setattr(server.subprocess, "run", fake_run)
+
+    assert server.pick_media_file() == {"cancelled": False, "path": str(selected.resolve())}
+
+
+def test_pick_media_file_reports_cancelled(monkeypatch) -> None:
+    def fake_run(*args, **kwargs):
+        return subprocess.CompletedProcess(args=args[0], returncode=0, stdout="\n", stderr="")
+
+    monkeypatch.setattr(server.subprocess, "run", fake_run)
+
+    assert server.pick_media_file() == {"cancelled": True}
+
+
+def test_pick_media_files_runs_dialog_in_child_process(monkeypatch, tmp_path: Path) -> None:
+    selected_a = tmp_path / "a.mp3"
+    selected_b = tmp_path / "b.mp4"
+
+    def fake_run(*args, **kwargs):
+        stdout = f"{selected_a}\n{selected_b}\n"
+        return subprocess.CompletedProcess(args=args[0], returncode=0, stdout=stdout, stderr="")
+
+    monkeypatch.setattr(server.subprocess, "run", fake_run)
+
+    assert server.pick_media_files() == {
+        "cancelled": False,
+        "paths": [str(selected_a.resolve()), str(selected_b.resolve())],
+    }
+
+
+def test_pick_media_files_reports_cancelled(monkeypatch) -> None:
+    def fake_run(*args, **kwargs):
+        return subprocess.CompletedProcess(args=args[0], returncode=0, stdout="\n", stderr="")
+
+    monkeypatch.setattr(server.subprocess, "run", fake_run)
+
+    assert server.pick_media_files() == {"cancelled": True, "paths": []}
+
+
+def test_pick_batch_manifest_runs_dialog_in_child_process(monkeypatch, tmp_path: Path) -> None:
+    selected = tmp_path / "tasks.jsonl"
+
+    def fake_run(*args, **kwargs):
+        return subprocess.CompletedProcess(args=args[0], returncode=0, stdout=f"{selected}\n", stderr="")
+
+    monkeypatch.setattr(server.subprocess, "run", fake_run)
+
+    assert server.pick_batch_manifest() == {"cancelled": False, "path": str(selected.resolve())}
+
+
+def test_pick_batch_manifest_reports_cancelled(monkeypatch) -> None:
+    def fake_run(*args, **kwargs):
+        return subprocess.CompletedProcess(args=args[0], returncode=0, stdout="\n", stderr="")
+
+    monkeypatch.setattr(server.subprocess, "run", fake_run)
+
+    assert server.pick_batch_manifest() == {"cancelled": True}
+
+
+def test_webui_status_reads_batch_summary(tmp_path: Path) -> None:
+    summary_dir = tmp_path / "summary"
+    summary_dir.mkdir(parents=True)
+    (summary_dir / "batch-summary.json").write_text(
+        '{"total":2,"succeeded":1,"failed":1,"tasks":[{"media":"a.mp3","workdir":"w1","status":"failed","error":"boom"}]}',
+        encoding="utf-8",
+    )
+    (tmp_path / "logs").mkdir()
+    (tmp_path / "logs" / "batch-run.log").write_text("line1\nline2\n", encoding="utf-8")
+
+    status = get_status(str(tmp_path))
+
+    assert status["batch_summary"]["total"] == 2
+    assert "batch-run" in status["logs"]
+
+
+def test_webui_status_exposes_quality_gate_report_and_log(tmp_path: Path) -> None:
+    paths = WorkPaths.from_workdir(tmp_path)
+    paths.final_quality_report.parent.mkdir(parents=True, exist_ok=True)
+    paths.logs_dir.mkdir(parents=True, exist_ok=True)
+    paths.final_quality_report.write_text(
+        '{"status":"WARN","summary":{"fail_count":0,"warn_count":1,"pass_count":3}}',
+        encoding="utf-8",
+    )
+    (paths.logs_dir / "quality-gate.log").write_text("quality-gate WARN\n", encoding="utf-8")
+
+    status = get_status(str(tmp_path))
+
+    assert status["files"]["final_quality"] is True
+    assert status["counts"]["final_quality"] == 4
+    assert "quality-gate" in status["logs"]
+
+
+def test_webui_status_exposes_proofread_realign_report_and_log(tmp_path: Path) -> None:
+    paths = WorkPaths.from_workdir(tmp_path)
+    report_path = paths.workdir / "reports" / "proofread_realign.json"
+    report_path.parent.mkdir(parents=True, exist_ok=True)
+    paths.logs_dir.mkdir(parents=True, exist_ok=True)
+    report_path.write_text(
+        '{"status":"WARN","candidate_count":3,"completed_count":2,"failed_count":0,"fallback_count":1}',
+        encoding="utf-8",
+    )
+    (paths.logs_dir / "proofread-realign.log").write_text("proofread-realign WARN\n", encoding="utf-8")
+
+    status = get_status(str(tmp_path))
+
+    assert status["files"]["proofread_realign"] is True
+    assert status["counts"]["proofread_realign"] == 5
+    assert "proofread-realign" in status["logs"]
+
+
+def test_webui_quality_gate_progress_uses_final_report(tmp_path: Path) -> None:
+    paths = WorkPaths.from_workdir(tmp_path)
+    paths.final_quality_report.parent.mkdir(parents=True, exist_ok=True)
+    paths.final_quality_report.write_text(
+        '{"status":"WARN","summary":{"fail_count":0,"warn_count":1,"pass_count":3}}',
+        encoding="utf-8",
+    )
+
+    progress = build_progress({"workdir": str(tmp_path), "stage": "quality-gate", "status": "completed"})
+
+    assert progress["summary"] == "quality-gate WARN: 0 FAIL, 1 WARN"
+    assert progress["completed"] == 3
+    assert progress["total"] == 4
+
+
+def test_webui_proofread_realign_progress_uses_report(tmp_path: Path) -> None:
+    paths = WorkPaths.from_workdir(tmp_path)
+    report_path = paths.workdir / "reports" / "proofread_realign.json"
+    report_path.parent.mkdir(parents=True, exist_ok=True)
+    report_path.write_text(
+        '{"status":"WARN","candidate_count":3,"completed_count":2,"failed_count":0,"fallback_count":1}',
+        encoding="utf-8",
+    )
+
+    progress = build_progress({"workdir": str(tmp_path), "stage": "proofread-realign", "status": "completed"})
+
+    assert progress["summary"] == "proofread-realign WARN: 2 completed, 0 failed, 1 fallback"
+    assert progress["completed"] == 2
+    assert progress["total"] == 3
+
+
+def test_webui_stage_progress_ignores_saved_progress_from_other_stage(tmp_path: Path) -> None:
+    paths = WorkPaths.from_workdir(tmp_path)
+    report_path = paths.workdir / "reports" / "proofread_realign.json"
+    report_path.parent.mkdir(parents=True, exist_ok=True)
+    report_path.write_text(
+        '{"status":"WARN","candidate_count":3,"completed_count":2,"failed_count":0,"fallback_count":1}',
+        encoding="utf-8",
+    )
+    paths.progress_path.write_text(
+        '{"stage":"quality-gate","status":"failed","done":0,"total":9,"summary":"stale quality gate"}',
+        encoding="utf-8",
+    )
+
+    progress = build_progress({"workdir": str(tmp_path), "stage": "proofread-realign", "status": "completed"})
+
+    assert progress["stage"] == "proofread-realign"
+    assert progress["summary"] == "proofread-realign WARN: 2 completed, 0 failed, 1 fallback"
+
+
+def test_webui_normalize_asr_language_is_case_insensitive() -> None:
+    assert normalize_asr_language("japanese") == "Japanese"
+    assert normalize_asr_language("") == ""
+
+
+def test_webui_index_html_loads_from_template_file() -> None:
+    assert INDEX_TEMPLATE_PATH.exists()
+    assert load_index_html() == INDEX_HTML
+    assert "<!doctype html>" in INDEX_HTML
+
+
+def test_webui_index_keeps_payload_control_ids() -> None:
+    required_ids = [
+        "mediaPath",
+        "mediaPaths",
+        "batchManifestPath",
+        "workdir",
+        "denoise",
+        "denoiseBackend",
+        "denoiseLevel",
+        "denoiseProfile",
+        "mdxModel",
+        "mdxModelDir",
+        "vadBackend",
+        "pyannoteOnnxModel",
+        "vadOnset",
+        "vadOffset",
+        "vadThreshold",
+        "vadMinSpeechMs",
+        "vadMinSilenceMs",
+        "vadSpeechPadMs",
+        "maxSegmentSeconds",
+        "minSegmentSeconds",
+        "preferredSilenceMs",
+        "minSilenceMs",
+        "paddingMs",
+        "overlapMs",
+        "asrModel",
+        "asrLanguage",
+        "alignModel",
+        "dtype",
+        "device",
+        "localFilesOnly",
+        "llmModel",
+        "threadNum",
+        "splitMaxWordCountCjk",
+        "splitMaxWordCountEnglish",
+        "proofreadKind",
+        "correctBatchNum",
+        "translateBatchNum",
+        "llmTimeout",
+        "disableThinking",
+        "llmExtraBodyJson",
+        "llmBaseUrl",
+        "mimoProofreadMode",
+        "mimoProofreadWorkers",
+        "mimoNearbyBatchSize",
+        "mimoNearbyBatchMaxGapS",
+        "mimoNearbyPaddingS",
+        "mimoNearbyContextSubtitles",
+        "mimoNearbyAudioWorkers",
+        "mimoProofreadMaxTokens",
+        "mimoCompactOutput",
+        "mimoProofreadOutputDir",
+        "targetLanguage",
+        "normalizeSource",
+        "normalizeExtendMs",
+        "normalizeSnapGapMs",
+        "normalizeMinBlankMs",
+        "translateCustomPrompt",
+        "glossaryXlsx",
+        "format",
+        "source",
+        "exportMode",
+        "exportPath",
+        "withAlign",
+        "withCorrect",
+        "withNormalize",
+        "withSplit",
+        "withTranslate",
+    ]
+
+    for control_id in required_ids:
+        assert f'id="{control_id}"' in INDEX_HTML or f"id='{control_id}'" in INDEX_HTML
+
+    assert 'id="normalizeGlossaryButton"' in INDEX_HTML
+    assert 'id="correctButton"' not in INDEX_HTML
+    assert 'id="mimoProofreadButton"' not in INDEX_HTML
+
+
+def test_webui_index_has_workflow_validation_and_log_tabs() -> None:
+    assert "function validateBeforeStart" in INDEX_HTML
+    assert "function sanitizedSettings" in INDEX_HTML
+    assert "llmApiKey" not in INDEX_HTML
+    assert "llm_api_key" not in INDEX_HTML
+    assert "普通校对" in INDEX_HTML
+    assert "MiMo + 音频校对" in INDEX_HTML
+    assert 'id="llmModel" value="gemini-3.8-flash-high"' in INDEX_HTML
+    assert 'id="threadNum" type="number" min="1" step="1" value="4"' in INDEX_HTML
+    assert 'id="mimoProofreadWorkers" type="number" min="1" step="1" value="10"' in INDEX_HTML
+    assert "{{DEFAULT_" not in INDEX_HTML
+    assert "proofreadKind" in INDEX_HTML
+    assert "startStage('correct')" not in INDEX_HTML
+    assert "function renderPipeline" in INDEX_HTML
+    assert "function renderLogs" in INDEX_HTML
+    assert "logTabs" in INDEX_HTML
+    assert "api/import-media" not in INDEX_HTML
+    assert "mediaFile" not in INDEX_HTML
+    assert "function pickMedia" in INDEX_HTML
+    assert "function pickMediaList" in INDEX_HTML
+    assert "function pickBatchManifest" in INDEX_HTML
+    assert "function renderBatchSummary" in INDEX_HTML
+    assert "function batchManifestPath" in INDEX_HTML
+    assert "function parsedMediaPaths" in INDEX_HTML
+    assert "function effectiveStage" in INDEX_HTML
+    assert "/api/pick-media-list" in INDEX_HTML
+    assert "/api/pick-batch-manifest" in INDEX_HTML
+    assert "batch-run" in INDEX_HTML
+    assert "mimo-proofread" in INDEX_HTML
+    assert "proofread-realign" in INDEX_HTML
+    assert "proofread_realign" in INDEX_HTML
+    assert "function normalizeGlossary" in INDEX_HTML
+    assert "/api/glossary-normalize" in INDEX_HTML
+    assert "function suggestWorkdir" in INDEX_HTML
+
+
+def test_webui_workbench_keeps_legacy_page_and_uses_new_root_shell() -> None:
+    assert "KoeAxis 字幕工作台" in WORKBENCH_HTML
+    assert "/static/workbench.css" in WORKBENCH_HTML
+    assert "/static/workbench.js" in WORKBENCH_HTML
+    assert "运行设置与兼容页面" in WORKBENCH_HTML
+    assert "function deleteCurrentWorkspace" in INDEX_HTML
+    assert "function deleteAllWorkspaces" in INDEX_HTML
+    assert "Object.prototype.hasOwnProperty.call(logs, active)" in INDEX_HTML
+    assert "/api/delete-workspaces" in INDEX_HTML
+
+
+def test_webui_index_has_workbench_structure() -> None:
+    required_nodes = [
+        "configShell",
+        "configRail",
+        "configDrawer",
+        "workspace",
+        "jobSummary",
+        "pipelinePanel",
+        "artifactsPanel",
+        "logsPanel",
+        "pipelineTimeline",
+    ]
+
+    for node_id in required_nodes:
+        assert f'id="{node_id}"' in INDEX_HTML or f"id='{node_id}'" in INDEX_HTML
+
+
+def test_webui_index_has_config_drawer_state_functions() -> None:
+    required_functions = [
+        "function toggleConfig",
+        "function applyConfigState",
+        "function openConfigGroup",
+        "function renderJobSummary",
+        "function renderPipeline",
+    ]
+
+    for function_name in required_functions:
+        assert function_name in INDEX_HTML
+
+    assert "qwen3_asr_webui_ui_state_v1" in INDEX_HTML
+    assert "const LEGACY_SETTINGS_KEYS" in INDEX_HTML
+    assert "LEGACY_SETTINGS_KEYS.forEach" in INDEX_HTML
+
+
+def test_webui_index_does_not_ship_machine_specific_defaults() -> None:
+    assert 'value="E:\\\\project' not in INDEX_HTML
+    assert 'placeholder="E:\\\\project' not in INDEX_HTML
+    assert "qwen3_asr_webui_settings_v2" not in INDEX_HTML
+    assert "qwen3_asr_webui_settings_v3" in INDEX_HTML
+    assert "koeaxis_webui_settings_v1" in INDEX_HTML
+
+
+def test_webui_suggest_workdir_uses_workspace_numbering(tmp_path: Path, monkeypatch) -> None:
+    monkeypatch.setattr("qwen_asr.web.commands.WORKSPACES_DIR", tmp_path)
+    (tmp_path / "0001-old").mkdir()
+
+    suggested = suggest_workdir(r"D:\media\demo.video.mp4")
+
+    assert suggested == tmp_path / "0002-demo.video"
+
+
+def test_webui_resolve_deletable_workspace_rejects_outside_paths(tmp_path: Path, monkeypatch) -> None:
+    monkeypatch.setattr("qwen_asr.web.commands.WORKSPACES_DIR", tmp_path)
+    allowed = tmp_path / "0001-demo"
+    allowed.mkdir()
+
+    assert resolve_deletable_workspace(str(allowed)) == allowed.resolve()
+    try:
+        resolve_deletable_workspace(str(tmp_path.parent / "backups"))
+    except ValueError as exc:
+        assert "workspaces" in str(exc)
+    else:
+        raise AssertionError("outside paths must be rejected")
+
+
+def test_webui_resolve_deletable_workspaces_lists_all_projects(tmp_path: Path, monkeypatch) -> None:
+    monkeypatch.setattr("qwen_asr.web.commands.WORKSPACES_DIR", tmp_path)
+    allowed_a = tmp_path / "0001-demo"
+    allowed_b = tmp_path / "0002-demo"
+    ignored = tmp_path / "manual"
+    allowed_a.mkdir()
+    allowed_b.mkdir()
+    ignored.mkdir()
+
+    assert resolve_deletable_workspaces() == [allowed_a.resolve(), allowed_b.resolve()]
+    assert resolve_deletable_workspaces([str(allowed_a), str(allowed_a), str(allowed_b)]) == [
+        allowed_a.resolve(),
+        allowed_b.resolve(),
+    ]
+
+    try:
+        resolve_deletable_workspaces([str(tmp_path.parent / "backups")])
+    except ValueError as exc:
+        assert "workspaces" in str(exc)
+    else:
+        raise AssertionError("outside paths must be rejected")
+
+
+def test_webui_delete_workspaces_deletes_all_deletable_projects(tmp_path: Path, monkeypatch) -> None:
+    monkeypatch.setattr("qwen_asr.web.commands.WORKSPACES_DIR", tmp_path)
+    monkeypatch.setattr("qwen_asr.web.server.WORKSPACES_DIR", tmp_path, raising=False)
+    allowed_a = tmp_path / "0001-demo"
+    allowed_b = tmp_path / "0002-demo"
+    ignored = tmp_path / "manual"
+    allowed_a.mkdir()
+    allowed_b.mkdir()
+    ignored.mkdir()
+
+    result = server.delete_workspaces()
+
+    assert result["count"] == 2
+    assert not allowed_a.exists()
+    assert not allowed_b.exists()
+    assert ignored.exists()
+
+
+def test_webui_delete_workspaces_rejects_non_list_selection() -> None:
+    try:
+        server.delete_workspaces("not-a-list")
+    except RuntimeError as exc:
+        assert "workdirs must be a list" in str(exc)
+    else:
+        raise AssertionError("non-list workdirs should be rejected")
+
+
+def test_webui_normalize_glossary_xlsx_returns_output_and_count(tmp_path: Path) -> None:
+    source = tmp_path / "glossary.xlsx"
+    _write_single_sheet_xlsx(
+        source,
+        "Input",
+        [["group", "source", "target", "note"], ["Terms", "A", "B", ""]],
+    )
+
+    result = server.normalize_glossary_xlsx(str(source))
+
+    assert result["count"] == 1
+    assert Path(result["output"]).exists()
+    assert Path(result["output"]).name == "glossary.normalized.xlsx"
+
+
+def test_webui_normalize_glossary_xlsx_rejects_empty_path() -> None:
+    try:
+        server.normalize_glossary_xlsx("")
+    except RuntimeError as exc:
+        assert "path is required" in str(exc)
+    else:
+        raise AssertionError("empty glossary path should be rejected")

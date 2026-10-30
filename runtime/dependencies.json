@@ -1,0 +1,172 @@
+[
+  {
+    "name": "openai",
+    "version": "2.33.0",
+    "modules": [
+      "openai"
+    ]
+  },
+  {
+    "name": "typing-extensions",
+    "version": "4.15.0",
+    "modules": [
+      "typing_extensions"
+    ]
+  },
+  {
+    "name": "tqdm",
+    "version": "4.67.3",
+    "modules": [
+      "tqdm"
+    ]
+  },
+  {
+    "name": "colorama",
+    "version": "0.4.6",
+    "modules": [
+      "colorama"
+    ]
+  },
+  {
+    "name": "sniffio",
+    "version": "1.3.1",
+    "modules": [
+      "sniffio"
+    ]
+  },
+  {
+    "name": "pydantic",
+    "version": "2.13.3",
+    "modules": [
+      "pydantic"
+    ]
+  },
+  {
+    "name": "typing-inspection",
+    "version": "0.4.2",
+    "modules": [
+      "typing_inspection"
+    ]
+  },
+  {
+    "name": "pydantic-core",
+    "version": "2.46.3",
+    "modules": [
+      "pydantic_core"
+    ]
+  },
+  {
+    "name": "annotated-types",
+    "version": "0.7.0",
+    "modules": [
+      "annotated_types"
+    ]
+  },
+  {
+    "name": "jiter",
+    "version": "0.14.0",
+    "modules": [
+      "jiter"
+    ]
+  },
+  {
+    "name": "httpx",
+    "version": "0.28.1",
+    "modules": [
+      "httpx"
+    ]
+  },
+  {
+    "name": "idna",
+    "version": "3.13",
+    "modules": [
+      "idna"
+    ]
+  },
+  {
+    "name": "httpcore",
+    "version": "1.0.9",
+    "modules": [
+      "httpcore"
+    ]
+  },
+  {
+    "name": "h11",
+    "version": "0.16.0",
+    "modules": [
+      "h11"
+    ]
+  },
+  {
+    "name": "certifi",
+    "version": "2026.4.22",
+    "modules": [
+      "certifi"
+    ]
+  },
+  {
+    "name": "anyio",
+    "version": "4.13.0",
+    "modules": [
+      "anyio"
+    ]
+  },
+  {
+    "name": "distro",
+    "version": "1.9.0",
+    "modules": [
+      "distro"
+    ]
+  },
+  {
+    "name": "json_repair",
+    "version": "0.58.3",
+    "modules": [
+      "json_repair"
+    ]
+  },
+  {
+    "name": "orjson",
+    "version": "3.11.8",
+    "modules": [
+      "orjson"
+    ]
+  },
+  {
+    "name": "six",
+    "version": "1.17.0",
+    "modules": [
+      "six"
+    ]
+  },
+  {
+    "name": "numpy",
+    "version": "2.4.4",
+    "modules": [
+      "numpy"
+    ]
+  },
+  {
+    "name": "soundfile",
+    "version": "0.13.1",
+    "modules": [
+      "soundfile",
+      "_soundfile"
+    ]
+  },
+  {
+    "name": "cffi",
+    "version": "2.0.0",
+    "modules": [
+      "cffi",
+      "_cffi_backend"
+    ]
+  },
+  {
+    "name": "pycparser",
+    "version": "3.0",
+    "modules": [
+      "pycparser"
+    ]
+  }
+]

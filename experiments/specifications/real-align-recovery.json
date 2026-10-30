@@ -1,0 +1,19 @@
+{
+  "id": "REAL-ALIGN-RECOVERY-001",
+  "version": "1",
+  "purpose": "Segment 41 short-window/MFA recovery and a real cooperative file lock. Offline reference does not load models. Not a full-chain pass.",
+  "entry": {"module_id": "test.real.align.recovery", "operation_id": "run", "interface_version": "0.1.0-real-align-recovery"},
+  "profile": "real-align-recovery-v1",
+  "owner": "test.real.align.recovery",
+  "input_identity": "fixed baseline transcript segment_000041; raw text is recorded only as a difference",
+  "allowed_variable": "REAL_ALIGN_RECOVERY_MODE=real loads one GPU model at a time and MFA; unset is offline",
+  "order": ["acquire filelock", "stage.align", "release filelock"],
+  "repetitions": 1,
+  "failure_policy": "release the lock in finally; keep the host result; no retries",
+  "randomness": "none in offline mode",
+  "cache_policy": "python -B; no bytecode in the legacy repository",
+  "permissions": {"write": "new runs/experiments/<id> evidence, REAL-ALIGN-RECOVERY-001 workdir, or session scratch", "read": "legacy transcript/audio/MFA resources and the existing model cache", "network": false, "models": "only when REAL_ALIGN_RECOVERY_MODE=real", "processes": "MFA subprocess and lock probes", "credentials": false},
+  "oracle": "offline host evidence is the replay reference; real segment comparison is reported separately and is not a full-chain pass",
+  "required_evidence": ["evidence/cases.json", "evidence/report.json"],
+  "not_accepted": ["P1 promotion", "external GPU process exclusion", "full ASR-to-subtitle chain", "erasing short-window or token differences"]
+}

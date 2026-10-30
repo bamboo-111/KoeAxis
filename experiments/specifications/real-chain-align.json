@@ -1,0 +1,19 @@
+{
+  "id": "REAL-CHAIN-ALIGN-001",
+  "version": "1",
+  "purpose": "Align the explicit current corrected transcript; recover failed segments without reading baseline manifests as execution input.",
+  "entry": {"module_id": "test.real.align.recovery", "operation_id": "run_chain", "interface_version": "0.1.0-real-align-recovery"},
+  "profile": "real-align-recovery-v1",
+  "owner": "test.real.align.recovery",
+  "input_identity": "explicit current corrected transcript and raw; explicit referenced audio",
+  "allowed_variable": "REAL_CHAIN_ALIGN_MODE=real runs models; unset runs synthetic offline",
+  "order": ["acquire filelock", "stage.align/run_bound", "release filelock"],
+  "repetitions": 1,
+  "failure_policy": "release lock in finally; preserve failures",
+  "randomness": "none in offline mode",
+  "cache_policy": "local models only; writable caches outside legacy repository",
+  "permissions": {"write": "new run output", "read": "current transcript and raw, audio and local model resources", "network": false, "models": "explicit real mode only", "processes": "MFA subprocess", "credentials": false},
+  "oracle": "offline synthetic reference; real output comparison reported independently",
+  "required_evidence": ["evidence/cases.json", "evidence/report.json"],
+  "not_accepted": ["full chain pass", "baseline used as execution input", "uncooperative GPU exclusion"]
+}

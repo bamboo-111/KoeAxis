@@ -1,0 +1,29 @@
+{
+  "id": "REAL-LLM-STAGES-001",
+  "version": "1",
+  "purpose": "Episode 54 stage-level Gemini semantic grouping, translation, and text proofread. The registered root calls stage.split/run, stage.translate/run, and stage.text_proofread/run. Offline replay does not open a socket.",
+  "entry": {"module_id": "test.real.llm.stages", "operation_id": "run", "interface_version": "0.1.0-real-llm-stages"},
+  "profile": "real-llm-stages-v1",
+  "owner": "test.real.llm.stages",
+  "input_identity": "baseline B upstream manifests for episode 54; read-only; not this run's ASR chain",
+  "allowed_variable": "REAL_LLM_STAGES_ONLINE=1 selects the explicit online grant; unset stays offline. REAL_CHAIN_BIND_UPSTREAM, when set, makes the same root call run_bound instead of run",
+  "order": ["offline or explicit online grant", "stage.split/run", "stage.translate/run", "stage.text_proofread/run"],
+  "bind_order": ["stage.split/run_bound", "stage.translate/run_bound", "stage.text_proofread/run_bound"],
+  "repetitions": "online runs each stage twice when the first pass is not a deterministic stop; offline runs once with zero requests",
+  "failure_policy": "deterministic HTTP 400 or 401 stops that stage with no further retries; transient failures stay inside the legacy limited retry; MiMo is not requested",
+  "randomness": "provider text may vary; semantic merge temperature is 0 and translation temperature is the legacy 0.3",
+  "cache_policy": "python -B; no bytecode",
+  "permissions": {
+    "offline": {"network": false, "credentials": false, "when": "REAL_LLM_STAGES_ONLINE unset"},
+    "online": {
+      "network": true,
+      "credentials": ["GEMINI_API_KEY", "GEMINI_BASE_URL", "GEMINI_MODEL"],
+      "endpoints": "existing Gemini native generateContent only",
+      "when": "REAL_LLM_STAGES_ONLINE=1",
+      "host_enforced_isolation": false
+    }
+  },
+  "oracle": "offline attempts stay 0; online sends gemini-3.8-flash-high and does not claim the old gemini-3.8-flash alias is equivalent",
+  "required_evidence": ["evidence/report.json", "progress.json"],
+  "not_accepted": ["episode pass", "D01 pass", "old CLI as host", "promotion", "MiMo retry", "requests under an online grant whose network flag is false"]
+}

@@ -1,0 +1,230 @@
+{
+  "profile": "real-llm-stages-v1",
+  "admission": "temporary",
+  "exemptions": [],
+  "bootstrap": [
+    [
+      "real-llm-stages-split",
+      "0.1.0-real-llm-stages"
+    ],
+    [
+      "real-llm-stages-translate",
+      "0.1.0-real-llm-stages"
+    ],
+    [
+      "real-llm-stages-text",
+      "0.1.0-real-llm-stages"
+    ],
+    [
+      "real-llm-stages-suite",
+      "0.1.0-real-llm-stages"
+    ]
+  ],
+  "trusted_bootstrap": {
+    "path": "host/__init__.py",
+    "sha256": "18d90bb032b6eedde69e2eb5158f3452fc0c3ea4ba928a0c56de206b260bed22",
+    "scope": "trusted interpreter entry; audit hash, not a self-attested module source"
+  },
+  "implementations": [
+    {
+      "module_id": "stage.split",
+      "implementation_id": "real-llm-stages-split",
+      "version": "0.1.0-real-llm-stages",
+      "admission": "temporary",
+      "source": "modules/temporary/real_llm_stages/operations.py",
+      "content_files": [
+        {
+          "path": "host/__main__.py",
+          "sha256": "e0e3fe0679860f02a1270a3811048ad096764ed2f4bea01dd4ba87a516a57999"
+        },
+        {
+          "path": "host/contracts.py",
+          "sha256": "fa67f1cde6794ca445bee9d410c31cdba3b22355248d7d339a77641f2cc2ff7d"
+        },
+        {
+          "path": "host/runtime.py",
+          "sha256": "bcc71f07af88a3bdb80d361743a16deb75d9a4301f60740caea328fae9d7dff0"
+        },
+        {
+          "path": "module-registry/real_llm_stages/contracts-real-llm-stages.json",
+          "sha256": "337aeec27c7b3a39677111d17132ed9ea327690e9793a40c5ba94fdc403743e6"
+        },
+        {
+          "path": "modules/temporary/real_llm_stages/operations.py",
+          "sha256": "aafaee25c5b419acf739b4bb4db77327e2b33c435013e0428472b3777a519505"
+        },
+        {
+          "path": "experiments/references/togeradi-terms/terms.json",
+          "sha256": "7280f03768e12a761abc7af4d629ebcb8488581e189b511ba31487ef0e187b20"
+        },
+        {
+          "path": "modules/temporary/real_llm_stages/evaluation.py",
+          "sha256": "6f4609a7b1f4119aeb4d7825f227b8ecf564a1f93ea5b1473bffca5cf218b8e8"
+        },
+        {
+          "path": "experiments/references/program-content/v1.json",
+          "sha256": "2e47612e91acb5e9cdd9f1bf3eff59ad9ffa4a0b60aba3d1834754eb1865c4b4"
+        }
+      ],
+      "settings": {
+        "role": "split"
+      },
+      "content_digest": "4981bba4cc69dc4bba8b6823f1d77ae05f0fe10fe8ae5509a7d8fa023480684c"
+    },
+    {
+      "module_id": "stage.translate",
+      "implementation_id": "real-llm-stages-translate",
+      "version": "0.1.0-real-llm-stages",
+      "admission": "temporary",
+      "source": "modules/temporary/real_llm_stages/operations.py",
+      "content_files": [
+        {
+          "path": "host/__main__.py",
+          "sha256": "e0e3fe0679860f02a1270a3811048ad096764ed2f4bea01dd4ba87a516a57999"
+        },
+        {
+          "path": "host/contracts.py",
+          "sha256": "fa67f1cde6794ca445bee9d410c31cdba3b22355248d7d339a77641f2cc2ff7d"
+        },
+        {
+          "path": "host/runtime.py",
+          "sha256": "bcc71f07af88a3bdb80d361743a16deb75d9a4301f60740caea328fae9d7dff0"
+        },
+        {
+          "path": "module-registry/real_llm_stages/contracts-real-llm-stages.json",
+          "sha256": "337aeec27c7b3a39677111d17132ed9ea327690e9793a40c5ba94fdc403743e6"
+        },
+        {
+          "path": "modules/temporary/real_llm_stages/operations.py",
+          "sha256": "aafaee25c5b419acf739b4bb4db77327e2b33c435013e0428472b3777a519505"
+        },
+        {
+          "path": "experiments/references/togeradi-terms/terms.json",
+          "sha256": "7280f03768e12a761abc7af4d629ebcb8488581e189b511ba31487ef0e187b20"
+        },
+        {
+          "path": "modules/temporary/real_llm_stages/evaluation.py",
+          "sha256": "6f4609a7b1f4119aeb4d7825f227b8ecf564a1f93ea5b1473bffca5cf218b8e8"
+        },
+        {
+          "path": "experiments/references/program-content/v1.json",
+          "sha256": "2e47612e91acb5e9cdd9f1bf3eff59ad9ffa4a0b60aba3d1834754eb1865c4b4"
+        }
+      ],
+      "settings": {
+        "role": "translate"
+      },
+      "content_digest": "f52646083e20038495660d8f8a6d4f76f1356dc1d2fd69dba4d864b55678f10e"
+    },
+    {
+      "module_id": "stage.text_proofread",
+      "implementation_id": "real-llm-stages-text",
+      "version": "0.1.0-real-llm-stages",
+      "admission": "temporary",
+      "source": "modules/temporary/real_llm_stages/operations.py",
+      "content_files": [
+        {
+          "path": "host/__main__.py",
+          "sha256": "e0e3fe0679860f02a1270a3811048ad096764ed2f4bea01dd4ba87a516a57999"
+        },
+        {
+          "path": "host/contracts.py",
+          "sha256": "fa67f1cde6794ca445bee9d410c31cdba3b22355248d7d339a77641f2cc2ff7d"
+        },
+        {
+          "path": "host/runtime.py",
+          "sha256": "bcc71f07af88a3bdb80d361743a16deb75d9a4301f60740caea328fae9d7dff0"
+        },
+        {
+          "path": "module-registry/real_llm_stages/contracts-real-llm-stages.json",
+          "sha256": "337aeec27c7b3a39677111d17132ed9ea327690e9793a40c5ba94fdc403743e6"
+        },
+        {
+          "path": "modules/temporary/real_llm_stages/operations.py",
+          "sha256": "aafaee25c5b419acf739b4bb4db77327e2b33c435013e0428472b3777a519505"
+        },
+        {
+          "path": "experiments/references/togeradi-terms/terms.json",
+          "sha256": "7280f03768e12a761abc7af4d629ebcb8488581e189b511ba31487ef0e187b20"
+        },
+        {
+          "path": "modules/temporary/real_llm_stages/evaluation.py",
+          "sha256": "6f4609a7b1f4119aeb4d7825f227b8ecf564a1f93ea5b1473bffca5cf218b8e8"
+        },
+        {
+          "path": "experiments/references/program-content/v1.json",
+          "sha256": "2e47612e91acb5e9cdd9f1bf3eff59ad9ffa4a0b60aba3d1834754eb1865c4b4"
+        }
+      ],
+      "settings": {
+        "role": "text"
+      },
+      "content_digest": "5367b55a0fb03fcf3b9c5327406ea3aa8c229b4a9b5504ec3280687fbe9698a2"
+    },
+    {
+      "module_id": "test.real.llm.stages",
+      "implementation_id": "real-llm-stages-suite",
+      "version": "0.1.0-real-llm-stages",
+      "admission": "temporary",
+      "source": "modules/temporary/real_llm_stages/operations.py",
+      "content_files": [
+        {
+          "path": "host/__main__.py",
+          "sha256": "e0e3fe0679860f02a1270a3811048ad096764ed2f4bea01dd4ba87a516a57999"
+        },
+        {
+          "path": "host/contracts.py",
+          "sha256": "fa67f1cde6794ca445bee9d410c31cdba3b22355248d7d339a77641f2cc2ff7d"
+        },
+        {
+          "path": "host/runtime.py",
+          "sha256": "bcc71f07af88a3bdb80d361743a16deb75d9a4301f60740caea328fae9d7dff0"
+        },
+        {
+          "path": "module-registry/real_llm_stages/contracts-real-llm-stages.json",
+          "sha256": "337aeec27c7b3a39677111d17132ed9ea327690e9793a40c5ba94fdc403743e6"
+        },
+        {
+          "path": "modules/temporary/real_llm_stages/operations.py",
+          "sha256": "aafaee25c5b419acf739b4bb4db77327e2b33c435013e0428472b3777a519505"
+        },
+        {
+          "path": "experiments/specifications/real-llm-stages.json",
+          "sha256": "fa178db3e7c89af0f5e54a623f68e5af8e8a6fffa9c724a0650a66c9bb9863c5"
+        },
+        {
+          "path": "experiments/specifications/real-chain-llm.json",
+          "sha256": "af4486e4c30b393142e3c4797d17d92cd0add2690db1764506a4cecbbbe87c09"
+        },
+        {
+          "path": "experiments/references/togeradi-terms/terms.json",
+          "sha256": "7280f03768e12a761abc7af4d629ebcb8488581e189b511ba31487ef0e187b20"
+        },
+        {
+          "path": "modules/temporary/real_llm_stages/evaluation.py",
+          "sha256": "6f4609a7b1f4119aeb4d7825f227b8ecf564a1f93ea5b1473bffca5cf218b8e8"
+        },
+        {
+          "path": "experiments/references/program-content/v1.json",
+          "sha256": "2e47612e91acb5e9cdd9f1bf3eff59ad9ffa4a0b60aba3d1834754eb1865c4b4"
+        },
+        {
+          "path": "modules/temporary/real_llm_stages/chain_synthetic/aligned_segments.json",
+          "sha256": "ecc0fab6b3a845730e8839001d5efb5429e66f21d2770f378a0d1eb7a38265fd"
+        },
+        {
+          "path": "modules/temporary/real_llm_stages/chain_synthetic/transcript_segments.json",
+          "sha256": "de7b21b7e3a7cae50135449985a9a2a691a513862ad01dbb7b8f06360d68cfc5"
+        },
+        {
+          "path": "modules/temporary/real_llm_stages/chain_synthetic/lineage.json",
+          "sha256": "63ad710e70715743710b3480a5147309aa1ca154af77aea8893e1cc7d805708d"
+        }
+      ],
+      "settings": {
+        "role": "suite"
+      },
+      "content_digest": "7764acf9d005e8473194b0047864534214df63c6319f0daa104bcf3488c5be20"
+    }
+  ]
+}

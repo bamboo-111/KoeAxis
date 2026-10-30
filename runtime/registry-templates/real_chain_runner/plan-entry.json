@@ -1,0 +1,10 @@
+{
+  "plan": "experiments/specifications/real-chain-runner.json",
+  "profile": "module-registry/real_chain_runner/contracts-real-chain-runner.json",
+  "catalog": "module-registry/real_chain_runner/catalog-real-chain-runner.json",
+  "entry": {
+    "module_id": "workflow.pipeline",
+    "operation_id": "run",
+    "interface_version": "0.1.0-real-chain-runner"
+  }
+}

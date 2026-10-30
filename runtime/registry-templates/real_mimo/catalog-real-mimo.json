@@ -1,0 +1,169 @@
+{
+  "profile": "real-mimo-v1",
+  "admission": "temporary",
+  "exemptions": [],
+  "bootstrap": [
+    [
+      "real-mimo-audio",
+      "0.1.0-real-mimo"
+    ],
+    [
+      "real-mimo-provider",
+      "0.1.0-real-mimo"
+    ],
+    [
+      "real-mimo-suite",
+      "0.1.0-real-mimo"
+    ]
+  ],
+  "trusted_bootstrap": {
+    "path": "host/__init__.py",
+    "sha256": "18d90bb032b6eedde69e2eb5158f3452fc0c3ea4ba928a0c56de206b260bed22",
+    "scope": "trusted interpreter entry; audit hash, not a self-attested module source"
+  },
+  "implementations": [
+    {
+      "module_id": "stage.audio_review",
+      "implementation_id": "real-mimo-audio",
+      "version": "0.1.0-real-mimo",
+      "admission": "temporary",
+      "source": "modules/temporary/real_mimo/operations.py",
+      "content_files": [
+        {
+          "path": "host/__main__.py",
+          "sha256": "e0e3fe0679860f02a1270a3811048ad096764ed2f4bea01dd4ba87a516a57999"
+        },
+        {
+          "path": "host/contracts.py",
+          "sha256": "fa67f1cde6794ca445bee9d410c31cdba3b22355248d7d339a77641f2cc2ff7d"
+        },
+        {
+          "path": "host/runtime.py",
+          "sha256": "bcc71f07af88a3bdb80d361743a16deb75d9a4301f60740caea328fae9d7dff0"
+        },
+        {
+          "path": "module-registry/real_mimo/contracts-real-mimo.json",
+          "sha256": "9924c8c7cf0f303c3a9da8f18c0afea6494789448a690476810165282d9e8b4f"
+        },
+        {
+          "path": "modules/temporary/real_mimo/operations.py",
+          "sha256": "6de4de2657dca75384224782122c956668001519c5f190e3f720d4dbca31f778"
+        },
+        {
+          "path": "experiments/references/togeradi-terms/terms.json",
+          "sha256": "7280f03768e12a761abc7af4d629ebcb8488581e189b511ba31487ef0e187b20"
+        },
+        {
+          "path": "modules/temporary/real_mimo/evaluation.py",
+          "sha256": "d33157b2e984c68850114f55a35c14a838f177024a58bb03cb687cc9f30fd970"
+        },
+        {
+          "path": "experiments/references/program-content/v1.json",
+          "sha256": "2e47612e91acb5e9cdd9f1bf3eff59ad9ffa4a0b60aba3d1834754eb1865c4b4"
+        }
+      ],
+      "settings": {
+        "role": "audio"
+      },
+      "content_digest": "b6443d39ab0c220cb200ab5b49f8256ce75b13df0ef028798384e369d44e3038"
+    },
+    {
+      "module_id": "provider.audio_llm",
+      "implementation_id": "real-mimo-provider",
+      "version": "0.1.0-real-mimo",
+      "admission": "temporary",
+      "source": "modules/temporary/real_mimo/operations.py",
+      "content_files": [
+        {
+          "path": "host/__main__.py",
+          "sha256": "e0e3fe0679860f02a1270a3811048ad096764ed2f4bea01dd4ba87a516a57999"
+        },
+        {
+          "path": "host/contracts.py",
+          "sha256": "fa67f1cde6794ca445bee9d410c31cdba3b22355248d7d339a77641f2cc2ff7d"
+        },
+        {
+          "path": "host/runtime.py",
+          "sha256": "bcc71f07af88a3bdb80d361743a16deb75d9a4301f60740caea328fae9d7dff0"
+        },
+        {
+          "path": "module-registry/real_mimo/contracts-real-mimo.json",
+          "sha256": "9924c8c7cf0f303c3a9da8f18c0afea6494789448a690476810165282d9e8b4f"
+        },
+        {
+          "path": "modules/temporary/real_mimo/operations.py",
+          "sha256": "6de4de2657dca75384224782122c956668001519c5f190e3f720d4dbca31f778"
+        },
+        {
+          "path": "experiments/references/togeradi-terms/terms.json",
+          "sha256": "7280f03768e12a761abc7af4d629ebcb8488581e189b511ba31487ef0e187b20"
+        },
+        {
+          "path": "modules/temporary/real_mimo/evaluation.py",
+          "sha256": "d33157b2e984c68850114f55a35c14a838f177024a58bb03cb687cc9f30fd970"
+        },
+        {
+          "path": "experiments/references/program-content/v1.json",
+          "sha256": "2e47612e91acb5e9cdd9f1bf3eff59ad9ffa4a0b60aba3d1834754eb1865c4b4"
+        }
+      ],
+      "settings": {
+        "role": "provider"
+      },
+      "content_digest": "aad1fe80190599dcf6cf9910268ce38b75e1c738c56dde14852f94f507fe35a6"
+    },
+    {
+      "module_id": "test.real.mimo",
+      "implementation_id": "real-mimo-suite",
+      "version": "0.1.0-real-mimo",
+      "admission": "temporary",
+      "source": "modules/temporary/real_mimo/operations.py",
+      "content_files": [
+        {
+          "path": "host/__main__.py",
+          "sha256": "e0e3fe0679860f02a1270a3811048ad096764ed2f4bea01dd4ba87a516a57999"
+        },
+        {
+          "path": "host/contracts.py",
+          "sha256": "fa67f1cde6794ca445bee9d410c31cdba3b22355248d7d339a77641f2cc2ff7d"
+        },
+        {
+          "path": "host/runtime.py",
+          "sha256": "bcc71f07af88a3bdb80d361743a16deb75d9a4301f60740caea328fae9d7dff0"
+        },
+        {
+          "path": "module-registry/real_mimo/contracts-real-mimo.json",
+          "sha256": "9924c8c7cf0f303c3a9da8f18c0afea6494789448a690476810165282d9e8b4f"
+        },
+        {
+          "path": "modules/temporary/real_mimo/operations.py",
+          "sha256": "6de4de2657dca75384224782122c956668001519c5f190e3f720d4dbca31f778"
+        },
+        {
+          "path": "experiments/specifications/real-mimo.json",
+          "sha256": "9dae3e459e4a6cdcd071ba8d6e404e8cb2ce21e176b2507ad0abe6949f9b18c4"
+        },
+        {
+          "path": "experiments/references/togeradi-terms/terms.json",
+          "sha256": "7280f03768e12a761abc7af4d629ebcb8488581e189b511ba31487ef0e187b20"
+        },
+        {
+          "path": "modules/temporary/real_mimo/evaluation.py",
+          "sha256": "d33157b2e984c68850114f55a35c14a838f177024a58bb03cb687cc9f30fd970"
+        },
+        {
+          "path": "experiments/references/program-content/v1.json",
+          "sha256": "2e47612e91acb5e9cdd9f1bf3eff59ad9ffa4a0b60aba3d1834754eb1865c4b4"
+        },
+        {
+          "path": "experiments/specifications/real-chain-mimo-full.json",
+          "sha256": "6937a5c1a03f6b43560313f0ea4bf7beb3d3b6cfb558df5cbc87196028933759"
+        }
+      ],
+      "settings": {
+        "role": "suite"
+      },
+      "content_digest": "f5719af2750dab420f7b2a799cbd3e28718660cb1bd5004dc5ef1234d3b06b29"
+    }
+  ]
+}

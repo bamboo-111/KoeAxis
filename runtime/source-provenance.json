@@ -1,0 +1,363 @@
+{
+  "remote_base": "1d7a3bd0e8add7f5f2180d01522d1d82db901f3d",
+  "runtime_source": "ed8c2c248b9a8d227b095f1b42040121c9b279d5",
+  "compatibility_source": "764a39787ff94fb80180420a68e1bbac0d9c73c8",
+  "compatibility_files": 302,
+  "runtime_paths_adapted": [
+    "modules/temporary/real_align_recovery/execution.py",
+    "modules/temporary/real_align_recovery/recover.py",
+    "modules/temporary/real_chain_correct/operations.py",
+    "modules/temporary/real_chain_correct/suite.py",
+    "modules/temporary/real_chain_finish/legacy.py",
+    "modules/temporary/real_chain_runner/media.py",
+    "modules/temporary/real_llm_stages/operations.py",
+    "modules/temporary/real_mimo/operations.py",
+    "tests/test_real_chain_bind.py",
+    "tests/test_real_chain_host312.py",
+    "tests/test_real_chain_llm.py",
+    "tests/test_real_chain_mimo_full.py"
+  ],
+  "scope": "fixed-chain candidate + legacy CLI/Web compatibility; excludes audit history and model assets",
+  "legacy_identity_normalization": {
+    "qwen_asr/text_proofread.py": {
+      "old_worktree_sha256": "2766433b8df46047fc84e9e488a3917696307e5c8d3cee01875dfc81f64e8e08",
+      "published_lf_sha256": "2766433b8df46047fc84e9e488a3917696307e5c8d3cee01875dfc81f64e8e08",
+      "change": "none"
+    },
+    "qwen_asr/__init__.py": {
+      "old_worktree_sha256": "d5cba54656461771276338d6b64b7b65639c6659baf9b7640f0c7b0925984837",
+      "published_lf_sha256": "f36cde3209de36b3787659a5bf9ed1c5a0a4ba1d9b45b5993b1e4d353a9bd60f",
+      "change": "CRLF to LF only"
+    },
+    "qwen_asr/defaults.py": {
+      "old_worktree_sha256": "5b67223bf02c6a9ba5f7ed01719fe7d009df7cd3984dbb7cd5c988ee8e860c04",
+      "published_lf_sha256": "5b67223bf02c6a9ba5f7ed01719fe7d009df7cd3984dbb7cd5c988ee8e860c04",
+      "change": "none"
+    },
+    "qwen_asr/gemini_pool.py": {
+      "old_worktree_sha256": "1a5c6abaccd11a3671aae79988706caeac9d945916efe044504f4e3662ebe048",
+      "published_lf_sha256": "1a5c6abaccd11a3671aae79988706caeac9d945916efe044504f4e3662ebe048",
+      "change": "none"
+    },
+    "optimizer/__init__.py": {
+      "old_worktree_sha256": "58f48ab064042d963d904a54f16ba013fc13659a3565f3dbd089c68b80533927",
+      "published_lf_sha256": "58f48ab064042d963d904a54f16ba013fc13659a3565f3dbd089c68b80533927",
+      "change": "none"
+    },
+    "optimizer/gemini_native.py": {
+      "old_worktree_sha256": "83544e3d73a1d6ce77ceb8345d9a89b607be8cc1859ba89442ff6584f78a8df5",
+      "published_lf_sha256": "83544e3d73a1d6ce77ceb8345d9a89b607be8cc1859ba89442ff6584f78a8df5",
+      "change": "none"
+    },
+    "optimizer/exceptions.py": {
+      "old_worktree_sha256": "adaa7995bf6227d9bc9055a01391910b7b4808ac76b955b6cc534cbbed2fd0bb",
+      "published_lf_sha256": "adaa7995bf6227d9bc9055a01391910b7b4808ac76b955b6cc534cbbed2fd0bb",
+      "change": "none"
+    },
+    "qwen_asr/mimo_audio.py": {
+      "old_worktree_sha256": "8b397f296876b7fc9bc928936dedf58938a4d089fd768241b8731989a6fbf124",
+      "published_lf_sha256": "8b397f296876b7fc9bc928936dedf58938a4d089fd768241b8731989a6fbf124",
+      "change": "none"
+    },
+    "qwen_asr/glossary.py": {
+      "old_worktree_sha256": "b5d4b0c2553502256bce10cd2d9f724dae64a1d825e90aac0e68f649c7be3a91",
+      "published_lf_sha256": "b5d4b0c2553502256bce10cd2d9f724dae64a1d825e90aac0e68f649c7be3a91",
+      "change": "none"
+    },
+    "qwen_asr/storage.py": {
+      "old_worktree_sha256": "c66b4730988d55c96eeeccb1e02bed53df806eebfc47588f74177f23768a22af",
+      "published_lf_sha256": "898b4d63dc7d25725179ae02dc64a21c184fd5d624c6b6423cdca948455cf589",
+      "change": "CRLF to LF only"
+    },
+    "qwen_asr/models.py": {
+      "old_worktree_sha256": "17e760a262816e694323410687bc6513e1205b3db5d2cec7d06871ad32cd9d5b",
+      "published_lf_sha256": "17e760a262816e694323410687bc6513e1205b3db5d2cec7d06871ad32cd9d5b",
+      "change": "none"
+    },
+    "qwen_asr/mimo_outputs.py": {
+      "old_worktree_sha256": "ca00de1927a8bea42d74c8b0a9312eb71eb1952cdd19707c01645c165d5b2e32",
+      "published_lf_sha256": "ca00de1927a8bea42d74c8b0a9312eb71eb1952cdd19707c01645c165d5b2e32",
+      "change": "none"
+    },
+    "qwen_asr/mimo_candidates.py": {
+      "old_worktree_sha256": "10349bb08d4e76fc80f19db9c83a59fa83a0f20396c7ae5b221605383e253e43",
+      "published_lf_sha256": "10349bb08d4e76fc80f19db9c83a59fa83a0f20396c7ae5b221605383e253e43",
+      "change": "none"
+    },
+    "qwen_asr/mimo_requests.py": {
+      "old_worktree_sha256": "9387c09774cad921577de2c5473781b116d59442d7cd79eff44f7ecb59d0bd18",
+      "published_lf_sha256": "9387c09774cad921577de2c5473781b116d59442d7cd79eff44f7ecb59d0bd18",
+      "change": "none"
+    },
+    "qwen_asr/performance.py": {
+      "old_worktree_sha256": "533e251b90f770196b0c57c4fafdc5b93bbbc086285c89708a49cfddfdfd5b62",
+      "published_lf_sha256": "533e251b90f770196b0c57c4fafdc5b93bbbc086285c89708a49cfddfdfd5b62",
+      "change": "none"
+    },
+    "qwen_asr/program_context.py": {
+      "old_worktree_sha256": "48f98605d9e41723e7cc7a7c1d7b6c49390841809d54ed2cdb4c741977336135",
+      "published_lf_sha256": "7a730c04c7ffc9d9ffe07dc8827192f67bc354aaa4ba13adfcc3b2501c0d61a9",
+      "change": "CRLF to LF only"
+    },
+    "qwen_asr/progress.py": {
+      "old_worktree_sha256": "469818a2fdca10542d7b481dc6883e4d3584cebc108cc29c213649ea356dc343",
+      "published_lf_sha256": "ef269c92a3882363733a0fb9c2ade91f0f7e0492528f9ca7e76e77ed190bf75b",
+      "change": "CRLF to LF only"
+    },
+    "qwen_asr/stages.py": {
+      "old_worktree_sha256": "cf432c562f8f24511a3c043ef427e328044ee8eb3c435250f1cf123293ae420e",
+      "published_lf_sha256": "cb5f30d4a19e28ff479cfde26a2148532bd2044965f67ebaa77af3ac856b2b91",
+      "change": "CRLF to LF only"
+    },
+    "qwen_asr/corrector.py": {
+      "old_worktree_sha256": "45ba5b4ee0249f9e0bd17362c10aefd6883a4b0a56d36c7d32c58848d395e199",
+      "published_lf_sha256": "dbbdd4f4dc9772f945f87fbb95f24ae5f46994622e2299e99970dfa012a22de6",
+      "change": "CRLF to LF only"
+    },
+    "qwen_asr/credentials.py": {
+      "old_worktree_sha256": "faf6e4a81bbb9aa138042a44f7fde8683c04bfd5f604ce11dc0cc94f6a491a76",
+      "published_lf_sha256": "faf6e4a81bbb9aa138042a44f7fde8683c04bfd5f604ce11dc0cc94f6a491a76",
+      "change": "none"
+    },
+    "optimizer/llm_config.py": {
+      "old_worktree_sha256": "deb9d3238b9c5e742ff4e359d9168ae77d5fb1f044c50e397de1792358be0b6c",
+      "published_lf_sha256": "03f07a4b131477b866ede7640340b9ba39ef1d67e745cf9571f63d180cc1df57",
+      "change": "CRLF to LF only"
+    },
+    "optimizer/llm_client.py": {
+      "old_worktree_sha256": "948ef77f8751fa60e621f605ec42e1f09ec855b198ace468eb9a388430073ae2",
+      "published_lf_sha256": "19f04f629432675215c8d173d7bd1d594c1f06b5dcf4a1b9d79ace0cccf09b45",
+      "change": "CRLF to LF only"
+    },
+    "optimizer/text_utils.py": {
+      "old_worktree_sha256": "2b73f6f7cf396cf274d4310bdff3bd93e2798a598f6573171fab844e93c9dffa",
+      "published_lf_sha256": "a4b6d28a8b7b474dba5f4650e73c6cf44332c865f4c77a928e11466cfadf51b1",
+      "change": "CRLF to LF only"
+    },
+    "optimizer/asr_cleanup.py": {
+      "old_worktree_sha256": "387c933d04ec5e38dbd50b0a887505106eececf1f8dc0b8a824e4d2a6787e0dd",
+      "published_lf_sha256": "dce68a092b904d37016845e4f0988893e245620473d48483e1b8ba668fed652b",
+      "change": "CRLF to LF only"
+    },
+    "optimizer/fixed_terms.py": {
+      "old_worktree_sha256": "a4c375c63d5617234b856ec8db5f674ca951852a651501a5b27ca7776aeef994",
+      "published_lf_sha256": "dacfc51ba403b11a2db881ad742af7c5cd77488d0f2cbaaab6801d3db458ce29",
+      "change": "CRLF to LF only"
+    },
+    "optimizer/text_metrics.py": {
+      "old_worktree_sha256": "01230159d479f84526765fcc3581fa142a4b031c6935704a7d0a0bcb6453c433",
+      "published_lf_sha256": "4b3471caa24dc2bd8ad7b401d48617131dceb419e6ef3c2ba36cb9ed16cc634c",
+      "change": "CRLF to LF only"
+    },
+    "qwen_asr/commands/stages.py": {
+      "old_worktree_sha256": "66f92a75962e25889e0963c052acee83f4a8cb7992245418edc4acb1132ec451",
+      "published_lf_sha256": "66f92a75962e25889e0963c052acee83f4a8cb7992245418edc4acb1132ec451",
+      "change": "none"
+    },
+    "qwen_asr/commands/__init__.py": {
+      "old_worktree_sha256": "85323b38ac6eb6fa596deac11b8d25c220197c5121ee536cdbe8f9f6be960db2",
+      "published_lf_sha256": "85323b38ac6eb6fa596deac11b8d25c220197c5121ee536cdbe8f9f6be960db2",
+      "change": "none"
+    },
+    "qwen_asr/commands/transcribe_profile.py": {
+      "old_worktree_sha256": "5185b1ac5c5bea072be763bc897ed917a939280b3780842fc436ae3cd3b29d23",
+      "published_lf_sha256": "5185b1ac5c5bea072be763bc897ed917a939280b3780842fc436ae3cd3b29d23",
+      "change": "none"
+    },
+    "qwen_asr/align.py": {
+      "old_worktree_sha256": "90f59e8b1ccbaae73c81f49f93989fca8e56009c93be0ea16d254c337cc2447f",
+      "published_lf_sha256": "90f59e8b1ccbaae73c81f49f93989fca8e56009c93be0ea16d254c337cc2447f",
+      "change": "none"
+    },
+    "qwen_asr/model_runtime.py": {
+      "old_worktree_sha256": "b9a653ffd31bc80eb2259ffd23eaf9fe264d319189c35098e36d8f7d4f54c4fb",
+      "published_lf_sha256": "b9a653ffd31bc80eb2259ffd23eaf9fe264d319189c35098e36d8f7d4f54c4fb",
+      "change": "none"
+    },
+    "qwen_asr/vendor_qwen.py": {
+      "old_worktree_sha256": "213c8c322f524d1b5e7460517d3f4440b35f84ccf79ee56d0cedfd224fe4d3cd",
+      "published_lf_sha256": "c31dc15f9bce11c8fa6a6166615245b15af291e5b17e73fcf1533b5d93ecf3ba",
+      "change": "CRLF to LF only"
+    },
+    "qwen_asr/artifact_state.py": {
+      "old_worktree_sha256": "47e6a310d527bd8358820d14d76c5cd0d005e951a9e30fa2aa1f846c39c4cb6e",
+      "published_lf_sha256": "00bc333c355af36ab49813d9f6bd42b14068644a9b12a504d7b722d5dd3935b1",
+      "change": "CRLF to LF only"
+    },
+    "qwen_asr/alignment_state.py": {
+      "old_worktree_sha256": "fff99ef397f24d5654528ca9e8d19c5f79fa9805cabf5cf74609380dc8e56272",
+      "published_lf_sha256": "fff99ef397f24d5654528ca9e8d19c5f79fa9805cabf5cf74609380dc8e56272",
+      "change": "none"
+    },
+    "qwen_asr/asr.py": {
+      "old_worktree_sha256": "31b8a61457b411f42b01b9ccd779151c725d4393080d5e512050a5af4adb4698",
+      "published_lf_sha256": "31b8a61457b411f42b01b9ccd779151c725d4393080d5e512050a5af4adb4698",
+      "change": "none"
+    },
+    "qwen_asr/asr_context.py": {
+      "old_worktree_sha256": "4fade86d529819b681ccf9f63e3627d34826bdafa98e990a96e28f1c368c5cc4",
+      "published_lf_sha256": "4fade86d529819b681ccf9f63e3627d34826bdafa98e990a96e28f1c368c5cc4",
+      "change": "none"
+    },
+    "qwen_asr/audio.py": {
+      "old_worktree_sha256": "6880aaf591cb4a2685fbc10e4a686c0b477ef492a812a3b92a8f47bc8dccc5da",
+      "published_lf_sha256": "63eae848ef1658f6b49feece52a2e695f307b02124729458a634a55f292887da",
+      "change": "CRLF to LF only"
+    },
+    "qwen_asr/batching.py": {
+      "old_worktree_sha256": "8511c01ae8d655dc04f2fa581de9625432afe9e8c5027088df722c2a5ebb9e46",
+      "published_lf_sha256": "8511c01ae8d655dc04f2fa581de9625432afe9e8c5027088df722c2a5ebb9e46",
+      "change": "none"
+    },
+    "qwen_asr/final_quality.py": {
+      "old_worktree_sha256": "5e53abe52eccd61c6e86f1575fcddba0a86a85840594c46f8c191675fdbc28d2",
+      "published_lf_sha256": "5e53abe52eccd61c6e86f1575fcddba0a86a85840594c46f8c191675fdbc28d2",
+      "change": "none"
+    },
+    "qwen_asr/final_quality_alignment.py": {
+      "old_worktree_sha256": "eba8d01f325869768ab05d3caa1655a412b98b0d6ddd85a05a8521375aa62296",
+      "published_lf_sha256": "eba8d01f325869768ab05d3caa1655a412b98b0d6ddd85a05a8521375aa62296",
+      "change": "none"
+    },
+    "qwen_asr/final_quality_common.py": {
+      "old_worktree_sha256": "7e11d0b8ee9a50220ba4c5a2f853a840ce50cb0e18f7d1976e8d02ecc7de3b31",
+      "published_lf_sha256": "7e11d0b8ee9a50220ba4c5a2f853a840ce50cb0e18f7d1976e8d02ecc7de3b31",
+      "change": "none"
+    },
+    "qwen_asr/final_quality_ass.py": {
+      "old_worktree_sha256": "26b2b86b2a0781e1ab436a37d03a6e98c404d484586e5e28f6ba21383fbf65e7",
+      "published_lf_sha256": "26b2b86b2a0781e1ab436a37d03a6e98c404d484586e5e28f6ba21383fbf65e7",
+      "change": "none"
+    },
+    "qwen_asr/final_quality_content.py": {
+      "old_worktree_sha256": "947af4e55af43ba0e5a045f27122ed3da804e5188c4437cd1c4db1f353198b20",
+      "published_lf_sha256": "947af4e55af43ba0e5a045f27122ed3da804e5188c4437cd1c4db1f353198b20",
+      "change": "none"
+    },
+    "qwen_asr/content_quality.py": {
+      "old_worktree_sha256": "bbdad7a8b5722216ad91078b1530adbef94b877d6f488ffe3049d7c715c75713",
+      "published_lf_sha256": "bbdad7a8b5722216ad91078b1530adbef94b877d6f488ffe3049d7c715c75713",
+      "change": "none"
+    },
+    "qwen_asr/final_quality_mimo.py": {
+      "old_worktree_sha256": "501e3a72165e0016777934d27c92b29689425907c82a97c1404062662964c4b4",
+      "published_lf_sha256": "501e3a72165e0016777934d27c92b29689425907c82a97c1404062662964c4b4",
+      "change": "none"
+    },
+    "qwen_asr/final_quality_postproofread.py": {
+      "old_worktree_sha256": "75cd7c230246fded75ed9d0c16d2dfd03a454ccbff85727d3ff5e109608bbbcb",
+      "published_lf_sha256": "75cd7c230246fded75ed9d0c16d2dfd03a454ccbff85727d3ff5e109608bbbcb",
+      "change": "none"
+    },
+    "qwen_asr/final_quality_readability.py": {
+      "old_worktree_sha256": "a6bff91285ffe25f5d999203ffd5566e68cf199b8f6e59a891d5cdc814b17563",
+      "published_lf_sha256": "a6bff91285ffe25f5d999203ffd5566e68cf199b8f6e59a891d5cdc814b17563",
+      "change": "none"
+    },
+    "qwen_asr/final_quality_realign.py": {
+      "old_worktree_sha256": "8a5e353c5dafca72bd0cc01ebc8114131868887981a5f68fa15ae46a46b6e974",
+      "published_lf_sha256": "8a5e353c5dafca72bd0cc01ebc8114131868887981a5f68fa15ae46a46b6e974",
+      "change": "none"
+    },
+    "qwen_asr/final_quality_srt.py": {
+      "old_worktree_sha256": "f6dc178586b72b8ea5595b8eaaa7bb3f5e27421f7dc22f970f93a3cd393e32b3",
+      "published_lf_sha256": "f6dc178586b72b8ea5595b8eaaa7bb3f5e27421f7dc22f970f93a3cd393e32b3",
+      "change": "none"
+    },
+    "qwen_asr/final_quality_stage.py": {
+      "old_worktree_sha256": "cd2d83d32987ee3449873be8eb01b09260db5ee46b524d28336894f3b08f8700",
+      "published_lf_sha256": "cd2d83d32987ee3449873be8eb01b09260db5ee46b524d28336894f3b08f8700",
+      "change": "none"
+    },
+    "qwen_asr/final_quality_translation.py": {
+      "old_worktree_sha256": "0a64a90e52f97f65e87af9860ab4e2e1ef3ccd595c4e284f4a74ee08e5e08c59",
+      "published_lf_sha256": "0a64a90e52f97f65e87af9860ab4e2e1ef3ccd595c4e284f4a74ee08e5e08c59",
+      "change": "none"
+    },
+    "qwen_asr/mimo_proofread.py": {
+      "old_worktree_sha256": "419f6123bd51bd790fe92aeb1a90faa8f6403241b210ad585c8cdb439cbcbdb7",
+      "published_lf_sha256": "419f6123bd51bd790fe92aeb1a90faa8f6403241b210ad585c8cdb439cbcbdb7",
+      "change": "none"
+    },
+    "qwen_asr/mimo_inputs.py": {
+      "old_worktree_sha256": "f7626f48a86df2d2532f2406714d440f5daf45d1f2586554bf0d80743290f8c2",
+      "published_lf_sha256": "f7626f48a86df2d2532f2406714d440f5daf45d1f2586554bf0d80743290f8c2",
+      "change": "none"
+    },
+    "qwen_asr/optimizer_bridge.py": {
+      "old_worktree_sha256": "bb4e41531c42588575d1e889f7579045b6978c5ccfb06f83722227f1c719995c",
+      "published_lf_sha256": "aec4b94da7a2014a01aa0ed9cb2bb3c7b21803583876baa8f08e9e9939578fe3",
+      "change": "CRLF to LF only"
+    },
+    "qwen_asr/optimizer_bridge_adapter.py": {
+      "old_worktree_sha256": "120884281a783d0ffd2bedd441c3e8650b50c3d51010be595a46a50c1912e52f",
+      "published_lf_sha256": "120884281a783d0ffd2bedd441c3e8650b50c3d51010be595a46a50c1912e52f",
+      "change": "none"
+    },
+    "qwen_asr/optimizer_bridge_guards.py": {
+      "old_worktree_sha256": "3924cbdf69efc68151f89f1918f3951309ce292abf45c39c9562d0536d9080b9",
+      "published_lf_sha256": "3924cbdf69efc68151f89f1918f3951309ce292abf45c39c9562d0536d9080b9",
+      "change": "none"
+    },
+    "qwen_asr/optimizer_bridge_stages.py": {
+      "old_worktree_sha256": "d49be18f6817ed40bdc5e6e5da5cd2fd31fdd5a6b4363489a9bc2893014e7d00",
+      "published_lf_sha256": "6b608571cae1a5c64bd3fa03fd839acda8b175ab722fabc17470d1788a3916a9",
+      "change": "CRLF to LF only"
+    },
+    "qwen_asr/semantic_boundary_merge.py": {
+      "old_worktree_sha256": "fa4f91fb0c07026877f66d2da626a19f076a50de6608e3affb3ef2b19df177ab",
+      "published_lf_sha256": "ef3afb924ed93a0bd9a8360710becd352797acbcdb4be0d1412756fdd17bd8dd",
+      "change": "CRLF to LF only"
+    },
+    "optimizer/splitter_boundaries.py": {
+      "old_worktree_sha256": "592c7450ef3aab8b3575b7c362d52b038a46153a834fde67aadf505b049ebedf",
+      "published_lf_sha256": "592c7450ef3aab8b3575b7c362d52b038a46153a834fde67aadf505b049ebedf",
+      "change": "none"
+    },
+    "optimizer/splitter_readability.py": {
+      "old_worktree_sha256": "3efd0d4a3298cabc1e02804e257fc48b18247799965457aca06514ecb30d8448",
+      "published_lf_sha256": "3efd0d4a3298cabc1e02804e257fc48b18247799965457aca06514ecb30d8448",
+      "change": "none"
+    },
+    "optimizer/asr_data.py": {
+      "old_worktree_sha256": "85add2188b6aa57ebdc6ba3d84e2dd24c9c7d8b34196cf579fe7bba330452040",
+      "published_lf_sha256": "d83989cbde912884a7ac91ca00d862a9a7a809f653f23814b4f1572362f1b2f5",
+      "change": "CRLF to LF only"
+    },
+    "qwen_asr/pipeline_runner.py": {
+      "old_worktree_sha256": "fc38b1c32dde434ae8e6efc782f1a2468ad7a42bcdcd08c9c03e230455e846c0",
+      "published_lf_sha256": "d18fe9343c7278573b2494618cd7921bc6449fd5eb18ac3cd6e791a80f08867b",
+      "change": "CRLF to LF only"
+    },
+    "qwen_asr/quality_suspects.py": {
+      "old_worktree_sha256": "15f462b3496538978b9256703f55fb56776407780f5afc94e2f2e5d2892fb9ee",
+      "published_lf_sha256": "15f462b3496538978b9256703f55fb56776407780f5afc94e2f2e5d2892fb9ee",
+      "change": "none"
+    },
+    "qwen_asr/preflight.py": {
+      "old_worktree_sha256": "d58a6f946d3e7be13a03f59af7fe5a365fe5e540147238df78abe8bcc25fca90",
+      "published_lf_sha256": "d58a6f946d3e7be13a03f59af7fe5a365fe5e540147238df78abe8bcc25fca90",
+      "change": "none"
+    },
+    "qwen_asr/segmenter.py": {
+      "old_worktree_sha256": "70d7336e96026ef8fee5f4adfe8a8e0cc3ea6c631dc24c9311c6fae2a1ca055a",
+      "published_lf_sha256": "70d7336e96026ef8fee5f4adfe8a8e0cc3ea6c631dc24c9311c6fae2a1ca055a",
+      "change": "none"
+    },
+    "qwen_asr/vad.py": {
+      "old_worktree_sha256": "9605e0c2e7432090879da7d5886f02e8aa087d196f4963b048beb08cccbc58a1",
+      "published_lf_sha256": "7706b6a7347c96bd7f1435d9d992199a56656ae318730ae6cf04e696496eeb6d",
+      "change": "CRLF to LF only"
+    }
+  },
+  "release_adaptations": [
+    "Repository-local compatibility root and model/diagnostic path defaults",
+    "Project-relative Host legacy_sources root",
+    "Generated installed-dependency identities and catalog digests; no vendored site-packages",
+    "Launcher validates installed pinned dependencies instead of developer-only isolated directory",
+    "Five frozen regression baselines replace internal Git-history reads",
+    "Historical-only diagnostics explicitly skipped; other historical input comparisons use synthetic fixtures",
+    "Default historical LLM plan still reports its two missing real-input SHA checks as failures",
+    "CLI/Web wrappers, restored installer, release verification entry and user documentation"
+  ]
+}

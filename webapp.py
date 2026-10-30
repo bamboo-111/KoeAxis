@@ -1,5 +1,9 @@
 from __future__ import annotations
 
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parent / "compat" / "legacy"))
+
 from qwen_asr.web import server as _server
 from qwen_asr.web.commands import (
     HOST,

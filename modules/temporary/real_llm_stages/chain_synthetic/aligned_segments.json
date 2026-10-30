@@ -1,0 +1,13 @@
+[
+  {
+    "segment_id": "segmentchain001",
+    "status": "completed",
+    "global_start_time": 0.0,
+    "global_end_time": 4.0,
+    "text": "こんにちはCHAINOFF",
+    "tokens": [
+      {"text": "こんにちは", "start_time": 0.2, "end_time": 0.8},
+      {"text": "CHAINOFF", "start_time": 0.8, "end_time": 1.4}
+    ]
+  }
+]
