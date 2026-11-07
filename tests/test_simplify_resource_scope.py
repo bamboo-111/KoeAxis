@@ -218,7 +218,25 @@ class ScopeTests(unittest.TestCase):
                 return {node.name: ast.dump(node, include_attributes=False)
                         for node in ast.parse(text).body
                         if isinstance(node, (ast.FunctionDef, ast.ClassDef)) and node.name != target}
-            self.assertEqual(definitions(source), definitions(Path(module.__file__).read_bytes()))
+            current = Path(module.__file__).read_text(encoding='utf-8')
+            if module is media:
+                # Explicit 2026-11 media-probe addition; keep all other bodies checked.
+                tree = ast.parse(current)
+                probe = [n for n in tree.body if isinstance(n, ast.FunctionDef) and n.name == 'source_metadata']
+                self.assertEqual(len(probe), 1)
+                lines = current.splitlines(keepends=True)
+                del lines[probe[0].lineno - 1:probe[0].end_lineno]
+                current = ''.join(lines)
+                added = """        if role == 'prepare':
+            metadata = source_metadata(media, config.get('device', 'cpu'))
+            temporary = work / 'media-source.json.tmp'
+            temporary.write_text(json.dumps(metadata, ensure_ascii=False, indent=2) + '\\n',
+                                 encoding='utf-8', newline='\\n')
+            os.replace(temporary, work / 'media-source.json')
+"""
+                self.assertEqual(current.count(added), 1)
+                current = current.replace(added, '', 1)
+            self.assertEqual(definitions(source), definitions(current))
 
 
 if __name__ == '__main__':

@@ -22,6 +22,7 @@ TESTS = [
     'test_opt54_content', 'test_opt54_integration', 'test_opt54_performance',
     'test_opt54_memory', 'test_simplify_state', 'test_simplify_llm_content',
     'test_simplify_resource_scope', 'test_release_layout',
+    'test_ass_source', 'test_progress_snapshot',
 ]
 HOOK = '''import socket
 def blocked(*args, **kwargs):

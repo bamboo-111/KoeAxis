@@ -146,6 +146,53 @@ def apply_address_boundary_protection(manifest, memory, legacy_apply):
     return report
 
 
+def export_source(work):
+    """Read the immutable input probe, not project.json rewritten by audio stages."""
+    path = work / 'media-source.json'
+    if not path.is_file():
+        return None  # legacy/synthetic callers without original-media metadata
+    data = json.loads(path.read_text(encoding='utf-8'))
+    if data.get('schema') != 1 or not isinstance(data.get('media_path'), str) or not Path(data['media_path']).is_absolute():
+        raise ValueError('invalid original media metadata')
+    video = data.get('video')
+    if video is not None and (not isinstance(video, dict) or any(
+            type(video.get(key)) is not int or not 0 < video[key] <= 65536 for key in ('width', 'height'))):
+        raise ValueError('invalid original video dimensions')
+    return data
+
+def set_ass_canvas(work, source):
+    """Set only Script Info geometry before final quality/checkpoint creation."""
+    if not source or source.get('video') is None:
+        return
+    video = source['video']
+    changes = []
+    for path in (work / 'subtitles.ass', work / 'export/subtitles.ass'):
+        if not path.is_file():
+            continue
+        data = path.read_bytes()
+        section = re.search(rb'(?m)^\[Script Info\][^\r\n]*\r?\n(.*?)(?=^\[|\Z)',
+                            data.lstrip(b'\xef\xbb\xbf'), re.DOTALL)
+        if section is None:
+            raise ValueError('ASS Script Info missing')
+        original = section.group(1)
+        updated = original
+        for name, key in ((b'PlayResX', 'width'), (b'PlayResY', 'height')):
+            updated, count = re.subn(rb'(?m)^' + name + rb':[ \t]*[^\r\n]*',
+                                    name + b': ' + str(video[key]).encode('ascii'), updated)
+            if count != 1:
+                raise ValueError('ASS requires exactly one ' + name.decode())
+        changes.append((path, data.replace(original, updated, 1)))
+    for path, data in changes:
+        tmp = path.with_name(path.name + '.canvas.tmp')
+        tmp.write_bytes(data)
+        os.replace(tmp, path)
+    report = work / 'reports/export-media.json'
+    report.parent.mkdir(parents=True, exist_ok=True)
+    report.write_text(json.dumps({'media_path': source['media_path'], 'video': video,
+                                 'ass_files': [str(p) for p, _ in changes]}, ensure_ascii=False, indent=2) + '\n',
+                      encoding='utf-8', newline='\n')
+
+
 def deterministic_args(stage, work, memory_file=None, speaker_enroll=None, ass=None, styles=None):
     """Explicit legacy command settings for the fixed finish-chain operations."""
     from types import SimpleNamespace
@@ -194,6 +241,10 @@ def run_stage(stage, work, memory_file=None, speaker_enroll=None, ass_reference=
         from qwen_asr.commands import cmd_quality_gate, cmd_normalize, cmd_export
         handler = {'quality': cmd_quality_gate, 'normalize': cmd_normalize, 'export': cmd_export}[stage]
         args = deterministic_args(stage, work, memory_file, speaker_enroll)
+        if stage == 'export':
+            source = export_source(work)
+            if source:
+                args.media_path = source['media_path']
     with isolated_environment(work):
         if stage == 'realign':
             from qwen_asr.proofread_realign import _pending_items, _clear_punctuation_only_realign_flags
@@ -246,6 +297,7 @@ def run_stage(stage, work, memory_file=None, speaker_enroll=None, ass_reference=
             if stage == 'export' and speaker_enroll and not (work / 'export/subtitles.ass').is_file():
                 raise RuntimeError('speaker ASS not produced')
             if stage == 'export' and code == 0:
+                set_ass_canvas(work, source)
                 # A reference must be supplied independently; never self-score the export.
                 if ass_reference:
                     reference = Path(ass_reference).resolve()

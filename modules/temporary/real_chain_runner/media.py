@@ -7,6 +7,9 @@ import json
 import os
 import shutil
 import sys
+import math
+import subprocess
+from fractions import Fraction
 from pathlib import Path
 
 LEGACY = Path(__file__).resolve().parents[3] / "compat" / "legacy"
@@ -85,6 +88,47 @@ def _options(values, allowed):
 
 
 
+def source_metadata(media, device):
+    """Probe once before prepare; retain original video geometry across audio stages."""
+    result = subprocess.run([
+        'ffprobe', '-v', 'error', '-show_entries',
+        'format=duration:stream=codec_type,width,height,sample_aspect_ratio:stream_disposition=attached_pic:stream_tags=rotate:stream_side_data=rotation',
+        '-of', 'json', str(media)], capture_output=True, text=True, encoding='utf-8',
+        timeout=30, check=True)
+    data = json.loads(result.stdout)
+    try:
+        duration = float(data.get('format', {}).get('duration'))
+    except (TypeError, ValueError):
+        duration = 0
+    duration = duration if math.isfinite(duration) and duration > 0 else None
+    video = None
+    for stream in data.get('streams', []):
+        if stream.get('codec_type') != 'video' or stream.get('disposition', {}).get('attached_pic'):
+            continue
+        width, height = int(stream['width']), int(stream['height'])
+        if width <= 0 or height <= 0:
+            raise ValueError('invalid source video dimensions')
+        sar = stream.get('sample_aspect_ratio') or '1:1'
+        ratio = Fraction(sar.replace(':', '/')) if sar not in ('N/A', '0:1', '') else Fraction(1)
+        if ratio <= 0:
+            raise ValueError('invalid source sample aspect ratio')
+        display_width = max(1, round(width * ratio))
+        rotation = float(stream.get('tags', {}).get('rotate', 0))
+        for side in stream.get('side_data_list', []):
+            if 'rotation' in side:
+                rotation = float(side['rotation'])
+        if not math.isfinite(rotation) or abs(rotation / 90 - round(rotation / 90)) > 0.01:
+            raise ValueError('unsupported source video rotation')
+        rotated = int(round(rotation / 90)) % 2
+        video = {'width': height if rotated else display_width,
+                 'height': display_width if rotated else height,
+                 'coded_width': width, 'coded_height': height,
+                 'sample_aspect_ratio': sar, 'rotation': rotation}
+        break
+    return {'schema': 1, 'media_path': str(Path(media).resolve()), 'duration_s': duration,
+            'device': device, 'video': video}
+
+
 def run(role, config):
     work = Path(config['work']).resolve()
     if role == 'prepare':
@@ -110,6 +154,12 @@ def run(role, config):
     with isolated(work):
         from qwen_asr.models import WorkPaths
         paths = WorkPaths.from_workdir(work)
+        if role == 'prepare':
+            metadata = source_metadata(media, config.get('device', 'cpu'))
+            temporary = work / 'media-source.json.tmp'
+            temporary.write_text(json.dumps(metadata, ensure_ascii=False, indent=2) + '\n',
+                                 encoding='utf-8', newline='\n')
+            os.replace(temporary, work / 'media-source.json')
         if role == 'speaker':
             audio = _existing(paths.audio_path, 'prepared audio')
             enrollment = _existing(config['enrollment'], 'speaker enrollment')
