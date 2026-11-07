@@ -1,0 +1,8 @@
+# KoeAxis CI control server (python -m qwen_asr.ci server). The GPU worker additionally needs requirements.txt.
+# Versions below are the ones verified locally (2026-10); loosen as needed.
+fastapi>=0.136
+uvicorn>=0.46
+sqlalchemy>=2.0
+pydantic>=2.13
+python-multipart>=0.0.27
+httpx>=0.28

@@ -1,0 +1,13 @@
+{
+  "id": "REAL-CHAIN-MIMO-FULL-001",
+  "version": "1",
+  "purpose": "Explicit lineage-bound MiMo first batch, full and same-input resume; offline replay does not contact a provider.",
+  "entry": {"module_id": "test.real.mimo", "operation_id": "run_chain", "interface_version": "0.1.0-real-mimo"},
+  "profile": "real-mimo-v1",
+  "owner": "test.real.mimo",
+  "input_identity": "Five explicit JSON manifests and lineage with SHA256; no baseline fallback.",
+  "allowed_variable": "REAL_MIMO_CHAIN_UPSTREAM selects the bundle; REAL_MIMO_ONLINE=1 grants the existing online path. REAL_CHAIN_FINISH_HANDOFF publishes a ready manifest only after the MiMo report is business-complete. REAL_CHAIN_MIMO_REUSE_CALLS restores an exact public-prompt match and does not count it as a new attempt. Speaker resource variables are recorded, not inferred from gpu_used.",
+  "oracle": "offline has zero provider calls; online remains partial and migration equivalence is not assessed",
+  "required_evidence": ["evidence/report.json", "evidence/criteria.json"],
+  "not_accepted": ["episode pass", "chain pass", "migration equivalence", "promotion"]
+}

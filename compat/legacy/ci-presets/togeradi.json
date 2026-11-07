@@ -1,0 +1,24 @@
+{
+  "id": "togeradi",
+  "title": "刺刺广播（トゲラジ）日语 → 简中",
+  "description": "トゲナシトゲアリ 电台节目。与 2026-10 批量验证（24–30 期）相同的参数，另加 2026-10-20 起的 LLM 纠错（v2 局部替换，带节目背景）：纠错、对齐（短窗回退）、断句、翻译（gemini-3.8-flash-high，并发 4）、MiMo 两段式听音校对、MFA 回退、Gemini 文本校对（只改中文译文，medium）、规范化。说话人识别（理名/夕莉/朱李 注册声纹，自动判断在场成员）辅助断句和翻译。",
+  "language": "Japanese",
+  "target_language": "简体中文",
+  "run_args": [
+    "--with-correct", "--correct-mode", "llm", "--with-align", "--align-fallback", "asr-short-window",
+    "--with-split", "--with-translate",
+    "--with-mimo-proofread", "--mimo-proofread-mode", "two-stage-nearby", "--mimo-nearby-batch-size", "3",
+    "--proofread-realign-mfa-fallback", "local", "--with-text-proofread", "--text-proofread-program", "日语电台节目《刺刺广播》（トゲラジ）", "--text-proofread-hosts", "理名、夕莉、朱李（乐队「无刺有刺」）", "--with-normalize",
+    "--format", "srt", "--performance-profile"
+  ],
+  "files": [
+    {"flag": "--glossary-xlsx", "path": "../samples/翻译对照.xlsx"},
+    {"flag": "--asr-context-file", "path": "../samples/asr-context-togeradi.txt"},
+    {"flag": "--program-memory-file", "path": "../samples/program-memory-togeradi.json"},
+    {"flag": "--speaker-enroll", "path": "../samples/speaker-enroll-togeradi.json"},
+    {"flag": "--program-context", "path": "../samples/program-context/togeradi.md"},
+    {"flag": "--program-context", "path": "../samples/program-context/girls-band-cry.md"}
+  ],
+  "env": {"QWEN_ASR_MFA_BACKGROUND_PREFETCH": "1"},
+  "options": {"llm_model": "gemini-3.8-flash-high"}
+}

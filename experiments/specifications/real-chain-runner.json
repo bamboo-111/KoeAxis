@@ -1,0 +1,10 @@
+{
+  "id": "CHAIN-READY-001",
+  "version": "1",
+  "entry": {"module_id": "workflow.pipeline", "operation_id": "run", "interface_version": "0.1.0-real-chain-runner"},
+  "profile": "real-chain-runner-v1",
+  "owner": "workflow.pipeline",
+  "purpose": "Incomplete candidate: fixed assembly of real chain stages; no production execution allowed.",
+  "permissions": {"offline": {"network": false, "credentials": false, "gpu": false}},
+  "required_evidence": []
+}

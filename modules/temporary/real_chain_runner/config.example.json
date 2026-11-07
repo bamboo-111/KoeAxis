@@ -1,0 +1,23 @@
+{
+  "plan_id": "CHAIN-READY-001",
+  "config": {
+    "media": "E:/absolute/path/to/input.wav",
+    "model": "E:/absolute/path/to/asr-model-directory",
+    "model_cache": "E:/absolute/path/to/model-cache",
+    "enrollment": "E:/absolute/path/to/speaker-enrollment.json",
+    "weights": "E:/absolute/path/to/speaker-weights.pt",
+    "device": "cuda",
+    "memory": "E:/absolute/path/to/program-memory.json",
+    "retry": false,
+    "align_resources": {
+      "cache": "E:/absolute/path/to/model-cache",
+      "asr_model": "E:/absolute/path/to/asr-model-directory",
+      "align_model": "E:/absolute/path/to/align-model-directory",
+      "mfa_exe": "E:/absolute/path/to/mfa.exe",
+      "mfa_dictionary": "E:/absolute/path/to/japanese.dict",
+      "mfa_acoustic": "E:/absolute/path/to/japanese.zip"
+    },
+    "prepare_options": ["--eager-segment-export"],
+    "transcribe_options": ["--language", "Japanese", "--batch-mode", "fixed", "--batch-size", "16"]
+  }
+}

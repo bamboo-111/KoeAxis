@@ -1,0 +1,42 @@
+[
+  {
+    "path": "tests/fixtures/baselines/813e9d2/modules/temporary/real_chain_runner/operations.py",
+    "source_commit": "813e9d2",
+    "source_path": "modules/temporary/real_chain_runner/operations.py",
+    "original_sha256": "ff24f93c26071d5007816efd1abbb927549e3b50226bfea0fc5d00fe09cef95b",
+    "sha256": "ff24f93c26071d5007816efd1abbb927549e3b50226bfea0fc5d00fe09cef95b",
+    "adaptation": "Repository-local source/model/diagnostic path expressions only; execute with original module __file__"
+  },
+  {
+    "path": "tests/fixtures/baselines/9dba954/modules/temporary/real_llm_stages/operations.py",
+    "source_commit": "9dba954",
+    "source_path": "modules/temporary/real_llm_stages/operations.py",
+    "original_sha256": "afb11067fee53b705c5b608589a9c8af1b4931db950fc492b811a74fb9d97767",
+    "sha256": "b32f4ac3d6fbaa238d67544648639c85c1dc8d2b56b521460fa35e8a93b57c5c",
+    "adaptation": "Repository-local source/model/diagnostic path expressions only; execute with original module __file__"
+  },
+  {
+    "path": "tests/fixtures/baselines/9dba954/modules/temporary/real_mimo/operations.py",
+    "source_commit": "9dba954",
+    "source_path": "modules/temporary/real_mimo/operations.py",
+    "original_sha256": "92a8a259f229d3d0eb0e4c1a0c635e6b4e33360b437569e835c0781615660fcc",
+    "sha256": "5a868fcec0654bc151bf19efb75454e0144b75c414939a32fa9050de05d02439",
+    "adaptation": "Repository-local source/model/diagnostic path expressions only; execute with original module __file__"
+  },
+  {
+    "path": "tests/fixtures/baselines/66e8ff6/modules/temporary/real_chain_runner/media.py",
+    "source_commit": "66e8ff6",
+    "source_path": "modules/temporary/real_chain_runner/media.py",
+    "original_sha256": "3aad8a8b5aaeebba56167849dce7fff07f0e4d6eed6e94370846091c1d994c2c",
+    "sha256": "abb9b1a65c08fd38f34c117a443c9ecc33af2f6f334ffa951ec14bc8831e2f82",
+    "adaptation": "Repository-local source/model/diagnostic path expressions only; execute with original module __file__"
+  },
+  {
+    "path": "tests/fixtures/baselines/66e8ff6/modules/temporary/real_align_recovery/recover.py",
+    "source_commit": "66e8ff6",
+    "source_path": "modules/temporary/real_align_recovery/recover.py",
+    "original_sha256": "4e8ab24ab49ae7280af29cf371318a5907139e817f4bf4fe69b812fc43990884",
+    "sha256": "127a0e5f75fa8140772a8ab068ae68c33261af78d68697bb4f21ed97825f17f1",
+    "adaptation": "Repository-local source/model/diagnostic path expressions only; execute with original module __file__"
+  }
+]

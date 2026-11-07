@@ -1,0 +1,10 @@
+[
+  {
+    "segment_id": "segmentchain001",
+    "text": "こんにちはCHAINOFF",
+    "status": "completed",
+    "audio_path": "synthetic-not-read.wav",
+    "global_start_time": 0.0,
+    "global_end_time": 4.0
+  }
+]

@@ -1,0 +1,19 @@
+{
+  "id": "REAL-CHAIN-LLM-001",
+  "version": "1",
+  "purpose": "Explicit current aligned and transcript inputs drive stage.split/run_bound then stage.translate/run_bound. The offline reference uses the built-in synthetic pair and does not open a socket.",
+  "entry": {"module_id": "test.real.llm.stages", "operation_id": "run_chain", "interface_version": "0.1.0-real-llm-stages"},
+  "profile": "real-llm-stages-v1",
+  "owner": "test.real.llm.stages",
+  "input_identity": "caller-supplied aligned_segments.json and transcript_segments.json, or the built-in synthetic pair when both env paths are unset",
+  "allowed_variable": "REAL_CHAIN_LLM_ALIGNED and REAL_CHAIN_LLM_TRANSCRIPT select explicit files or directories. REAL_LLM_STAGES_ONLINE=1 lets run_bound execute. REAL_CHAIN_LLM_EXECUTE_REAL=1 is the only switch that runs the known real episode files; without it those files stay hash-checked and do not start stages. Speaker enroll, npz and source audio are optional explicit resources and are required together when the real switch is on. REAL_CHAIN_LLM_REUSE_SPLIT, REAL_CHAIN_LLM_REUSE_CALLS and REAL_CHAIN_LLM_REUSE_SPLIT_SHA together bind an already guarded split and add zero split requests. REAL_CHAIN_LLM_REUSE_TRANSLATE restores saved translate responses by exact prompt sha and model; cache hits are reused, not new attempts or tokens.",
+  "order": ["validate explicit or synthetic input", "stage.split/run_bound", "read this split product", "stage.translate/run_bound", "handoff"],
+  "repetitions": 1,
+  "failure_policy": "missing, bad JSON, or id/time mismatch makes zero provider calls; split failure does not call translate; translate failure does not write a successful handoff",
+  "randomness": "offline reference has no provider text; stubbed tests are deterministic",
+  "cache_policy": "python -B; a previous handoff is never returned as this run's success",
+  "permissions": {"network": false, "credentials": false, "gpu": false, "when": "this plan's offline reference"},
+  "oracle": "REAL-CHAIN-LLM-OFF/evidence; chain_passed remains false",
+  "required_evidence": ["evidence/report.json", "evidence/cases.json", "evidence/criteria.json"],
+  "not_accepted": ["episode pass", "full ASR-to-subtitle chain", "text-proofread in this root", "real service execution", "migration equivalence"]
+}

@@ -1,0 +1,135 @@
+{
+  "profile": "real-chain-correct-v1",
+  "admission": "temporary",
+  "exemptions": [],
+  "bootstrap": [
+    [
+      "real-chain-correct-artifacts",
+      "0.1.0-real-chain-correct"
+    ],
+    [
+      "real-chain-correct-stage",
+      "0.1.0-real-chain-correct"
+    ],
+    [
+      "real-chain-correct-suite",
+      "0.1.0-real-chain-correct"
+    ]
+  ],
+  "trusted_bootstrap": {
+    "path": "host/__init__.py",
+    "sha256": "18d90bb032b6eedde69e2eb5158f3452fc0c3ea4ba928a0c56de206b260bed22",
+    "scope": "trusted interpreter entry; audit hash, not a self-attested module source"
+  },
+  "implementations": [
+    {
+      "module_id": "storage.artifacts",
+      "implementation_id": "real-chain-correct-artifacts",
+      "version": "0.1.0-real-chain-correct",
+      "admission": "temporary",
+      "source": "modules/temporary/b00/artifacts.py",
+      "content_files": [
+        {
+          "path": "host/__main__.py",
+          "sha256": "e0e3fe0679860f02a1270a3811048ad096764ed2f4bea01dd4ba87a516a57999"
+        },
+        {
+          "path": "host/contracts.py",
+          "sha256": "fa67f1cde6794ca445bee9d410c31cdba3b22355248d7d339a77641f2cc2ff7d"
+        },
+        {
+          "path": "host/runtime.py",
+          "sha256": "bcc71f07af88a3bdb80d361743a16deb75d9a4301f60740caea328fae9d7dff0"
+        },
+        {
+          "path": "module-registry/real_chain_correct/contracts-real-chain-correct.json",
+          "sha256": "a4d0139ab91dbc4d0fa089f6454f751c4a22483497d6c6ef2fd17d8993567575"
+        },
+        {
+          "path": "modules/temporary/b00/artifacts.py",
+          "sha256": "853bea599a7c9507af2764ea1458baf8b28ee4322791318dad1e287c2ab7b985"
+        }
+      ],
+      "settings": {},
+      "content_digest": "e1ffcdafecd661c9ec5eaabf62fd05a57619d649017c493c356eb4db343d7897"
+    },
+    {
+      "module_id": "stage.correct",
+      "implementation_id": "real-chain-correct-stage",
+      "version": "0.1.0-real-chain-correct",
+      "admission": "temporary",
+      "source": "modules/temporary/real_chain_correct/operations.py",
+      "content_files": [
+        {
+          "path": "host/__main__.py",
+          "sha256": "e0e3fe0679860f02a1270a3811048ad096764ed2f4bea01dd4ba87a516a57999"
+        },
+        {
+          "path": "host/contracts.py",
+          "sha256": "fa67f1cde6794ca445bee9d410c31cdba3b22355248d7d339a77641f2cc2ff7d"
+        },
+        {
+          "path": "host/runtime.py",
+          "sha256": "bcc71f07af88a3bdb80d361743a16deb75d9a4301f60740caea328fae9d7dff0"
+        },
+        {
+          "path": "module-registry/real_chain_correct/contracts-real-chain-correct.json",
+          "sha256": "a4d0139ab91dbc4d0fa089f6454f751c4a22483497d6c6ef2fd17d8993567575"
+        },
+        {
+          "path": "modules/temporary/real_chain_correct/operations.py",
+          "sha256": "3ede0a312628771f1a72698455073c150f549669d2629965ccdf2d3c741b62fa"
+        }
+      ],
+      "settings": {},
+      "content_digest": "998789ac9b8f0cfdee88fe7e18089ee7928351e4cfc529c27cf9d7c53495e30c"
+    },
+    {
+      "module_id": "test.real.chain.correct",
+      "implementation_id": "real-chain-correct-suite",
+      "version": "0.1.0-real-chain-correct",
+      "admission": "temporary",
+      "source": "modules/temporary/real_chain_correct/suite.py",
+      "content_files": [
+        {
+          "path": "host/__main__.py",
+          "sha256": "e0e3fe0679860f02a1270a3811048ad096764ed2f4bea01dd4ba87a516a57999"
+        },
+        {
+          "path": "host/contracts.py",
+          "sha256": "fa67f1cde6794ca445bee9d410c31cdba3b22355248d7d339a77641f2cc2ff7d"
+        },
+        {
+          "path": "host/runtime.py",
+          "sha256": "bcc71f07af88a3bdb80d361743a16deb75d9a4301f60740caea328fae9d7dff0"
+        },
+        {
+          "path": "module-registry/real_chain_correct/contracts-real-chain-correct.json",
+          "sha256": "a4d0139ab91dbc4d0fa089f6454f751c4a22483497d6c6ef2fd17d8993567575"
+        },
+        {
+          "path": "modules/temporary/real_chain_correct/suite.py",
+          "sha256": "b53cdd8bfa681815b4cd5d864ca86f3b2edc90365bbca5c34add614d0918e2a4"
+        },
+        {
+          "path": "experiments/specifications/real-chain-correct.json",
+          "sha256": "a1cafaafe2990ee77d8ea099888f970986e409560647efb83792b9b140372409"
+        },
+        {
+          "path": "modules/temporary/real_chain_correct/fixtures.py",
+          "sha256": "ed160c70855ebc631acfa513fa50e33ad72da07fd9e040768d938498eecb946c"
+        },
+        {
+          "path": "modules/temporary/real_chain_correct/reference.py",
+          "sha256": "2bb1e488b906029bcdb0de793e8169041b91c68e43e98c38960141e4e4687e7c"
+        },
+        {
+          "path": "modules/temporary/real_chain_correct/compare.py",
+          "sha256": "ac9e92b074d482c2861b364518e8e1f3e4d2bbd6428d4ae50886160620284bce"
+        }
+      ],
+      "settings": {},
+      "content_digest": "a96c6bc54dfb9a1bca553e63d461a37d7e2b7d203e07d299745b8faad36ec1ee"
+    }
+  ]
+}

@@ -1,0 +1,703 @@
+{
+  "profile": "real-chain-runner-v1",
+  "admission": "temporary",
+  "exemptions": [],
+  "bootstrap": [
+    [
+      "chain-runner-stage-correct",
+      "0.1.0-real-chain-runner"
+    ],
+    [
+      "chain-runner-stage-align",
+      "0.1.0-real-chain-runner"
+    ],
+    [
+      "chain-runner-provider-mfa",
+      "0.1.0-real-chain-runner"
+    ],
+    [
+      "chain-runner-stage-split",
+      "0.1.0-real-chain-runner"
+    ],
+    [
+      "chain-runner-stage-translate",
+      "0.1.0-real-chain-runner"
+    ],
+    [
+      "chain-runner-stage-audio_review",
+      "0.1.0-real-chain-runner"
+    ],
+    [
+      "chain-runner-stage-proofread_realign",
+      "0.1.0-real-chain-runner"
+    ],
+    [
+      "chain-runner-quality",
+      "0.1.0-real-chain-runner"
+    ],
+    [
+      "chain-runner-stage-normalize",
+      "0.1.0-real-chain-runner"
+    ],
+    [
+      "chain-runner-stage-export",
+      "0.1.0-real-chain-runner"
+    ],
+    [
+      "chain-runner-prepare",
+      "0.1.0-real-chain-runner"
+    ],
+    [
+      "chain-runner-transcribe",
+      "0.1.0-real-chain-runner"
+    ],
+    [
+      "chain-runner-speaker",
+      "0.1.0-real-chain-runner"
+    ],
+    [
+      "chain-runner-root",
+      "0.1.0-real-chain-runner"
+    ]
+  ],
+  "trusted_bootstrap": {
+    "path": "host/__init__.py",
+    "sha256": "18d90bb032b6eedde69e2eb5158f3452fc0c3ea4ba928a0c56de206b260bed22",
+    "scope": "trusted interpreter entry"
+  },
+  "implementations": [
+    {
+      "module_id": "stage.correct",
+      "implementation_id": "chain-runner-stage-correct",
+      "version": "0.1.0-real-chain-runner",
+      "admission": "temporary",
+      "source": "modules/temporary/real_chain_correct/operations.py",
+      "content_files": [
+        {
+          "path": "host/__main__.py",
+          "sha256": "e0e3fe0679860f02a1270a3811048ad096764ed2f4bea01dd4ba87a516a57999"
+        },
+        {
+          "path": "host/contracts.py",
+          "sha256": "fa67f1cde6794ca445bee9d410c31cdba3b22355248d7d339a77641f2cc2ff7d"
+        },
+        {
+          "path": "host/runtime.py",
+          "sha256": "bcc71f07af88a3bdb80d361743a16deb75d9a4301f60740caea328fae9d7dff0"
+        },
+        {
+          "path": "module-registry/real_chain_correct/contracts-real-chain-correct.json",
+          "sha256": "a4d0139ab91dbc4d0fa089f6454f751c4a22483497d6c6ef2fd17d8993567575"
+        },
+        {
+          "path": "module-registry/real_chain_runner/contracts-real-chain-runner-312.json",
+          "sha256": "9e20a387f2dc220bee0100ab274d5ed7f9db60e1cff8f5a50afaf4da6c58ad21"
+        },
+        {
+          "path": "modules/temporary/real_chain_correct/operations.py",
+          "sha256": "3ede0a312628771f1a72698455073c150f549669d2629965ccdf2d3c741b62fa"
+        }
+      ],
+      "settings": {},
+      "content_digest": "70c15f7570a284a144b5c0225d463b01ff5a563d63f28dfc75dac0ff48531b99"
+    },
+    {
+      "module_id": "stage.align",
+      "implementation_id": "chain-runner-stage-align",
+      "version": "0.1.0-real-chain-runner",
+      "admission": "temporary",
+      "source": "modules/temporary/real_align_recovery/stage.py",
+      "content_files": [
+        {
+          "path": "host/__main__.py",
+          "sha256": "e0e3fe0679860f02a1270a3811048ad096764ed2f4bea01dd4ba87a516a57999"
+        },
+        {
+          "path": "host/contracts.py",
+          "sha256": "fa67f1cde6794ca445bee9d410c31cdba3b22355248d7d339a77641f2cc2ff7d"
+        },
+        {
+          "path": "host/runtime.py",
+          "sha256": "bcc71f07af88a3bdb80d361743a16deb75d9a4301f60740caea328fae9d7dff0"
+        },
+        {
+          "path": "module-registry/real_align_recovery/contracts-real-align-recovery.json",
+          "sha256": "dd4cad37d52c48995a889162d42a3423e94fad26beaf5a2fa1f60771c5e3ceaf"
+        },
+        {
+          "path": "module-registry/real_chain_runner/contracts-real-chain-runner-312.json",
+          "sha256": "9e20a387f2dc220bee0100ab274d5ed7f9db60e1cff8f5a50afaf4da6c58ad21"
+        },
+        {
+          "path": "modules/temporary/real_align_recovery/chain.py",
+          "sha256": "438c25b2c5269ac35b6b66bf1cdff205a2669ad59690be20f94b045017f420b3"
+        },
+        {
+          "path": "modules/temporary/real_align_recovery/recover.py",
+          "sha256": "f7e602cf544a2d8ee81d5c8723e42168e71d338e8584297a3e38141bdaa31cde"
+        },
+        {
+          "path": "modules/temporary/real_align_recovery/stage.py",
+          "sha256": "a1f55fdeadb6984ea046f4ff18affbcbd303e12483f91eee1c244cc1ecd95840"
+        }
+      ],
+      "settings": {
+        "role": "stage",
+        "interface_version": "0.1.0-real-chain-runner"
+      },
+      "content_digest": "75dd567cadcf4a6f5de9205e932e9f594ee08ae136fc7a07d8c87464fa59919f"
+    },
+    {
+      "module_id": "provider.mfa",
+      "implementation_id": "chain-runner-provider-mfa",
+      "version": "0.1.0-real-chain-runner",
+      "admission": "temporary",
+      "source": "modules/temporary/real_align_recovery/mfa.py",
+      "content_files": [
+        {
+          "path": "host/__main__.py",
+          "sha256": "e0e3fe0679860f02a1270a3811048ad096764ed2f4bea01dd4ba87a516a57999"
+        },
+        {
+          "path": "host/contracts.py",
+          "sha256": "fa67f1cde6794ca445bee9d410c31cdba3b22355248d7d339a77641f2cc2ff7d"
+        },
+        {
+          "path": "host/runtime.py",
+          "sha256": "bcc71f07af88a3bdb80d361743a16deb75d9a4301f60740caea328fae9d7dff0"
+        },
+        {
+          "path": "module-registry/real_align_recovery/contracts-real-align-recovery.json",
+          "sha256": "dd4cad37d52c48995a889162d42a3423e94fad26beaf5a2fa1f60771c5e3ceaf"
+        },
+        {
+          "path": "module-registry/real_chain_runner/contracts-real-chain-runner-312.json",
+          "sha256": "9e20a387f2dc220bee0100ab274d5ed7f9db60e1cff8f5a50afaf4da6c58ad21"
+        },
+        {
+          "path": "modules/temporary/real_align_recovery/mfa.py",
+          "sha256": "b69b7200ebfe99ad07e9f7f8af537510fcefafb87cf97a915c974d060be1302b"
+        },
+        {
+          "path": "modules/temporary/real_align_recovery/recover.py",
+          "sha256": "f7e602cf544a2d8ee81d5c8723e42168e71d338e8584297a3e38141bdaa31cde"
+        }
+      ],
+      "settings": {
+        "role": "mfa"
+      },
+      "content_digest": "f5ed0a05d2f732ecd21d73e80e6a2c1eb655bc1766f97f902588ea270e70bdbe"
+    },
+    {
+      "module_id": "stage.split",
+      "implementation_id": "chain-runner-stage-split",
+      "version": "0.1.0-real-chain-runner",
+      "admission": "temporary",
+      "source": "modules/temporary/real_llm_stages/operations.py",
+      "content_files": [
+        {
+          "path": "experiments/references/program-content/v1.json",
+          "sha256": "2e47612e91acb5e9cdd9f1bf3eff59ad9ffa4a0b60aba3d1834754eb1865c4b4"
+        },
+        {
+          "path": "experiments/references/togeradi-terms/terms.json",
+          "sha256": "7280f03768e12a761abc7af4d629ebcb8488581e189b511ba31487ef0e187b20"
+        },
+        {
+          "path": "host/__main__.py",
+          "sha256": "e0e3fe0679860f02a1270a3811048ad096764ed2f4bea01dd4ba87a516a57999"
+        },
+        {
+          "path": "host/contracts.py",
+          "sha256": "fa67f1cde6794ca445bee9d410c31cdba3b22355248d7d339a77641f2cc2ff7d"
+        },
+        {
+          "path": "host/runtime.py",
+          "sha256": "bcc71f07af88a3bdb80d361743a16deb75d9a4301f60740caea328fae9d7dff0"
+        },
+        {
+          "path": "module-registry/real_chain_runner/contracts-real-chain-runner-312.json",
+          "sha256": "9e20a387f2dc220bee0100ab274d5ed7f9db60e1cff8f5a50afaf4da6c58ad21"
+        },
+        {
+          "path": "module-registry/real_llm_stages/contracts-real-llm-stages.json",
+          "sha256": "337aeec27c7b3a39677111d17132ed9ea327690e9793a40c5ba94fdc403743e6"
+        },
+        {
+          "path": "modules/temporary/real_llm_stages/evaluation.py",
+          "sha256": "6f4609a7b1f4119aeb4d7825f227b8ecf564a1f93ea5b1473bffca5cf218b8e8"
+        },
+        {
+          "path": "modules/temporary/real_llm_stages/operations.py",
+          "sha256": "aafaee25c5b419acf739b4bb4db77327e2b33c435013e0428472b3777a519505"
+        }
+      ],
+      "settings": {
+        "role": "split"
+      },
+      "content_digest": "a13aa2fa71ccd926584c381e7c280ee9aa31eddf21d159685b7ff1d5f6691c36"
+    },
+    {
+      "module_id": "stage.translate",
+      "implementation_id": "chain-runner-stage-translate",
+      "version": "0.1.0-real-chain-runner",
+      "admission": "temporary",
+      "source": "modules/temporary/real_llm_stages/operations.py",
+      "content_files": [
+        {
+          "path": "experiments/references/program-content/v1.json",
+          "sha256": "2e47612e91acb5e9cdd9f1bf3eff59ad9ffa4a0b60aba3d1834754eb1865c4b4"
+        },
+        {
+          "path": "experiments/references/togeradi-terms/terms.json",
+          "sha256": "7280f03768e12a761abc7af4d629ebcb8488581e189b511ba31487ef0e187b20"
+        },
+        {
+          "path": "host/__main__.py",
+          "sha256": "e0e3fe0679860f02a1270a3811048ad096764ed2f4bea01dd4ba87a516a57999"
+        },
+        {
+          "path": "host/contracts.py",
+          "sha256": "fa67f1cde6794ca445bee9d410c31cdba3b22355248d7d339a77641f2cc2ff7d"
+        },
+        {
+          "path": "host/runtime.py",
+          "sha256": "bcc71f07af88a3bdb80d361743a16deb75d9a4301f60740caea328fae9d7dff0"
+        },
+        {
+          "path": "module-registry/real_chain_runner/contracts-real-chain-runner-312.json",
+          "sha256": "9e20a387f2dc220bee0100ab274d5ed7f9db60e1cff8f5a50afaf4da6c58ad21"
+        },
+        {
+          "path": "module-registry/real_llm_stages/contracts-real-llm-stages.json",
+          "sha256": "337aeec27c7b3a39677111d17132ed9ea327690e9793a40c5ba94fdc403743e6"
+        },
+        {
+          "path": "modules/temporary/real_llm_stages/evaluation.py",
+          "sha256": "6f4609a7b1f4119aeb4d7825f227b8ecf564a1f93ea5b1473bffca5cf218b8e8"
+        },
+        {
+          "path": "modules/temporary/real_llm_stages/operations.py",
+          "sha256": "aafaee25c5b419acf739b4bb4db77327e2b33c435013e0428472b3777a519505"
+        }
+      ],
+      "settings": {
+        "role": "translate"
+      },
+      "content_digest": "ec6d2ae07819f71c77b61955c7e922ff699914a8426265d72b9355b1f6d6c548"
+    },
+    {
+      "module_id": "stage.audio_review",
+      "implementation_id": "chain-runner-stage-audio_review",
+      "version": "0.1.0-real-chain-runner",
+      "admission": "temporary",
+      "source": "modules/temporary/real_mimo/operations.py",
+      "content_files": [
+        {
+          "path": "experiments/references/program-content/v1.json",
+          "sha256": "2e47612e91acb5e9cdd9f1bf3eff59ad9ffa4a0b60aba3d1834754eb1865c4b4"
+        },
+        {
+          "path": "experiments/references/togeradi-terms/terms.json",
+          "sha256": "7280f03768e12a761abc7af4d629ebcb8488581e189b511ba31487ef0e187b20"
+        },
+        {
+          "path": "host/__main__.py",
+          "sha256": "e0e3fe0679860f02a1270a3811048ad096764ed2f4bea01dd4ba87a516a57999"
+        },
+        {
+          "path": "host/contracts.py",
+          "sha256": "fa67f1cde6794ca445bee9d410c31cdba3b22355248d7d339a77641f2cc2ff7d"
+        },
+        {
+          "path": "host/runtime.py",
+          "sha256": "bcc71f07af88a3bdb80d361743a16deb75d9a4301f60740caea328fae9d7dff0"
+        },
+        {
+          "path": "module-registry/real_chain_runner/contracts-real-chain-runner-312.json",
+          "sha256": "9e20a387f2dc220bee0100ab274d5ed7f9db60e1cff8f5a50afaf4da6c58ad21"
+        },
+        {
+          "path": "module-registry/real_mimo/contracts-real-mimo.json",
+          "sha256": "9924c8c7cf0f303c3a9da8f18c0afea6494789448a690476810165282d9e8b4f"
+        },
+        {
+          "path": "modules/temporary/real_mimo/evaluation.py",
+          "sha256": "d33157b2e984c68850114f55a35c14a838f177024a58bb03cb687cc9f30fd970"
+        },
+        {
+          "path": "modules/temporary/real_mimo/operations.py",
+          "sha256": "6de4de2657dca75384224782122c956668001519c5f190e3f720d4dbca31f778"
+        }
+      ],
+      "settings": {
+        "role": "audio"
+      },
+      "content_digest": "bc4056ffac975ee940452c9b76c0c152c247c1c7029faa32fd7fc81659ec0d77"
+    },
+    {
+      "module_id": "stage.proofread_realign",
+      "implementation_id": "chain-runner-stage-proofread_realign",
+      "version": "0.1.0-real-chain-runner",
+      "admission": "temporary",
+      "source": "modules/temporary/real_chain_finish/operations.py",
+      "content_files": [
+        {
+          "path": "experiments/specifications/real-chain-finish.json",
+          "sha256": "ec49c1a66e6f0b8fad94ddcc5ece88eb7f39ee561e046bd3255e5e7634b3bab7"
+        },
+        {
+          "path": "host/__main__.py",
+          "sha256": "e0e3fe0679860f02a1270a3811048ad096764ed2f4bea01dd4ba87a516a57999"
+        },
+        {
+          "path": "host/contracts.py",
+          "sha256": "fa67f1cde6794ca445bee9d410c31cdba3b22355248d7d339a77641f2cc2ff7d"
+        },
+        {
+          "path": "host/runtime.py",
+          "sha256": "bcc71f07af88a3bdb80d361743a16deb75d9a4301f60740caea328fae9d7dff0"
+        },
+        {
+          "path": "module-registry/real_chain_finish/contracts-real-chain-finish.json",
+          "sha256": "9b65d2413031a17850aacb5ec72eb425a5959c92196433dbb87ad8c6eff47bf0"
+        },
+        {
+          "path": "module-registry/real_chain_runner/contracts-real-chain-runner-312.json",
+          "sha256": "9e20a387f2dc220bee0100ab274d5ed7f9db60e1cff8f5a50afaf4da6c58ad21"
+        },
+        {
+          "path": "modules/temporary/real_chain_finish/handoff.py",
+          "sha256": "71260db77884fafe2287fb428d213640ffcf9db1fd0d6edd798fb9d1d6c7a25d"
+        },
+        {
+          "path": "modules/temporary/real_chain_finish/legacy.py",
+          "sha256": "a924a9d53bc5206710e2b7e6b64c94f2eaeda1861711b6751a2afdcf5741b809"
+        },
+        {
+          "path": "modules/temporary/real_chain_finish/operations.py",
+          "sha256": "1dadae9a34d753f4cc09fefb2ce87db1e2c169b3cfa5958f758462e11f306dce"
+        },
+        {
+          "path": "modules/temporary/verification_gold54/evaluate.py",
+          "sha256": "7e7965bafdf4c30e0d9e47afd238877854889534b70ba603915085c810721c17"
+        }
+      ],
+      "settings": {
+        "role": "realign"
+      },
+      "content_digest": "454092bc0ae863f3d5524f5bb92d9d89db8b9bbb8ed0ea601fee61b7ab626c7d"
+    },
+    {
+      "module_id": "quality",
+      "implementation_id": "chain-runner-quality",
+      "version": "0.1.0-real-chain-runner",
+      "admission": "temporary",
+      "source": "modules/temporary/real_chain_finish/operations.py",
+      "content_files": [
+        {
+          "path": "experiments/specifications/real-chain-finish.json",
+          "sha256": "ec49c1a66e6f0b8fad94ddcc5ece88eb7f39ee561e046bd3255e5e7634b3bab7"
+        },
+        {
+          "path": "host/__main__.py",
+          "sha256": "e0e3fe0679860f02a1270a3811048ad096764ed2f4bea01dd4ba87a516a57999"
+        },
+        {
+          "path": "host/contracts.py",
+          "sha256": "fa67f1cde6794ca445bee9d410c31cdba3b22355248d7d339a77641f2cc2ff7d"
+        },
+        {
+          "path": "host/runtime.py",
+          "sha256": "bcc71f07af88a3bdb80d361743a16deb75d9a4301f60740caea328fae9d7dff0"
+        },
+        {
+          "path": "module-registry/real_chain_finish/contracts-real-chain-finish.json",
+          "sha256": "9b65d2413031a17850aacb5ec72eb425a5959c92196433dbb87ad8c6eff47bf0"
+        },
+        {
+          "path": "module-registry/real_chain_runner/contracts-real-chain-runner-312.json",
+          "sha256": "9e20a387f2dc220bee0100ab274d5ed7f9db60e1cff8f5a50afaf4da6c58ad21"
+        },
+        {
+          "path": "modules/temporary/real_chain_finish/handoff.py",
+          "sha256": "71260db77884fafe2287fb428d213640ffcf9db1fd0d6edd798fb9d1d6c7a25d"
+        },
+        {
+          "path": "modules/temporary/real_chain_finish/legacy.py",
+          "sha256": "a924a9d53bc5206710e2b7e6b64c94f2eaeda1861711b6751a2afdcf5741b809"
+        },
+        {
+          "path": "modules/temporary/real_chain_finish/operations.py",
+          "sha256": "1dadae9a34d753f4cc09fefb2ce87db1e2c169b3cfa5958f758462e11f306dce"
+        },
+        {
+          "path": "modules/temporary/verification_gold54/evaluate.py",
+          "sha256": "7e7965bafdf4c30e0d9e47afd238877854889534b70ba603915085c810721c17"
+        }
+      ],
+      "settings": {
+        "role": "quality"
+      },
+      "content_digest": "f128544fa83c7a015dc5e4575aa2995d552b9226ff5557b8ab3f29023cb1967e"
+    },
+    {
+      "module_id": "stage.normalize",
+      "implementation_id": "chain-runner-stage-normalize",
+      "version": "0.1.0-real-chain-runner",
+      "admission": "temporary",
+      "source": "modules/temporary/real_chain_finish/operations.py",
+      "content_files": [
+        {
+          "path": "experiments/specifications/real-chain-finish.json",
+          "sha256": "ec49c1a66e6f0b8fad94ddcc5ece88eb7f39ee561e046bd3255e5e7634b3bab7"
+        },
+        {
+          "path": "host/__main__.py",
+          "sha256": "e0e3fe0679860f02a1270a3811048ad096764ed2f4bea01dd4ba87a516a57999"
+        },
+        {
+          "path": "host/contracts.py",
+          "sha256": "fa67f1cde6794ca445bee9d410c31cdba3b22355248d7d339a77641f2cc2ff7d"
+        },
+        {
+          "path": "host/runtime.py",
+          "sha256": "bcc71f07af88a3bdb80d361743a16deb75d9a4301f60740caea328fae9d7dff0"
+        },
+        {
+          "path": "module-registry/real_chain_finish/contracts-real-chain-finish.json",
+          "sha256": "9b65d2413031a17850aacb5ec72eb425a5959c92196433dbb87ad8c6eff47bf0"
+        },
+        {
+          "path": "module-registry/real_chain_runner/contracts-real-chain-runner-312.json",
+          "sha256": "9e20a387f2dc220bee0100ab274d5ed7f9db60e1cff8f5a50afaf4da6c58ad21"
+        },
+        {
+          "path": "modules/temporary/real_chain_finish/handoff.py",
+          "sha256": "71260db77884fafe2287fb428d213640ffcf9db1fd0d6edd798fb9d1d6c7a25d"
+        },
+        {
+          "path": "modules/temporary/real_chain_finish/legacy.py",
+          "sha256": "a924a9d53bc5206710e2b7e6b64c94f2eaeda1861711b6751a2afdcf5741b809"
+        },
+        {
+          "path": "modules/temporary/real_chain_finish/operations.py",
+          "sha256": "1dadae9a34d753f4cc09fefb2ce87db1e2c169b3cfa5958f758462e11f306dce"
+        },
+        {
+          "path": "modules/temporary/verification_gold54/evaluate.py",
+          "sha256": "7e7965bafdf4c30e0d9e47afd238877854889534b70ba603915085c810721c17"
+        }
+      ],
+      "settings": {
+        "role": "normalize"
+      },
+      "content_digest": "f3c9fe248412978b69afb91d9d85a97686506bd336c2b90e0be14215aa6be509"
+    },
+    {
+      "module_id": "stage.export",
+      "implementation_id": "chain-runner-stage-export",
+      "version": "0.1.0-real-chain-runner",
+      "admission": "temporary",
+      "source": "modules/temporary/real_chain_finish/operations.py",
+      "content_files": [
+        {
+          "path": "experiments/specifications/real-chain-finish.json",
+          "sha256": "ec49c1a66e6f0b8fad94ddcc5ece88eb7f39ee561e046bd3255e5e7634b3bab7"
+        },
+        {
+          "path": "host/__main__.py",
+          "sha256": "e0e3fe0679860f02a1270a3811048ad096764ed2f4bea01dd4ba87a516a57999"
+        },
+        {
+          "path": "host/contracts.py",
+          "sha256": "fa67f1cde6794ca445bee9d410c31cdba3b22355248d7d339a77641f2cc2ff7d"
+        },
+        {
+          "path": "host/runtime.py",
+          "sha256": "bcc71f07af88a3bdb80d361743a16deb75d9a4301f60740caea328fae9d7dff0"
+        },
+        {
+          "path": "module-registry/real_chain_finish/contracts-real-chain-finish.json",
+          "sha256": "9b65d2413031a17850aacb5ec72eb425a5959c92196433dbb87ad8c6eff47bf0"
+        },
+        {
+          "path": "module-registry/real_chain_runner/contracts-real-chain-runner-312.json",
+          "sha256": "9e20a387f2dc220bee0100ab274d5ed7f9db60e1cff8f5a50afaf4da6c58ad21"
+        },
+        {
+          "path": "modules/temporary/real_chain_finish/handoff.py",
+          "sha256": "71260db77884fafe2287fb428d213640ffcf9db1fd0d6edd798fb9d1d6c7a25d"
+        },
+        {
+          "path": "modules/temporary/real_chain_finish/legacy.py",
+          "sha256": "a924a9d53bc5206710e2b7e6b64c94f2eaeda1861711b6751a2afdcf5741b809"
+        },
+        {
+          "path": "modules/temporary/real_chain_finish/operations.py",
+          "sha256": "1dadae9a34d753f4cc09fefb2ce87db1e2c169b3cfa5958f758462e11f306dce"
+        },
+        {
+          "path": "modules/temporary/verification_gold54/evaluate.py",
+          "sha256": "7e7965bafdf4c30e0d9e47afd238877854889534b70ba603915085c810721c17"
+        }
+      ],
+      "settings": {
+        "role": "export"
+      },
+      "content_digest": "132a72814db854d7ae27c40755d7fa944c0585c3a3670d508dca942878f9014f"
+    },
+    {
+      "module_id": "stage.prepare",
+      "implementation_id": "chain-runner-prepare",
+      "version": "0.1.0-real-chain-runner",
+      "admission": "temporary",
+      "source": "modules/temporary/real_chain_runner/operations.py",
+      "content_files": [
+        {
+          "path": "host/__main__.py",
+          "sha256": "e0e3fe0679860f02a1270a3811048ad096764ed2f4bea01dd4ba87a516a57999"
+        },
+        {
+          "path": "host/contracts.py",
+          "sha256": "fa67f1cde6794ca445bee9d410c31cdba3b22355248d7d339a77641f2cc2ff7d"
+        },
+        {
+          "path": "host/runtime.py",
+          "sha256": "bcc71f07af88a3bdb80d361743a16deb75d9a4301f60740caea328fae9d7dff0"
+        },
+        {
+          "path": "module-registry/real_chain_runner/contracts-real-chain-runner-312.json",
+          "sha256": "9e20a387f2dc220bee0100ab274d5ed7f9db60e1cff8f5a50afaf4da6c58ad21"
+        },
+        {
+          "path": "modules/temporary/real_chain_runner/media.py",
+          "sha256": "abe646c9046eb89266d714d5673a54032b13e6fade975733ec99d4e452387860"
+        },
+        {
+          "path": "modules/temporary/real_chain_runner/operations.py",
+          "sha256": "8c2120823c6ed5a691cbd7306ad85c353468ede1cd8497d0dcfc64a9a588fccb"
+        }
+      ],
+      "settings": {
+        "role": "prepare"
+      },
+      "content_digest": "e570a6d37633c07760af3b31d2ac5dae229872731eec9afd78342835a09aa6d3"
+    },
+    {
+      "module_id": "stage.transcribe",
+      "implementation_id": "chain-runner-transcribe",
+      "version": "0.1.0-real-chain-runner",
+      "admission": "temporary",
+      "source": "modules/temporary/real_chain_runner/operations.py",
+      "content_files": [
+        {
+          "path": "host/__main__.py",
+          "sha256": "e0e3fe0679860f02a1270a3811048ad096764ed2f4bea01dd4ba87a516a57999"
+        },
+        {
+          "path": "host/contracts.py",
+          "sha256": "fa67f1cde6794ca445bee9d410c31cdba3b22355248d7d339a77641f2cc2ff7d"
+        },
+        {
+          "path": "host/runtime.py",
+          "sha256": "bcc71f07af88a3bdb80d361743a16deb75d9a4301f60740caea328fae9d7dff0"
+        },
+        {
+          "path": "module-registry/real_chain_runner/contracts-real-chain-runner-312.json",
+          "sha256": "9e20a387f2dc220bee0100ab274d5ed7f9db60e1cff8f5a50afaf4da6c58ad21"
+        },
+        {
+          "path": "modules/temporary/real_chain_runner/media.py",
+          "sha256": "abe646c9046eb89266d714d5673a54032b13e6fade975733ec99d4e452387860"
+        },
+        {
+          "path": "modules/temporary/real_chain_runner/operations.py",
+          "sha256": "8c2120823c6ed5a691cbd7306ad85c353468ede1cd8497d0dcfc64a9a588fccb"
+        }
+      ],
+      "settings": {
+        "role": "transcribe"
+      },
+      "content_digest": "9b8770b45e18ac53e4d01b8091d57cb53516dabe35e65c15bf78d76e1fc9038f"
+    },
+    {
+      "module_id": "stage.speaker",
+      "implementation_id": "chain-runner-speaker",
+      "version": "0.1.0-real-chain-runner",
+      "admission": "temporary",
+      "source": "modules/temporary/real_chain_runner/operations.py",
+      "content_files": [
+        {
+          "path": "host/__main__.py",
+          "sha256": "e0e3fe0679860f02a1270a3811048ad096764ed2f4bea01dd4ba87a516a57999"
+        },
+        {
+          "path": "host/contracts.py",
+          "sha256": "fa67f1cde6794ca445bee9d410c31cdba3b22355248d7d339a77641f2cc2ff7d"
+        },
+        {
+          "path": "host/runtime.py",
+          "sha256": "bcc71f07af88a3bdb80d361743a16deb75d9a4301f60740caea328fae9d7dff0"
+        },
+        {
+          "path": "module-registry/real_chain_runner/contracts-real-chain-runner-312.json",
+          "sha256": "9e20a387f2dc220bee0100ab274d5ed7f9db60e1cff8f5a50afaf4da6c58ad21"
+        },
+        {
+          "path": "modules/temporary/real_chain_runner/media.py",
+          "sha256": "abe646c9046eb89266d714d5673a54032b13e6fade975733ec99d4e452387860"
+        },
+        {
+          "path": "modules/temporary/real_chain_runner/operations.py",
+          "sha256": "8c2120823c6ed5a691cbd7306ad85c353468ede1cd8497d0dcfc64a9a588fccb"
+        }
+      ],
+      "settings": {
+        "role": "speaker"
+      },
+      "content_digest": "1d0165245535d4b100424839009eee73c87865b2d4f403e442f4bbacd82af6f5"
+    },
+    {
+      "module_id": "workflow.pipeline",
+      "implementation_id": "chain-runner-root",
+      "version": "0.1.0-real-chain-runner",
+      "admission": "temporary",
+      "source": "modules/temporary/real_chain_runner/operations.py",
+      "content_files": [
+        {
+          "path": "experiments/specifications/real-chain-runner.json",
+          "sha256": "5ef509cb8819c280a6e6dc66654df06958d6fe1d4af16039fc6885e505f63681"
+        },
+        {
+          "path": "host/__main__.py",
+          "sha256": "e0e3fe0679860f02a1270a3811048ad096764ed2f4bea01dd4ba87a516a57999"
+        },
+        {
+          "path": "host/contracts.py",
+          "sha256": "fa67f1cde6794ca445bee9d410c31cdba3b22355248d7d339a77641f2cc2ff7d"
+        },
+        {
+          "path": "host/runtime.py",
+          "sha256": "bcc71f07af88a3bdb80d361743a16deb75d9a4301f60740caea328fae9d7dff0"
+        },
+        {
+          "path": "module-registry/real_chain_runner/contracts-real-chain-runner-312.json",
+          "sha256": "9e20a387f2dc220bee0100ab274d5ed7f9db60e1cff8f5a50afaf4da6c58ad21"
+        },
+        {
+          "path": "modules/temporary/real_chain_runner/operations.py",
+          "sha256": "8c2120823c6ed5a691cbd7306ad85c353468ede1cd8497d0dcfc64a9a588fccb"
+        },
+        {
+          "path": "modules/temporary/real_chain_runner/performance.py",
+          "sha256": "6aed4a45377133f57ef7db84887fa5de8a2b8d36aec4c31d6dd9c45163bb36d2"
+        }
+      ],
+      "settings": {
+        "role": "root"
+      },
+      "content_digest": "4a67b96b7bad49e98bfe2d73754f2817edf579e770b395ae8fb51524559c3b5c"
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "id": "REAL-CHAIN-CORRECT-001",
+  "version": "1",
+  "purpose": "Rules correction of an explicit raw manifest. Offline reference is synthetic. The 149-segment CPU run is separate and is not an align pass.",
+  "entry": {"module_id": "test.real.chain.correct", "operation_id": "run", "interface_version": "0.1.0-real-chain-correct"},
+  "profile": "real-chain-correct-v1",
+  "owner": "test.real.chain.correct",
+  "input_identity": "offline uses fixed synthetic rows; REAL_CHAIN_CORRECT_MODE=cpu149 reads REAL-ASR-001 repair-1 historical-batch run-1 legacy-format raw",
+  "allowed_variable": "REAL_CHAIN_CORRECT_MODE=cpu149 runs the 149-segment rules path; unset or offline is the synthetic reference",
+  "order": ["test.real.chain.correct/run", "stage.correct/run_bound"],
+  "repetitions": 1,
+  "failure_policy": "stop at the first failed check; do not fall back to baseline B",
+  "randomness": "none",
+  "cache_policy": "python -B; no bytecode in the legacy repository",
+  "permissions": {"write": "new runs/experiments/<id> only", "read": "explicit raw and, for comparison only, baseline manifests", "network": false, "models": false, "credentials": false},
+  "oracle": "synthetic host output must match a direct run_correction_stage call; baseline B is a comparison, not an oracle",
+  "required_evidence": ["evidence/cases.json", "evidence/report.json"],
+  "not_accepted": ["copying B transcript as this round's output", "llm correction", "align completion", "chain_passed true", "changing rules to match B"]
+}

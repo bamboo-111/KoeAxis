@@ -1,0 +1,17 @@
+{
+  "id": "japanese-generic",
+  "title": "通用日语视频 → 简中",
+  "description": "不带节目专用词表/记忆的日语流程：纠错、对齐、断句、翻译、MiMo 听音校对、Gemini 文本校对（只改中文译文）、规范化。可在新建运行时上传词表。",
+  "language": "Japanese",
+  "target_language": "简体中文",
+  "run_args": [
+    "--with-correct", "--with-align", "--align-fallback", "asr-short-window",
+    "--with-split", "--with-translate",
+    "--with-mimo-proofread", "--mimo-proofread-mode", "two-stage-nearby", "--mimo-nearby-batch-size", "3",
+    "--proofread-realign-mfa-fallback", "local", "--with-text-proofread", "--with-normalize",
+    "--format", "srt", "--performance-profile"
+  ],
+  "files": [],
+  "env": {"QWEN_ASR_MFA_BACKGROUND_PREFETCH": "1"},
+  "options": {"llm_model": "gemini-3.8-flash-high"}
+}

@@ -1,0 +1,356 @@
+{
+  "profile": "real-chain-finish-v1",
+  "protocol_version": "0.1.0-draft",
+  "interface_version": "0.1.0-real-chain-finish",
+  "schema_dialect": "closed-object-v1",
+  "types": {
+    "OperationRef": {
+      "object": {
+        "module_id": "id",
+        "operation_id": "id",
+        "interface_version": "id"
+      }
+    },
+    "Identity": {
+      "object": {
+        "module_id": "id",
+        "implementation_id": "id",
+        "version": "id",
+        "content_digest": "sha256"
+      }
+    },
+    "ContentFile": {
+      "object": {
+        "path": "text",
+        "sha256": "sha256"
+      }
+    },
+    "ImplementationRecord": {
+      "object": {
+        "module_id": "id",
+        "implementation_id": "id",
+        "version": "id",
+        "content_digest": "sha256",
+        "admission": {
+          "const": "temporary"
+        },
+        "source": "text",
+        "content_files": {
+          "array": "ContentFile"
+        },
+        "settings": "json"
+      }
+    },
+    "AssemblyManifest": {
+      "object": {
+        "binding_id": "id",
+        "implementations": {
+          "array": "Identity"
+        },
+        "root_operations": {
+          "array": "OperationRef"
+        }
+      }
+    },
+    "ArtifactRef": {
+      "object": {
+        "artifact_id": "id",
+        "locator": "text",
+        "representation": {
+          "const": "application/json; charset=utf-8"
+        },
+        "permissions": {
+          "array": {
+            "enum": [
+              "read",
+              "write"
+            ]
+          }
+        },
+        "content_identity": {
+          "union": [
+            "sha256",
+            "null"
+          ]
+        },
+        "state_owner": "id",
+        "writer_operation": "OperationRef",
+        "lifetime": {
+          "const": "run"
+        }
+      }
+    },
+    "CallContext": {
+      "object": {
+        "run_id": "id",
+        "call_id": "id",
+        "parent_call_id": {
+          "union": [
+            "id",
+            "null"
+          ]
+        },
+        "binding_id": "id",
+        "cancellation_ref": "null",
+        "trace_ref": "id",
+        "resource_scope_id": "id"
+      }
+    },
+    "CallEnvelope": {
+      "object": {
+        "protocol_version": {
+          "const": "0.1.0-draft"
+        },
+        "target": "OperationRef",
+        "context": "CallContext",
+        "arguments": "json",
+        "config_view": {
+          "const": {
+            "entries": {},
+            "provenance": [],
+            "evaluation_records": []
+          }
+        },
+        "artifact_refs": {
+          "array": "ArtifactRef"
+        },
+        "resource_handles": {
+          "array": "json"
+        }
+      }
+    },
+    "SideEffectRecord": {
+      "object": {
+        "resource_ref": "json",
+        "operation": {
+          "enum": [
+            "read",
+            "write"
+          ]
+        },
+        "commit_state": {
+          "enum": [
+            "not_started",
+            "committed",
+            "partial",
+            "unknown"
+          ]
+        },
+        "observation": "text",
+        "evidence_ref": {
+          "union": [
+            "text",
+            "null"
+          ]
+        }
+      }
+    },
+    "BusinessError": {
+      "object": {
+        "category": "id",
+        "legacy_identity": "text",
+        "message": "text",
+        "cause_chain": {
+          "array": "json"
+        },
+        "partial_result": "json",
+        "effects": {
+          "array": "SideEffectRecord"
+        }
+      }
+    },
+    "HostRejection": {
+      "object": {
+        "code": {
+          "enum": [
+            "UNKNOWN_MODULE",
+            "UNKNOWN_OPERATION",
+            "VERSION_MISMATCH",
+            "BINDING_MISMATCH",
+            "UNDECLARED_DEPENDENCY",
+            "INVALID_ENVELOPE",
+            "CAPABILITY_DENIED",
+            "STALE_HANDLE",
+            "ADMISSION_MISMATCH"
+          ]
+        },
+        "execution_started": {
+          "const": false
+        },
+        "detail": "text",
+        "external_mapping": {
+          "const": null
+        }
+      }
+    }
+  },
+  "modules": {
+    "stage.proofread_realign": {
+      "operations": {
+        "run": {
+          "input": {
+            "object": {
+              "work": "text",
+              "memory": "text",
+              "speaker": {
+                "union": [
+                  "text",
+                  "null"
+                ]
+              },
+              "ass_reference": {
+                "union": [
+                  "text",
+                  "null"
+                ]
+              }
+            }
+          },
+          "output": {
+            "object": {
+              "report": "json"
+            }
+          },
+          "calls": [],
+          "files": {},
+          "host_capabilities": [],
+          "resource_handles": []
+        }
+      }
+    },
+    "quality": {
+      "operations": {
+        "run": {
+          "input": {
+            "object": {
+              "work": "text",
+              "memory": "text",
+              "speaker": {
+                "union": [
+                  "text",
+                  "null"
+                ]
+              },
+              "ass_reference": {
+                "union": [
+                  "text",
+                  "null"
+                ]
+              }
+            }
+          },
+          "output": {
+            "object": {
+              "report": "json"
+            }
+          },
+          "calls": [],
+          "files": {},
+          "host_capabilities": [],
+          "resource_handles": []
+        }
+      }
+    },
+    "stage.normalize": {
+      "operations": {
+        "run": {
+          "input": {
+            "object": {
+              "work": "text",
+              "memory": "text",
+              "speaker": {
+                "union": [
+                  "text",
+                  "null"
+                ]
+              },
+              "ass_reference": {
+                "union": [
+                  "text",
+                  "null"
+                ]
+              }
+            }
+          },
+          "output": {
+            "object": {
+              "report": "json"
+            }
+          },
+          "calls": [],
+          "files": {},
+          "host_capabilities": [],
+          "resource_handles": []
+        }
+      }
+    },
+    "stage.export": {
+      "operations": {
+        "run": {
+          "input": {
+            "object": {
+              "work": "text",
+              "memory": "text",
+              "speaker": {
+                "union": [
+                  "text",
+                  "null"
+                ]
+              },
+              "ass_reference": {
+                "union": [
+                  "text",
+                  "null"
+                ]
+              }
+            }
+          },
+          "output": {
+            "object": {
+              "report": "json"
+            }
+          },
+          "calls": [],
+          "files": {},
+          "host_capabilities": [],
+          "resource_handles": []
+        }
+      }
+    },
+    "test.real.chain.finish": {
+      "operations": {
+        "run": {
+          "input": {
+            "object": {
+              "plan_id": {
+                "const": "REAL-CHAIN-FINISH-001"
+              }
+            }
+          },
+          "output": {
+            "object": {
+              "report": "json"
+            }
+          },
+          "calls": [
+            "stage.proofread_realign/run",
+            "quality/run",
+            "stage.normalize/run",
+            "stage.export/run"
+          ],
+          "files": {},
+          "host_capabilities": [
+            "snapshot"
+          ],
+          "resource_handles": [],
+          "environment": [
+            "REAL_CHAIN_FINISH_MODE",
+            "REAL_CHAIN_FINISH_HANDOFF",
+            "REAL_CHAIN_FINISH_HANDOFF_SHA256"
+          ]
+        }
+      }
+    }
+  },
+  "open": []
+}

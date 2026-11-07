@@ -1,0 +1,97 @@
+{
+  "registry": "host-plan-registry-v1",
+  "since_host": "0.1.4",
+  "rule": "python -B -m host --plan <plan> dispatches only plans listed here; each catalog must agree on host source identities; profile/catalog under module-registry/<pkg>/; entry is the only bootstrap root grant.",
+  "plans": [
+    {
+      "plan": "experiments/specifications/real-llm-stages.json",
+      "profile": "module-registry/real_llm_stages/contracts-real-llm-stages.json",
+      "catalog": "module-registry/real_llm_stages/catalog-real-llm-stages.json",
+      "entry": {
+        "module_id": "test.real.llm.stages",
+        "operation_id": "run",
+        "interface_version": "0.1.0-real-llm-stages"
+      }
+    },
+    {
+      "plan": "experiments/specifications/real-mimo.json",
+      "profile": "module-registry/real_mimo/contracts-real-mimo.json",
+      "catalog": "module-registry/real_mimo/catalog-real-mimo.json",
+      "entry": {
+        "module_id": "test.real.mimo",
+        "operation_id": "run",
+        "interface_version": "0.1.0-real-mimo"
+      }
+    },
+    {
+      "plan": "experiments/specifications/real-align-recovery.json",
+      "profile": "module-registry/real_align_recovery/contracts-real-align-recovery.json",
+      "catalog": "module-registry/real_align_recovery/catalog-real-align-recovery.json",
+      "entry": {
+        "module_id": "test.real.align.recovery",
+        "operation_id": "run",
+        "interface_version": "0.1.0-real-align-recovery"
+      }
+    },
+    {
+      "plan": "experiments/specifications/real-chain-correct.json",
+      "profile": "module-registry/real_chain_correct/contracts-real-chain-correct.json",
+      "catalog": "module-registry/real_chain_correct/catalog-real-chain-correct.json",
+      "entry": {
+        "module_id": "test.real.chain.correct",
+        "operation_id": "run",
+        "interface_version": "0.1.0-real-chain-correct"
+      }
+    },
+    {
+      "plan": "experiments/specifications/real-chain-align.json",
+      "profile": "module-registry/real_align_recovery/contracts-real-align-recovery.json",
+      "catalog": "module-registry/real_align_recovery/catalog-real-align-recovery.json",
+      "entry": {
+        "module_id": "test.real.align.recovery",
+        "operation_id": "run_chain",
+        "interface_version": "0.1.0-real-align-recovery"
+      }
+    },
+    {
+      "plan": "experiments/specifications/real-chain-llm.json",
+      "profile": "module-registry/real_llm_stages/contracts-real-llm-stages.json",
+      "catalog": "module-registry/real_llm_stages/catalog-real-llm-stages.json",
+      "entry": {
+        "module_id": "test.real.llm.stages",
+        "operation_id": "run_chain",
+        "interface_version": "0.1.0-real-llm-stages"
+      }
+    },
+    {
+      "plan": "experiments/specifications/real-chain-mimo-full.json",
+      "profile": "module-registry/real_mimo/contracts-real-mimo.json",
+      "catalog": "module-registry/real_mimo/catalog-real-mimo.json",
+      "entry": {
+        "module_id": "test.real.mimo",
+        "operation_id": "run_chain",
+        "interface_version": "0.1.0-real-mimo"
+      }
+    },
+    {
+      "plan": "experiments/specifications/real-chain-finish.json",
+      "profile": "module-registry/real_chain_finish/contracts-real-chain-finish.json",
+      "catalog": "module-registry/real_chain_finish/catalog-real-chain-finish.json",
+      "entry": {
+        "module_id": "test.real.chain.finish",
+        "operation_id": "run",
+        "interface_version": "0.1.0-real-chain-finish"
+      }
+    },
+    {
+      "plan": "experiments/specifications/real-chain-runner.json",
+      "profile": "module-registry/real_chain_runner/contracts-real-chain-runner-312.json",
+      "catalog": "module-registry/real_chain_runner/catalog-real-chain-runner-312.json",
+      "entry": {
+        "module_id": "workflow.pipeline",
+        "operation_id": "run",
+        "interface_version": "0.1.0-real-chain-runner"
+      }
+    }
+  ]
+}

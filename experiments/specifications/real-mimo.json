@@ -1,0 +1,28 @@
+{
+  "id": "REAL-MIMO-001",
+  "version": "1",
+  "purpose": "Episode 54 MiMo audio review on the Token Plan OpenAI endpoint, then a limited same-audio Anthropic comparison. The registered root calls stage.audio_review/run and provider.audio_llm/compare. Offline replay does not open a socket.",
+  "entry": {"module_id": "test.real.mimo", "operation_id": "run", "interface_version": "0.1.0-real-mimo"},
+  "profile": "real-mimo-v1",
+  "owner": "test.real.mimo",
+  "input_identity": "baseline B translated and segment manifests for episode 54; stage-level, not this run's ASR chain",
+  "allowed_variable": "REAL_MIMO_ONLINE=1 selects the explicit online grant; unset stays offline. REAL_CHAIN_BIND_UPSTREAM, when set, makes the same root call stage.audio_review/run_bound",
+  "order": ["offline or explicit online grant", "stage.audio_review/run first real nearby-audio batch", "stage.audio_review/run full episode only after that batch passes", "provider.audio_llm/compare limited samples"],
+  "bind_order": ["stage.audio_review/run_bound"],
+  "failure_policy": "HTTP 400, 401, or 403 stops that protocol; audio-unsupported is a capability result, not a text-quality failure; a text-only probe is not an audio comparison",
+  "randomness": "provider text may vary; temperature is 0",
+  "cache_policy": "python -B; no bytecode",
+  "permissions": {
+    "offline": {"network": false, "credentials": false, "when": "REAL_MIMO_ONLINE unset"},
+    "online": {
+      "network": true,
+      "credentials": ["MIMO_API_KEY"],
+      "endpoints": "Token Plan OpenAI and Token Plan Anthropic only",
+      "when": "REAL_MIMO_ONLINE=1",
+      "host_enforced_isolation": false
+    }
+  },
+  "oracle": "offline attempts stay 0; online sends mimo-v2.6-pro and does not claim migration equivalence",
+  "required_evidence": ["evidence/report.json", "evidence/criteria.json", "progress.json"],
+  "not_accepted": ["episode pass", "migration equivalence", "old CLI as host", "promotion", "text probe as audio comparison"]
+}
